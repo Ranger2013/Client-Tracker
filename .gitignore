@@ -1,9 +1,10 @@
-# PHP files and directories
+# Ignore all PHP files by default
 *.php
 
-# But allow these PHP files
+# Allow public directory and all its subdirectories
 !public/
-!public/src/*.php
+!public/**/
+!public/**/*.php
 
 # Common system files
 .DS_Store
