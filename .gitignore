@@ -1,0 +1,15 @@
+# PHP files and directories
+*.php
+
+# Common system files
+.DS_Store
+.vscode/
+.idea/
+
+# Logs and temp files
+*.log
+logs/
+error-logs/
+
+# Environment and config
+.env

@@ -1,0 +1,9 @@
+AuthType Basic
+AuthName "Restricted Area"
+AuthUserFile /home/darklord/farrierclients/auth_test/.htpasswd
+Require valid-user
+
+# Pass the Authorization header
+RewriteEngine On
+RewriteCond %{HTTP:Authorization} ^(.*)
+RewriteRule ^(.*) - [E=HTTP_AUTHORIZATION:%1]

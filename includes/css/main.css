@@ -1,0 +1,18 @@
+/* ...existing styles... */
+
+/* Remove hover effects on touch devices */
+@media (hover: none) {
+    .w3-dropdown-content .w3-button:hover {
+        background-color: inherit !important;
+    }
+}
+
+/* Class to forcibly remove hover states */
+.remove-hover * {
+    pointer-events: none !important;
+}
+
+/* Ensure dropdowns are properly positioned on mobile */
+.w3-dropdown-content {
+    touch-action: none;  /* Prevent browser handling of touches */
+}
