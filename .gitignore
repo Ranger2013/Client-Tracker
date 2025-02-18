@@ -2,8 +2,8 @@
 *.php
 
 # But allow these PHP files
-!includes/public/*.php
-!includes/public/src/*.php
+!public/
+!public/src/*.php
 
 # Common system files
 .DS_Store
