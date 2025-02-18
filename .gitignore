@@ -1,6 +1,9 @@
 # PHP files and directories
 *.php
 
+# But allow layout files
+!includes/public/*.php
+
 # Common system files
 .DS_Store
 .vscode/
