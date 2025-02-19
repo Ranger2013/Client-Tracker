@@ -2,6 +2,7 @@ import userAuthorization from "./utils/security/userAuthorization.js";
 import mainTrackerNavigation from "./utils/navigation/trackerAppMainNavigation.js";
 import selectPage from "./utils/navigation/selectPage.js";
 
+// Token stored in memory for security - cleared on page refresh
 let validationToken = null;
 
 /**
@@ -10,43 +11,64 @@ let validationToken = null;
  */
 const initializeApp = async () => {
     try {
-        // Visual feedback for app initialization
+        // Visual feedback while loading
         document.body.classList.add('app-initializing');
         
+        // Get current URL path
         const path = window.location.pathname;
         
-        // Validate user's subscription and token
+        // This handles entire auth flow
         validationToken = await userAuthorization(path);
 
-        // Initialize navigation only after successful authorization
         if (validationToken) {
+            // Continue app initialization
             await mainTrackerNavigation();
-            
-            // Handle browser navigation events
+            // Handle browser back/forward navigation
             window.addEventListener('popstate', handlePageNavigation);
-            
-            // Global error boundaries
+            // Set up global error catching for unhandled errors
             setupErrorBoundaries();
         }
-    } catch (err) {
+    } 
+    catch (err) {
         const { handleError } = await import("./utils/error-messages/handleError.js");
-        await handleError('initAppError', 'Init app error: ', err);
-    } finally {
+        await handleError({
+            filename: 'trackerError',
+            consoleMsg: 'Init app error: ',
+            err: err,
+            userMsg: 'Failed to initialize application',
+            errorEle: 'appErrorContainer'
+        });
+    } 
+    finally {
         document.body.classList.remove('app-initializing');
     }
 };
 
+// Sets up global error boundaries to catch unhandled errors and rejections
 function setupErrorBoundaries() {
     window.addEventListener('error', handleGlobalError);
     window.addEventListener('unhandledrejection', handleGlobalPromiseError);
 }
 
+// Handles browser navigation events (back/forward) and updates content
 async function handlePageNavigation(evt) {
-    const page = evt?.state?.page || null;
-    await selectPage({ evt, page });
+    try {
+        const page = evt?.state?.page || null;
+        await selectPage({ evt, page });
+    } 
+    catch (err) {
+        const { handleError } = await import("./utils/error-messages/handleError.js");
+        await handleError({
+            filename: 'handlePaegNavigationError',
+            consoleMsg: 'Navigation error: ',
+            err: err,
+            userMsg: 'Failed to navigate to page',
+            errorEle: 'navigationError'
+        });
+    }
 }
 
-// Global error handlers
+// Global error handlers with recovery mechanisms
 function handleGlobalError(error) {
     console.error('Global error:', error);
     errorRecovery();
@@ -65,5 +87,5 @@ function errorRecovery() {
 // Initialize the app
 await initializeApp();
 
-// Export token getter for API calls
+// Provide controlled access to token
 export const getValidationToken = () => validationToken;

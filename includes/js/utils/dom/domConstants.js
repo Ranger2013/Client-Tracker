@@ -1,7 +1,8 @@
 export const DOM_IDS = {
+    // Error/Message Elements
+    PAGE_MSG: 'page-msg',
     FORM_MSG: 'form-msg',
-    LOGIN_FORM: 'login-form',
-	 PAGE_MSG: 'page-msg',
-	 MODAL_MSG: 'modal-msg',
-    // ... other commonly used IDs
+    MODAL_MSG: 'modal-msg',
+        
+    // Other existing DOM constants...
 };

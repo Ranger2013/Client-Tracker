@@ -1,98 +1,126 @@
 import ManageUser from "../../classes/ManageUser.js";
 import TokenValidation from "../../classes/TokenValidation.js";
+import { commonErrors } from "../error-messages/errorMessages.js";
 
 const PROTECTED_ROUTES = ['/login/', '/register/'];
 const ADMIN_EMAIL = 'farriers.clienttracker@gmail.com';
+const PAGE_MSG = 'page-msg';
 
 /**
- * Handles user authorization and token validation
- * @param {string} urlPath - Current URL path
- * @returns {Promise<string|null>} - Returns token if valid, null otherwise
+ * Validates user authorization and handles token management
+ * @param {string} urlPath - Current URL path to check against protected routes
+ * @returns {Promise<string|null>} Valid token or null if unauthorized
+ * @throws {Error} When token validation fails
  */
 export default async function userAuthorization(urlPath) {
+    // Skip auth for login/register pages
     if (PROTECTED_ROUTES.some(route => urlPath.includes(route))) {
         return null;
     }
 
     try {
+        // 1. Get stored token
         const tokenValidation = new TokenValidation();
         const userToken = await tokenValidation.getUserToken();
         
         if (!userToken) {
-            redirectToLogin("We could not locate your credentials.");
+            redirectToLogin(commonErrors.sessionExpired);
             return null;
         }
 
+        // 2. Validate token
         await tokenValidation.setToken(userToken);
         const token = await tokenValidation.getToken();
         
+        // 3. Check account status/expiry
         const isValid = await validateUserAccount(token);
         return isValid ? token : null;
-
-    } catch (err) {
-        await logAuthError(err);
-        redirectToLogin("We were unable to validate your credentials.");
+    } 
+    catch (err) {
+        const { handleError } = await import("../error-messages/handleError.js");
+        await handleError({
+            filename: 'userAuthorizationError',
+            consoleMsg: 'Authorization failed: ',
+            err: err,
+            userMsg: commonErrors.unauthorized,
+            errorEle: PAGE_MSG
+        });
+        redirectToLogin(commonErrors.unauthorized);
         return null;
     }
 }
 
 /**
- * Validates user account status and expiration
- * @param {string} token - User's validation token
- * @returns {Promise<boolean>} - Returns true if account is valid
+ * Validates user account status and handles expiration
+ * @param {string} token - User's authentication token
+ * @returns {Promise<boolean>} True if account is valid and not expired
+ * @throws {Error} When account validation fails
  */
 async function validateUserAccount(token) {
     if (!token) {
-        redirectToLogin("Invalid token detected.");
+        redirectToLogin(commonErrors.sessionExpired);
+        return false;
     }
 
     try {
         const manageUser = new ManageUser();
-        const userSettings = await manageUser.getUserSettings();
+        const { user_status } = await manageUser.getSettings('user_status') ?? {};
 
-        if (!userSettings || !userSettings.user_status) {
-            redirectToLogin("There was a problem validating your credentials.");
+        if (!user_status) {
+            redirectToLogin(commonErrors.unauthorized);
+            return false;
         }
 
-        // Early return for admin users
-        if (userSettings.user_status.status === 'admin') {
+        if (user_status.status === 'admin') {
             return true;
         }
 
-        // Check expiration based on user status
-        const now = new Date();
-        let expiryDate = new Date(userSettings.user_status.expiry);
-
-        // Add 3-day grace period for members
-        if (userSettings.user_status.status === 'member') {
-            expiryDate.setDate(expiryDate.getDate() + 3);
-        }
-
-        if (now > expiryDate) {
+        const isExpired = checkAccountExpiry(user_status);
+        if (isExpired) {
             redirectToLogin(
-                `It appears that your account has expired.<br>` +
-                `If this is incorrect, please email the administrator at '${ADMIN_EMAIL}'`
+                `Your account has expired. Please contact ${ADMIN_EMAIL} for assistance.`
             );
+            return false;
         }
 
         return true;
-
-    } catch (err) {
-        const { default: errorLogs } = await import("../error-messages/errorLogs.js");
-        await errorLogs('isUserAccountExpiredError', 'Account validation error: ', err);
-        throw err;
+    } 
+    catch (err) {
+        const { handleError } = await import("../error-messages/handleError.js");
+        await handleError({
+            filename: 'validateUserAccountError',
+            consoleMsg: 'Account validation error: ',
+            err,
+            userMsg: 'Unable to validate account',
+            errorEle: PAGE_MSG
+        });
+        return false;
     }
 }
 
 /**
- * Redirects to login page with error message
- * @param {string} message - Error message to display
+ * Checks if a user account has expired
+ * @param {Object} userStatus - User status object from database
+ * @param {string} userStatus.status - Account type ('member' or 'admin')
+ * @param {string} userStatus.expiry - Expiration date string
+ * @returns {boolean} True if account is expired
+ */
+function checkAccountExpiry(userStatus) {
+    const now = new Date();
+    let expiryDate = new Date(userStatus.expiry);
+
+    if (userStatus.status === 'member') {
+        expiryDate.setDate(expiryDate.getDate() + 3); // 3-day grace period
+    }
+
+    return now > expiryDate;
+}
+
+/**
+ * Redirects user to login page with error message
+ * @param {string} message - Error message to display on login page
+ * @returns {void}
  */
 function redirectToLogin(message) {
     window.location.href = `/login/?msg=${encodeURIComponent(message)}`;
-}
-
-async function logAuthError(error) {
-    const { default: errorLogs } = await import("../error-messages/errorLogs.js");
-    await errorLogs('userAuthorizationError', 'User Authorization Error: ', error);
 }
