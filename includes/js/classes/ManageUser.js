@@ -18,6 +18,7 @@ export default class ManageUser {
      * @throws {Error} If initialization fails
      */
     async #initializeSettings() {
+        
         if (this.#initialized) return;
 
         try {
@@ -25,6 +26,7 @@ export default class ManageUser {
             const userSettings = await this.#indexed.getAllStorePromise(db, this.#indexed.stores.USERSETTINGS);
             this.#settings = userSettings?.length === 1 ? userSettings[0] : null;
             this.#initialized = true;
+            
         } 
         catch (err) {
             const { handleError } = await import("../utils/error-messages/handleError.js");
@@ -48,6 +50,7 @@ export default class ManageUser {
      * const { date_time, farrier_prices } = await getSettings('date_time', 'farrier_prices');
      */
     async getSettings(...keys) {
+        
         try {
             await this.#initializeSettings();
             

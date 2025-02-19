@@ -1,7 +1,6 @@
 import IndexedDBOperations from "../../classes/IndexedDBOperations.js";
 import setupBackupNotice from "../../utils/backup-notice/backupNotice.js";
 import updateUserSettings from "./helpers/updateUserSettings.js";
-import handleNotifications from "./helpers/handleNotifications.js";
 import handleInstallAppModal from "./helpers/handleInstallAppModal.js";
 import { installPromptState } from "../../classes/InstallPromptManager.js";
 

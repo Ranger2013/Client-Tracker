@@ -4,14 +4,26 @@ import closeNavigationMenu from "./closeNavigationMenu.js";
 let cleanup = null;
 const main = document.getElementById('main');
 
-
 /**
  * Handles page navigation and cleanup
+ * Navigation state handling has two parts:
+ * 1. closeNavigationMenu() - Handles full navigation reset including sidebar
+ *    Only runs when closeMenu is false (typical navigation)
+ * 2. Direct dropdown/arrow reset - Always runs to ensure clean state
+ *    Needed for cases like:
+ *    - Browser back/forward navigation
+ *    - Internal page transitions (e.g., client detail -> list view)
+ *    - Cases where we want to reset dropdowns but keep sidebar state
+ * 
  * @param {Object} params Navigation parameters
+ * @param {Event} params.evt - Click or popstate event
+ * @param {string} params.page - Page identifier
+ * @param {string|null} [params.cID] - Client ID for filtered views
+ * @param {boolean|null} [params.closeMenu] - Whether to skip full menu close
+ * @param {string|null} [params.primaryKey] - Record identifier
  */
 export default async function selectPage({ evt, page, cID = null, closeMenu = null, primaryKey }) {
     evt.preventDefault();
-
     try {
         // Page configuration map
         const PAGE_CONFIG = {
@@ -95,12 +107,13 @@ export default async function selectPage({ evt, page, cID = null, closeMenu = nu
         };
 
         await cleanupPreviousPage();
+        
+        // Conditional full navigation reset
         if (!closeMenu) closeNavigationMenu();
 
-        // Reset all dropdown menus and arrows
+        // Always reset dropdown states regardless of navigation type
         const dropdowns = document.querySelectorAll('.w3-dropdown-content');
         const arrows = document.querySelectorAll('.arrow');
-
         dropdowns.forEach(dropdown => dropdown.classList.remove('w3-show'));
         arrows.forEach(arrow => arrow.classList.remove('up'));
 
@@ -140,25 +153,17 @@ async function importModule(modulePath) {
     try {
         return await import(modulePath);
     } catch (err) {
-        console.log('In importModule: catch block: err: ', err);
-        console.log('In importModule: catch block: modulePath: ', modulePath);
-
         // Get current script path and resolve relative path
         const currentPath = '/includes/js/utils/navigation/';
         const absolutePath = new URL(modulePath, 'https://cavalierhorsemanship.com' + currentPath).pathname;
 
-        console.log('Attempting absolute path:', absolutePath);
-
         const response = await caches.match(absolutePath);
         if (!response) throw err;
-        console.log('In importModule: catch block: response: ', response);
 
         const text = await response.text();
-        console.log('In importModule: catch block: text: ', text);
 
         const blob = new Blob([text], { type: 'application/javascript' });
         const url = URL.createObjectURL(blob);
-        console.log('In importModule: catch block: url: ', url);
 
         try {
             const module = await import(url);

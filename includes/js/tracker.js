@@ -8,11 +8,9 @@ let validationToken = null;
 /**
  * Initializes the application, handling auth, navigation, and error boundaries
  * Ensures proper cleanup of event listeners on errors
- */
+*/
 const initializeApp = async () => {
     try {
-        // Visual feedback while loading
-        document.body.classList.add('app-initializing');
         
         // Get current URL path
         const path = window.location.pathname;

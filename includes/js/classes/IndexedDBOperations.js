@@ -200,7 +200,7 @@ export default class IndexedDBOperations {
     * @param {IDBDatabase} db - The IndexedDB database.
     * @param {string} store - The name of the object store.
     * @param {IDBTransaction} [transaction] - An existing transaction.
-    * @returns {IDBObjectStore} The object store.
+    * @returns {Promise<IDBObjectStore>} The object store.
     */
     async transReadWrite(db, store, transaction = null) {
         try {
@@ -228,7 +228,7 @@ export default class IndexedDBOperations {
     * @param {IDBDatabase} db - The IndexedDB database.
     * @param {string} store - The name of the object store.
     * @param {IDBTransaction} [transaction] - An existing transaction.
-    * @returns {IDBObjectStore} The object store.
+    * @returns {Promise<IDBObjectStore>} The object store.
     */
     async transReadOnly(db, store, transaction = null) {
         try {
@@ -288,25 +288,43 @@ export default class IndexedDBOperations {
     * @returns {Promise<any>} A promise that resolves with the result of the operation.
     */
     addStorePromise(db, data, store, clearStore = false, transaction) {
-        return new Promise((resolve, reject) => {
-            const myStore = this.transReadWrite(db, store, transaction);
+        return new Promise(async (resolve, reject) => {
+            try {
+                const myStore = await this.transReadWrite(db, store, transaction);
 
-            if (clearStore) {
-                myStore.clear();
-            }
+                if (clearStore) {
+                    const clearRequest = myStore.clear();
+                    clearRequest.onerror = async err => {
+                        await this.#handleError({
+                            filename: 'addStorePromiseError',
+                            consoleMsg: `Error clearing store ${store}: `,
+                            err,
+                            userMsg: 'Unable to add data'
+                        });
+                        reject(err);
+                    };
+                }
 
-            const response = myStore.add(data)
-
-            response.onsuccess = (evt) => resolve(evt.target.result);
-            response.onerror = async err => {
+                const request = myStore.add(data);
+                request.onsuccess = (evt) => resolve(evt.target.result);
+                request.onerror = async err => {
+                    await this.#handleError({
+                        filename: 'addStorePromiseError',
+                        consoleMsg: `Error adding data to ${store}: `,
+                        err,
+                        userMsg: 'Unable to add data'
+                    });
+                    reject(err);
+                };
+            } catch (err) {
                 await this.#handleError({
                     filename: 'addStorePromiseError',
-                    consoleMsg: `Error adding data to ${store}: `,
+                    consoleMsg: `Error initializing store ${store}: `,
                     err,
                     userMsg: 'Unable to add data'
                 });
                 reject(err);
-            };
+            }
         });
     }
 
@@ -383,24 +401,37 @@ export default class IndexedDBOperations {
     * @returns {Promise<any>} A promise that resolves with the result of the operation.
     */
     getAllStorePromise(db, store) {
-        return new Promise((resolve, reject) => {
-            const myStore = this.transReadOnly(db, store);
+        
+        return new Promise(async (resolve, reject) => {
+            try {
+                const myStore = await this.transReadOnly(db, store);
+                
+                const request = myStore.getAll();
+                
+                request.onsuccess = (event) => {
+                    
+                    resolve(event.target.result);
+                };
 
-            const request = myStore.getAll();
-
-            request.onsuccess = (event) => {
-                resolve(event.target.result);
-            };
-
-            request.onerror = async err => {
+                request.onerror = async err => {
+                    
+                    await this.#handleError({
+                        filename: 'getAllStorePromiseError',
+                        consoleMsg: `Error retrieving data from ${store}: `,
+                        err,
+                        userMsg: 'Unable to retrieve data'
+                    });
+                    reject(err);
+                };
+            } catch (err) {
                 await this.#handleError({
                     filename: 'getAllStorePromiseError',
-                    consoleMsg: `Error retrieving data from ${store}: `,
+                    consoleMsg: `Error accessing store ${store}: `,
                     err,
-                    userMsg: 'Unable to retrieve data'
+                    userMsg: 'Unable to access data store'
                 });
                 reject(err);
-            };
+            }
         });
     }
 
