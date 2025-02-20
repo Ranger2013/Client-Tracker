@@ -13,9 +13,19 @@ export default class TokenValidation {
      * @returns {Promise<string|null>} Token or null if not found
      */
     async getUserToken() {
-        const { userToken } = await this.#userManager.getSettings('userToken') ?? {};
-        
-        return userToken ?? null;
+        try {
+            console.log('In getUserToken: ');
+
+            const userStatus = await this.#userManager.getSettings('user_status');
+            console.log('userStatus: ', userStatus);
+            const userToken = userStatus?.user_status?.userToken;
+
+            return userToken ?? null;
+        }
+        catch (err) {
+            console.warn('Error in getUserToken: ', err);
+
+        }
     }
 
     /**

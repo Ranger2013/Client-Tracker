@@ -1,36 +1,39 @@
-import IndexedDBOperations from "../../../classes/IndexedDBOperations";
 import { installPromptState } from "../../../classes/InstallPromptManager.js";
-import { closeModal } from "../../../utils/modal/openModal.js";
-import updateUserSettings from "./updateUserSettings.js";
 
-const indexed = new IndexedDBOperations();
+/**
+ * Handles the PWA installation process using the browser's install prompt.
+ * 
+ * @async
+ * @function installApp
+ * @param {Event} evt - The event object that triggered the installation
+ * @throws {Error} If there's an error during the installation process
+ * @returns {Promise<void>}
+ * 
+ * @example
+ * button.addEventListener('click', (evt) => 
+ *     installApp(evt, updateUserSettings, currentSettings)
+ * );
+ */
+export default async function installApp(manageUser){
+    try {        
+        const deferredprompt = installPromptState.getPrompt();
 
-export default async function installApp(evt){
-	console.log('In installApp: evt.target: ', evt.target);
-	try{
-		
-		const deferredprompt = installPromptState.getPrompt();
+        if(deferredprompt){
+            deferredprompt.prompt();
+            const choiceResult = await deferredprompt.userChoice;
 
-		if(deferredprompt){
-			deferredprompt.prompt();
+            if(choiceResult.outcome === 'accepted'){
+                await manageUser.updateLocalUserSettings({
+                    userData: { status: 'installed', timestamp: Date.now() },
+                    settingsProperty: 'installApp'
+                });
+            }
 
-			const choiceResult = await deferredprompt.userChoice;
-
-			if(choiceResult.outcome === 'accepted'){
-				// Update the user settings for the install app
-				const db = await indexed.openDBPromise();
-				const userSettings = await indexed.getAllStorePromise(db, indexed.stores.USERSETTINGS);
-
-				// update user settings closes the modal
-				await updateUserSettings('installed', 'installApp', userSettings[0]);
-			}
-
-			// Clear the prompt
-			installPromptState.clearPrompt();
-		}
-	}
-	catch(err){
-		const { default: errorLogs } = await import("../../../utils/error-messages/errorLogs.js");
-		await errorLogs('installAppError.txt', 'App installation error.', err);
-	}
+            installPromptState.clearPrompt();
+        }
+    }
+    catch(err){
+        const { default: errorLogs } = await import("../../../utils/error-messages/errorLogs.js");
+        await errorLogs('installAppError.txt', 'App installation error.', err);
+    }
 }

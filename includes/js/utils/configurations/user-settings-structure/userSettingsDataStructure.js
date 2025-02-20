@@ -1,6 +1,4 @@
-export default function userDataStructureConfig({
-	validationToken = null,
-	req = null}) {
+export default function userDataStructureConfig({validationToken = null, req = null} = {}) {
 	const baseStructure = {
 		color_options: {},
 		date_time: {},
@@ -26,11 +24,11 @@ export default function userDataStructureConfig({
 			timestamp: 0
 		},
 		schedule_options: {},
+		user_status: {},
 	};
 
 	return validationToken && req ? {
 		...baseStructure,
-		userToken: validationToken,
-		user_status: { uID: req.uID, status: req.member_status, expiry: req.account_expiry }
+		user_status: { user_token: validationToken, uID: req.uID, status: req.member_status, expiry: req.account_expiry }
 	} : baseStructure;
 };

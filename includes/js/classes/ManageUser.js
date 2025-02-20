@@ -18,17 +18,23 @@ export default class ManageUser {
      * @throws {Error} If initialization fails
      */
     async #initializeSettings() {
-        
+        console.log("In #initializeSettings: this.#initialized: ", this.#initialized);
         if (this.#initialized) return;
 
         try {
             const db = await this.#indexed.openDBPromise();
             const userSettings = await this.#indexed.getAllStorePromise(db, this.#indexed.stores.USERSETTINGS);
+            console.log('In #initializeSettings: userSettings: ', userSettings);
             this.#settings = userSettings?.length === 1 ? userSettings[0] : null;
-            this.#initialized = true;
+            console.log('In #initializeSettings: this.#settings: ', this.#settings);
+            // console.log('In #initializeSettings: this.#settings.length: ', this.#settings.length);
             
-        } 
+            this.#initialized = true;
+
+        }
         catch (err) {
+            console.warn('Error in #initializeSettings: ', err);
+            
             const { handleError } = await import("../utils/error-messages/handleError.js");
             await handleError({
                 filename: 'initializeSettingsError',
@@ -50,20 +56,22 @@ export default class ManageUser {
      * const { date_time, farrier_prices } = await getSettings('date_time', 'farrier_prices');
      */
     async getSettings(...keys) {
-        
         try {
             await this.#initializeSettings();
-            
+            console.log('In getSettings: this.#intitializeSettings: ', this.#initializeSettings);
+            console.log('In getSettings: this.#settings: ', this.#settings);
             if (!this.#settings) return null;
-
-            return keys.length === 0 
-                ? this.#settings 
+            
+            return keys.length === 0
+                ? this.#settings
                 : keys.reduce((acc, key) => {
                     acc[key] = this.#settings[key];
                     return acc;
                 }, {});
         }
         catch (err) {
+            console.warn('In getSettings: err: ', err);
+            
             const { handleError } = await import("../utils/error-messages/handleError.js");
             await handleError({
                 filename: 'getSettingsError',
@@ -94,7 +102,7 @@ export default class ManageUser {
         if (!mileage_charges) return null;
 
         const { per_mile: perMile = {}, range = [] } = mileage_charges;
-        
+
         if (perMile.cost_per_mile != null && perMile.starting_mile != null) {
             return perMile;
         }
@@ -143,6 +151,7 @@ export default class ManageUser {
      */
     async updateLocalUserSettings({ userData, settingsProperty, backupStore = null, backupAPITag = null, backupData = null }) {
         try {
+            // #updateSettings will create all the object stores if they don't exist
             const result = await this.#updateSettings({ userData, settingsProperty, backupStore, backupAPITag, backupData });
             if (result) {
                 this.#settings = null;
@@ -169,31 +178,47 @@ export default class ManageUser {
      * @throws {Error} If update fails
      */
     async #updateSettings({ userData, settingsProperty, backupStore = null, backupAPITag = null, backupData = null }) {
-        // getSettings already has error handling
-        const userSettings = await this.getSettings();
-        if (!userSettings) return false;
-
-        userSettings[settingsProperty] = userData;
-        
         try {
+            let userSettings = await this.getSettings();
+
+            
+            // If there are no user settings, then we to build the structure
+            if (!userSettings) {
+                // Dynamically import the userSettingsDataStructure.js file and then set the userSettings to that structure
+                const { default: userSettingsDataStructure } = await import("../utils/configurations/user-settings-structure/userSettingsDataStructure.js");
+                const setUserSettings = userSettingsDataStructure();
+                
+                const db = await this.#indexed.openDBPromise();
+                await this.#indexed.putStorePromise(db, setUserSettings, this.#indexed.stores.USERSETTINGS);
+                // Get all of the user's settings
+                userSettings = setUserSettings;
+
+                // Reset the cache so next getSettings() will fetch fresh content
+                this.#settings = null;
+                this.#initialized = false;
+            }
+            
+            userSettings[settingsProperty] = userData;
+            console.log('In updateSettings: userSettings: ', userSettings);
+
+            
             // This operation needs error handling
-            await this.#manageIDBTransactions({ 
-                userData, 
-                userSettings, 
-                backupStore, 
-                backupAPITag, 
-                backupData 
+            await this.#manageIDBTransactions({
+                userData,
+                userSettings,
+                backupStore,
+                backupAPITag,
+                backupData
             });
             return true;
         }
         catch (err) {
+            console.log('In updateSettings: err: ', err);
             const { handleError } = await import("../utils/error-messages/handleError.js");
             await handleError({
                 filename: 'updateSettingsError',
                 consoleMsg: 'Settings update error: ',
                 err,
-                userMsg: 'Unable to update settings',
-                errorEle: 'page-msg'
             });
             throw err;
         }
@@ -223,15 +248,13 @@ export default class ManageUser {
             }
 
             return true;
-        } 
+        }
         catch (err) {
             const { handleError } = await import("../utils/error-messages/handleError.js");
             await handleError({
                 filename: 'manageIDBTransactionsError',
                 consoleMsg: 'Manage IDB transactions error: ',
                 err,
-                userMsg: 'Unable to manage IDB transactions',
-                errorEle: 'page-msg'
             });
             throw err;
         }

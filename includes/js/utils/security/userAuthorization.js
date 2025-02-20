@@ -19,25 +19,32 @@ export default async function userAuthorization(urlPath) {
         return null;
     }
     
+    console.log('In userAuthorization: urlPath: ', urlPath);
     try {
+        console.log('In userAuthorization: getting userToken.');
+        
         // 1. Get stored token
         const tokenValidation = new TokenValidation();
         const userToken = await tokenValidation.getUserToken();
         
+        console.log('userToken: ', userToken);
+        
         if (!userToken) {
-            redirectToLogin(commonErrors.sessionExpired);
+            redirectToLogin(commonErrors.tokenValidationError);
             return null;
         }
 
         // 2. Validate token
         await tokenValidation.setToken(userToken);
-        const token = await tokenValidation.getToken();
+        const token = tokenValidation.getToken();
         
         // 3. Check account status/expiry
         const isValid = await validateUserAccount(token);
         return isValid ? token : null;
     } 
     catch (err) {
+        console.warn('Authorization failed: ', err);
+        
         const { handleError } = await import("../error-messages/handleError.js");
         await handleError({
             filename: 'userAuthorizationError',

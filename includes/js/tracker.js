@@ -2,6 +2,8 @@ import userAuthorization from "./utils/security/userAuthorization.js";
 import mainTrackerNavigation from "./utils/navigation/trackerAppMainNavigation.js";
 import selectPage from "./utils/navigation/selectPage.js";
 
+/** @typedef {string} ValidationToken */
+
 // Token stored in memory for security - cleared on page refresh
 let validationToken = null;
 
@@ -11,12 +13,14 @@ let validationToken = null;
 */
 const initializeApp = async () => {
     try {
+        console.log('In initializeApp: ');
         
         // Get current URL path
         const path = window.location.pathname;
         
         // This handles entire auth flow
         validationToken = await userAuthorization(path);
+console.log('In intializeApp: validationToken: ', validationToken);
 
         if (validationToken) {
             // Continue app initialization
@@ -28,13 +32,16 @@ const initializeApp = async () => {
         }
     } 
     catch (err) {
+        console.warn('Init app error: ', err);
+        
+        const { DOM_IDS } = await import("./utils/dom/domConstants.js");
         const { handleError } = await import("./utils/error-messages/handleError.js");
         await handleError({
             filename: 'trackerError',
             consoleMsg: 'Init app error: ',
             err: err,
             userMsg: 'Failed to initialize application',
-            errorEle: 'appErrorContainer'
+            errorEle: DOM_IDS.PAGE_MSG,
         });
     } 
     finally {
@@ -55,13 +62,14 @@ async function handlePageNavigation(evt) {
         await selectPage({ evt, page });
     } 
     catch (err) {
+        const { DOM_IDS } = await import("./utils/dom/domConstants.js");
         const { handleError } = await import("./utils/error-messages/handleError.js");
         await handleError({
             filename: 'handlePaegNavigationError',
             consoleMsg: 'Navigation error: ',
             err: err,
             userMsg: 'Failed to navigate to page',
-            errorEle: 'navigationError'
+            errorEle: DOM_IDS.PAGE_MSG,
         });
     }
 }

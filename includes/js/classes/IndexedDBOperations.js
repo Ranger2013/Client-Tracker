@@ -339,8 +339,8 @@ export default class IndexedDBOperations {
     * @returns {Promise<any>} A promise that resolves with the result of the operation.
     */
     putStorePromise(db, data, store, clearStore = false, transaction) {
-        return new Promise((resolve, reject) => {
-            const myStore = this.transReadWrite(db, store, transaction);
+        return new Promise(async (resolve, reject) => {
+            const myStore = await this.transReadWrite(db, store, transaction);
 
             if (clearStore) {
                 myStore.clear();
@@ -370,8 +370,8 @@ export default class IndexedDBOperations {
     * @returns {Promise<any>} A promise that resolves with the result of the operation.
     */
     getStorePromise(db, store, key, transaction) {
-        return new Promise((resolve, reject) => {
-            const myStore = this.transReadOnly(db, store, transaction);
+        return new Promise(async (resolve, reject) => {
+            const myStore = await this.transReadOnly(db, store, transaction);
 
             let request = myStore.get(key);
 
@@ -445,8 +445,8 @@ export default class IndexedDBOperations {
     * @returns {Promise<any>} A promise that resolves with the result of the operation.
     */
     getAllStoreByIndexPromise(db, store, indexName, value, transaction) {
-        return new Promise((resolve, reject) => {
-            const myStore = this.transReadOnly(db, store, transaction);
+        return new Promise(async (resolve, reject) => {
+            const myStore = await this.transReadOnly(db, store, transaction);
             const index = myStore.index(indexName);
             const response = index.openCursor(IDBKeyRange.only(value));
 
@@ -484,8 +484,8 @@ export default class IndexedDBOperations {
     * @returns {Promise<void>} A promise that resolves when the operation is complete.
     */
     clearStorePromise(db, store, transaction) {
-        return new Promise((resolve, reject) => {
-            const myStore = this.transReadWrite(db, store, transaction);
+        return new Promise(async (resolve, reject) => {
+            const myStore = await this.transReadWrite(db, store, transaction);
             const response = myStore.clear();
 
             response.onsuccess = () => resolve(response.result);
@@ -509,11 +509,11 @@ export default class IndexedDBOperations {
      * @param {IDBTransaction} [transaction=null] - Optional transaction
      * @returns {Promise<any>} Result of the operation
      */
-    async addIndexDBPromise(userData, storeName, clearStore = false, transaction = null) {
+    async addIndexDBPromise({data, storeName, clearStore = false, transaction = null}) {
         return new Promise(async (resolve, reject) => {
             try {
                 const db = await ((transaction instanceof IDBTransaction) ? transaction.db : this.openDBPromise());
-                const myStore = this.transReadWrite(db, storeName, transaction);
+                const myStore = await this.transReadWrite(db, storeName, transaction);
 
                 if (clearStore) {
                     const clearRequest = myStore.clear();
@@ -528,7 +528,7 @@ export default class IndexedDBOperations {
                     };
                 }
 
-                const request = myStore.add(userData);
+                const request = myStore.add(data);
 
                 request.onsuccess = (evt) => resolve(evt.target.result);
                 request.onerror = async err => {
@@ -564,7 +564,7 @@ export default class IndexedDBOperations {
         return new Promise(async (resolve, reject) => {
             try {
                 const db = await ((transaction instanceof IDBTransaction) ? transaction.db : this.openDBPromise());
-                const myStore = this.transReadWrite(db, storeName, transaction);
+                const myStore = await this.transReadWrite(db, storeName, transaction);
                 
                 const response = myStore.put(userData);
                 response.onsuccess = () => resolve(response.result);
@@ -603,7 +603,7 @@ export default class IndexedDBOperations {
             const db = await ((transaction instanceof IDBTransaction) ? transaction.db : this.openDBPromise());
 
             // Get the object store with the correct transaction
-            const myStore = this.transReadWrite(db, store, transaction);
+            const myStore = await this.transReadWrite(db, store, transaction);
 
             // Delete the record
             const deleteRecord = myStore.delete(key);

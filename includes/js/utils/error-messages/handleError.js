@@ -27,6 +27,7 @@ export async function handleError({ filename, consoleMsg, err, userMsg = null, e
 
         // Log error first
         await errorLogs(filename, consoleMsg, err);
+        console.warn(consoleMsg, err);
 
         // Handle UI feedback if needed
         if (userMsg && errorEle) {
