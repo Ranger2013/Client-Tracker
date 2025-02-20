@@ -270,4 +270,12 @@ export default class ManageUser {
             throw err;
         }
     }
+
+    /**
+     * Gets the store names for backup operations
+     * @returns {Object} Object containing store name constants
+     */
+    getStoreNames() {
+        return this.#indexed.stores;
+    }
 }

@@ -74,9 +74,9 @@ export default async function buildAddEditClientPage({ cID = null, primaryKey = 
                 }
             });
 
-            submitButton = await buildSubmitDeleteButtonSection({ 
-                submitButtonText: 'Edit Client', 
-                deleteButtonText: 'Delete Client' 
+            submitButton = await buildSubmitDeleteButtonSection({
+                submitButtonText: 'Edit Client',
+                deleteButtonText: 'Delete Client'
             });
         }
         else {
@@ -84,12 +84,12 @@ export default async function buildAddEditClientPage({ cID = null, primaryKey = 
         }
 
         const pageTitle = !clientInfo ? 'Add a new Client' : 'Edit ';
-        const [container, card] = await buildPageContainer({ 
-            pageTitle, 
-            clientAnchor, 
-            clientName, 
-            cID, 
-            primaryKey 
+        const [container, card] = await buildPageContainer({
+            pageTitle,
+            clientAnchor,
+            clientName,
+            cID,
+            primaryKey
         });
 
         // Build form
@@ -110,7 +110,7 @@ export default async function buildAddEditClientPage({ cID = null, primaryKey = 
                 required: 'required'
             }),
             buildTwoColumnAddressSection('Address:', 'street', [
-                { 
+                {
                     typeEle: 'input',
                     inputId: 'street',
                     inputType: 'text',
@@ -120,7 +120,7 @@ export default async function buildAddEditClientPage({ cID = null, primaryKey = 
                     inputValue: fieldValues.street,
                     required: 'required'
                 },
-                { 
+                {
                     typeEle: 'input',
                     inputId: 'city',
                     inputType: 'text',
@@ -130,7 +130,7 @@ export default async function buildAddEditClientPage({ cID = null, primaryKey = 
                     inputValue: fieldValues.city,
                     required: 'required'
                 },
-                { 
+                {
                     typeEle: 'input',
                     inputId: 'state',
                     inputType: 'text',
@@ -140,7 +140,7 @@ export default async function buildAddEditClientPage({ cID = null, primaryKey = 
                     inputValue: fieldValues.state,
                     required: 'required'
                 },
-                { 
+                {
                     typeEle: 'input',
                     inputId: 'zip',
                     inputType: 'text',
@@ -206,19 +206,19 @@ export default async function buildAddEditClientPage({ cID = null, primaryKey = 
             buildTwoColumnRadioButtonSection({
                 labelText: 'Active Status:',
                 buttons: [
-                    { 
+                    {
                         type: 'radio',
                         name: 'active',
                         value: 'yes',
                         labelText: 'Yes',
-                        checked: fieldValues.active === 'yes' || fieldValues.active === '' ? 'checked' : undefined 
+                        checked: fieldValues.active === 'yes' || fieldValues.active === '' ? 'checked' : undefined
                     },
-                    { 
+                    {
                         type: 'radio',
                         name: 'active',
                         value: 'no',
                         labelText: 'No',
-                        checked: fieldValues.active === 'no' ? 'checked' : undefined 
+                        checked: fieldValues.active === 'no' ? 'checked' : undefined
                     }
                 ]
             })
@@ -231,7 +231,7 @@ export default async function buildAddEditClientPage({ cID = null, primaryKey = 
 
         mainContainer.innerHTML = '';
         mainContainer.appendChild(container);
-
+        
         const { default: addEditClient } = await import("../../../../../pages/clients/add-edit-client/addEditClientJS.js");
         await addEditClient(cID, primaryKey, clientInfo);
 

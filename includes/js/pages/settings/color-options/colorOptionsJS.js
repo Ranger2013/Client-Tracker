@@ -34,11 +34,12 @@ async function handleColorOptionFormSubmission(evt) {
 
 		// Include the Manage user class
 		const manageUser = new ManageUser();
+		const stores = manageUser.getStoreNames();
 
 		if(await manageUser.updateLocalUserSettings({
 			userData,
 			settingsProperty: 'color_options',
-			backupStore: manageUser.indexed.stores.COLOROPTIONS,
+			backupStore: stores.COLOROPTIONS,
 			backupAPITag: 'add_colorOptions'
 		})){
 			mySuccess(fm, 'Color Options have been saved');

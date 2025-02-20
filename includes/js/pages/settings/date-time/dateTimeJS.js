@@ -31,8 +31,15 @@ async function handleFormSubmission(evt) {
 		// Get the userData
 		const userData = Object.fromEntries(new FormData(evt.target));
 
+		const stores = manageUser.getStoreNames();
+		
 		// Update the user settings
-		const updateSettings = await manageUser.updateLocalUserSettings({userData, settingsProperty: 'date_time', backupStore: manageUser.indexed.stores.DATETIME, backupAPITag: 'add_date_time'});
+		const updateSettings = await manageUser.updateLocalUserSettings({
+			userData, 
+			settingsProperty: 'date_time', 
+			backupStore: stores.DATETIME,  // Using the store names getter
+			backupAPITag: 'add_date_time'
+		});
 
 		if (updateSettings) {
 			mySuccess(fm, 'Date/Time Options have been saved.');

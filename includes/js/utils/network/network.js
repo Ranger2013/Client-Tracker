@@ -70,7 +70,6 @@ export async function logServerSideError(API, err, page, shouldLog = true) {
 	try {
 		const { getValidationToken } = await import("../../tracker.js");
 		const validationToken = getValidationToken();
-console.log('In logServerSideError: err:', err);
 
 		const params = {
 			page,

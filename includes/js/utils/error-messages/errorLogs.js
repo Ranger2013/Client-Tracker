@@ -6,6 +6,6 @@ export default async function errorLogs(fileName, msg, err){
 		await logServerSideError(errorLogAPI, err, fileName);
 	}
 	catch(error){
-		console.warn('errorLogs Error. ', msg);
+		console.warn('Error Logs Error: ', msg);
 	}
 }

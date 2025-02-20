@@ -40,28 +40,32 @@ export default async function buildClientList({ active = '', clientID = null, pr
     }
 }
 
-async function handleNoSettings(colorOptions, dateTime){
-	try{
-		let settingsMsg = '';
+async function processClientList(clientList, active, primaryKey, fragment, uniqueClientIDs, counter, userSettings) {
+    // Sort client list by trim date and appointment time
+    clientList.sort((a, b) => sortByTrimDateAndAppTime(a, b, true));
 
-		if(Object.keys(colorOptions).length === 0) {
-			settingsMsg += 'Please set your color options in the settings.<br>';
-		}
+    // Process each client
+    for (const [index, client] of clientList.entries()) {
+        if ((typeof active === 'string' && client.active.toLowerCase() === active.toLowerCase()) 
+            || client.primaryKey === primaryKey) {
+            
+            if (!uniqueClientIDs.has(client.cID)) {
+                uniqueClientIDs.add(client.cID);
+                counter++;
+            }
 
-		if(Object.keys(dateTime).length === 0) {
-			settingsMsg += 'Please set your date and time options in the settings.';
-		}
+            const clientBlock = await buildClientListBlock(
+                client, 
+                index, 
+                userSettings.color_options, 
+                userSettings.date_time
+            );
 
-		if(settingsMsg !== '') {
-			myError('page-msg', settingsMsg);
-		}
-	}
-	catch(err){
-		const { default: errorLogs } = await import("../../../../../../utils/error-messages/errorLogs.js");
-		await errorLogs('handleNoSettingsError', 'Handle no settings error: ', err);
-		throw err;
-	}
+            fragment.appendChild(clientBlock);
+        }
+    }
 }
+
 /**
  * Builds a client list block element.
  * 
@@ -171,6 +175,28 @@ async function buildClientListBlock(client, index, colorOptions, dateTime) {
 	}
 }
 
+async function handleNoSettings(colorOptions, dateTime){
+	try{
+		let settingsMsg = '';
+
+		if(Object.keys(colorOptions).length === 0) {
+			settingsMsg += 'Please set your color options in the settings.<br>';
+		}
+
+		if(Object.keys(dateTime).length === 0) {
+			settingsMsg += 'Please set your date and time options in the settings.';
+		}
+
+		if(settingsMsg !== '') {
+			myError('page-msg', settingsMsg);
+		}
+	}
+	catch(err){
+		const { default: errorLogs } = await import("../../../../../../utils/error-messages/errorLogs.js");
+		await errorLogs('handleNoSettingsError', 'Handle no settings error: ', err);
+		throw err;
+	}
+}
 /**
  * Determines the style for the schedule based on the date difference.
  * @param {string} date - The date string in the format 'YYYY-MM-DD'.
@@ -596,31 +622,6 @@ async function fetchClientList(active, clientID, primaryKey) {
 
 async function fetchUserSettings() {
     const manageUser = new ManageUser();
-    return await manageUser.getUserSettings();
-}
-
-async function processClientList(clientList, active, primaryKey, fragment, uniqueClientIDs, counter, userSettings) {
-    // Sort client list by trim date and appointment time
-    clientList.sort((a, b) => sortByTrimDateAndAppTime(a, b, true));
-
-    // Process each client
-    for (const [index, client] of clientList.entries()) {
-        if ((typeof active === 'string' && client.active.toLowerCase() === active.toLowerCase()) 
-            || client.primaryKey === primaryKey) {
-            
-            if (!uniqueClientIDs.has(client.cID)) {
-                uniqueClientIDs.add(client.cID);
-                counter++;
-            }
-
-            const clientBlock = await buildClientListBlock(
-                client, 
-                index, 
-                userSettings.color_options, 
-                userSettings.date_time
-            );
-
-            fragment.appendChild(clientBlock);
-        }
-    }
+    // Change from getUserSettings() to getSettings()
+    return await manageUser.getSettings();  
 }

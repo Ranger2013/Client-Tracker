@@ -1,10 +1,10 @@
 import { createDebouncedHandler, getOptimalDelay } from "../../../utils/event-listeners/eventUtils.js";
 import { clearMsg, disableEnableSubmitButton, myError, mySuccess, top } from "../../../utils/dom/domUtils.js";
-import { addListener } from "../../../utils/event-listeners/listeners.js";
+import { addListener, removeListeners } from "../../../utils/event-listeners/listeners.js";
 import checkAppointment from "../../../utils/appointment-block/checkAppointment.js";
 import getAllFormIdElements from "../../../utils/dom/getAllFormIDElements.js";
 import checkClientFormValidity from "../../../utils/validation/checkClientFormValidity.js";
-import { helpDeskTicket } from "../../../utils/error-messages/errorMessages.js";
+import selectPage from "../../../utils/navigation/selectPage.js";
 
 const COMPONENT_ID = 'add-edit-client';
 const FORM_MSG = 'form-msg';
@@ -23,13 +23,35 @@ const FORM_FIELDS = [
 export default async function addEditClient(cID, primaryKey, clientInfo = null) {
     try {
         const elements = await getAllFormIdElements('client-form');
+        
+        // Simplified anchor listener since selectPage handles its own errors
+        const clientNav = document.querySelector('[data-component="client-navigation"]');
+        if (clientNav) {
+            addListener(clientNav, 'click', (evt) => {
+                evt.preventDefault();
+                selectPage({
+                    evt,
+                    page: 'singleClient',
+                    cID: clientNav.dataset.clientId,
+                    primaryKey: clientNav.dataset.primaryKey
+                });
+            }, COMPONENT_ID);
+        }
+
         initializeAppointmentCheck(elements, clientInfo);
         setupFormValidation(cID, primaryKey, clientInfo);
         
         return () => removeListeners(COMPONENT_ID);
-    } catch (err) {
+    }
+    catch (err) {
         const { handleError } = await import("../../../utils/error-messages/handleError.js");
-        await handleError(err);
+        await handleError({
+            filename: 'addEditClientError',
+            consoleMsg: 'Add/Edit client initialization error: ',
+            err,
+            userMsg: 'Unable to initialize page functionality',
+            errorEle: 'page-msg'
+        });
     }
 }
 
@@ -117,8 +139,16 @@ async function handleFormValidation(evt, field, cID, primaryKey) {
         }
 
         await disableEnableSubmitButton('submit-button');
-    } catch (err) {
-        throw err;
+    }
+    catch (err) {
+        const { handleError } = await import("../../../utils/error-messages/handleError.js");
+        await handleError({
+            filename: 'formValidationError',
+            consoleMsg: 'Form validation error: ',
+            err,
+            userMsg: 'Unable to validate form field',
+            errorEle: `${field}-error`
+        });
     }
 }
 
@@ -179,6 +209,10 @@ async function handleFormSubmission(evt, elements, cID, primaryKey, clientInfo) 
         const { default: formSubmission } = await import("./addEditFormSubmission.js");
         const response = await formSubmission({ evt, cID, primaryKey });
         
+        if (!response.status) {
+            throw new Error(response.msg);
+        }
+
         if (response.status === true) {
             top();
             if (response.type === 'add-client') {
@@ -220,12 +254,13 @@ async function handleFormSubmission(evt, elements, cID, primaryKey, clientInfo) 
         return;
     }
     catch (err) {
-        console.warn(err);
-        
-        top();
-        const { default: errorLogs } = await import("../../../utils/error-messages/errorLogs.js");
-        myError(FORM_MSG, `There was an issue submitting the form.<br>${helpDeskTicket}`);
-        await errorLogs('addEditClientError', 'Add edit client error: ', err);
-        return;
+        const { handleError } = await import("../../../utils/error-messages/handleError.js");
+        await handleError({
+            filename: 'formSubmissionError',
+            consoleMsg: 'Form submission error: ',
+            err,
+            userMsg: 'Unable to submit form',
+            errorEle: FORM_MSG
+        });
     }
 }

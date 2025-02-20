@@ -47,6 +47,11 @@ export default async function checkAppointment({
 			manageUser.getUserBlockedDates() ?? []
 		]);
 
+		// Check if the user has schedule options or date time formats
+		if(Object.keys(scheduleOptions).length === 0 || Object.keys(dateTimeFormats).length === 0) {
+			throw new Error('User schedule options or date time formats are missing. Please update your settings.');
+		}
+
 		// Add the notice in the error block that this date has been blocked out by the user
 		if (blockedDates?.includes(trimDate.value)) {
 			myError(trimDateError, 'You have blocked out this date.', trimDateError);
@@ -73,9 +78,14 @@ export default async function checkAppointment({
 		}
 	}
 	catch (err) {
-		const { default: errorLogs } = await import("../../utils/error-messages/errorLogs.js");
-		await errorLogs('checkAppointmentError', 'Check Appointment Error: ', err);
-		myError(appBlock, `${err}<br>${helpDeskTicket}`);
+		const { handleError } = await import("../error-messages/handleError.js");
+		await handleError({
+			filename: 'checkAppointmentError',
+			consoleMsg: 'Check appointment error: ',
+			err,
+			userMsg: `Unable to check appointment availability.<br>${err.message}`,
+			errorEle: appBlock  // Use appBlock for error display
+		});
 	}
 }
 

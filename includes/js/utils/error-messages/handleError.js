@@ -31,28 +31,20 @@ export async function handleError({ filename, consoleMsg, err, userMsg = null, e
         const { default: errorLogs } = errorLog;
 
         // Log error first
-        await errorLogs(filename, consoleMsg, err);
-        console.warn(consoleMsg, err);
+        await errorLogs(filename, consoleMsg, err); // err might be undefined here
 
         // Handle UI feedback if needed
         if (userMsg && errorEle) {
-            if (typeof errorEle === 'string') {
-                errorEle = document.getElementById(errorEle);
-            }
-            
-            const errorMessage = err?.message || '';
-            const formattedMsg = `${userMsg}${errorMessage ? `: ${errorMessage}` : ''}<br>${helpDeskTicket}`;
-            
+            const formattedMsg = `${userMsg}<br>${helpDeskTicket}`;
+
             myError(errorEle, formattedMsg);
         }
-    } 
-    catch (logError) {
-        console.error('Error in error handler:', logError);
-        if (userMsg && errorEle) {
-            myError(
-                typeof errorEle === 'string' ? document.getElementById(errorEle) : errorEle,
-                'An unexpected error occurred. Please try again.'
-            );
+    } catch (logError) {
+        if (errorEle) {
+            const element = typeof errorEle === 'string' ? 
+                document.getElementById(errorEle) 
+                : errorEle;
+            myError(element, 'An unexpected error occurred. Please try again.');
         }
     }
 }

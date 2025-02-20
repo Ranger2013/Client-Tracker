@@ -43,6 +43,7 @@ async function submitFarrierPricesForm(evt) {
 		// Imports
 		const { default: ManageUser } = await import("../../../classes/ManageUser.js"); 
 		const manageUser = new ManageUser();
+		const stores = manageUser.getStoreNames();
 
 		// Get the form data and convert it to a js object
 		const userData = Object.fromEntries(new FormData(evt.target));
@@ -51,7 +52,7 @@ async function submitFarrierPricesForm(evt) {
 		const farrierPricesStructure = seperateFarrierPricesFromAccessories(userData);
 
 		// Now we are going to add the farrier prices to the user_settings idb store
-		const updatePrices = await manageUser.updateLocalUserSettings({ userData: farrierPricesStructure, settingsProperty: 'farrier_prices', backupStore: manageUser.indexed.stores.FARRIERPRICES, backupAPITag: 'add_farrierPrices' });
+		const updatePrices = await manageUser.updateLocalUserSettings({ userData: farrierPricesStructure, settingsProperty: 'farrier_prices', backupStore: stores.FARRIERPRICES, backupAPITag: 'add_farrierPrices' });
 
 		if (updatePrices) {
 			mySuccess(fm, 'Your pricing has been set.');
