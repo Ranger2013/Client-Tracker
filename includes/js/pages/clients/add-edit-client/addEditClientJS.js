@@ -28,6 +28,7 @@ export default async function addEditClient(cID, primaryKey, clientInfo = null) 
         
         return () => removeListeners(COMPONENT_ID);
     } catch (err) {
+        const { handleError } = await import("../../../utils/error-messages/handleError.js");
         await handleError(err);
     }
 }

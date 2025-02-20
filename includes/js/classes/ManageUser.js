@@ -18,23 +18,15 @@ export default class ManageUser {
      * @throws {Error} If initialization fails
      */
     async #initializeSettings() {
-        console.log("In #initializeSettings: this.#initialized: ", this.#initialized);
         if (this.#initialized) return;
 
         try {
             const db = await this.#indexed.openDBPromise();
             const userSettings = await this.#indexed.getAllStorePromise(db, this.#indexed.stores.USERSETTINGS);
-            console.log('In #initializeSettings: userSettings: ', userSettings);
             this.#settings = userSettings?.length === 1 ? userSettings[0] : null;
-            console.log('In #initializeSettings: this.#settings: ', this.#settings);
-            // console.log('In #initializeSettings: this.#settings.length: ', this.#settings.length);
-            
             this.#initialized = true;
-
         }
         catch (err) {
-            console.warn('Error in #initializeSettings: ', err);
-            
             const { handleError } = await import("../utils/error-messages/handleError.js");
             await handleError({
                 filename: 'initializeSettingsError',
@@ -58,8 +50,6 @@ export default class ManageUser {
     async getSettings(...keys) {
         try {
             await this.#initializeSettings();
-            console.log('In getSettings: this.#intitializeSettings: ', this.#initializeSettings);
-            console.log('In getSettings: this.#settings: ', this.#settings);
             if (!this.#settings) return null;
             
             return keys.length === 0
@@ -199,8 +189,6 @@ export default class ManageUser {
             }
             
             userSettings[settingsProperty] = userData;
-            console.log('In updateSettings: userSettings: ', userSettings);
-
             
             // This operation needs error handling
             await this.#manageIDBTransactions({
@@ -213,7 +201,6 @@ export default class ManageUser {
             return true;
         }
         catch (err) {
-            console.log('In updateSettings: err: ', err);
             const { handleError } = await import("../utils/error-messages/handleError.js");
             await handleError({
                 filename: 'updateSettingsError',

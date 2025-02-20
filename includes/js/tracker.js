@@ -13,14 +13,11 @@ let validationToken = null;
 */
 const initializeApp = async () => {
     try {
-        console.log('In initializeApp: ');
-        
         // Get current URL path
         const path = window.location.pathname;
         
         // This handles entire auth flow
         validationToken = await userAuthorization(path);
-console.log('In intializeApp: validationToken: ', validationToken);
 
         if (validationToken) {
             // Continue app initialization

@@ -73,8 +73,14 @@ export default async function buildTwoColumnAddressSection(labelText, inputID, f
         return row;
 
     } catch (err) {
-        const { default: errorLogs } = await import("../../../utils/error-messages/errorLogs.js");
-        await errorLogs('buildTwoColumnAddressSectionError', 'Build Two Column Address Section Error:', err);
+        const { handleError } = await import("../../error-messages/handleError.js");
+        await handleError({
+            filename: 'builtTwoColumnAddressSectionError',
+            consoleMsg: 'Build address section error: ',
+            err,
+            userMsg: 'Unable to create the address section.',
+            errorEle: 'page-msg'
+        });
         throw err;
     }
 }

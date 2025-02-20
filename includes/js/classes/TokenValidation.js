@@ -14,10 +14,7 @@ export default class TokenValidation {
      */
     async getUserToken() {
         try {
-            console.log('In getUserToken: ');
-
             const userStatus = await this.#userManager.getSettings('user_status');
-            console.log('userStatus: ', userStatus);
             const userToken = userStatus?.user_status?.userToken;
 
             return userToken ?? null;

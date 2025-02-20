@@ -48,8 +48,14 @@ export default async function buildSubmitDeleteButtonSection({ submitButtonText,
         return row;
 
     } catch (err) {
-        const { default: errorLogs } = await import("../../../utils/error-messages/errorLogs.js");
-        await errorLogs('buildSubmitDeleteButtonSectionError', 'Build Submit Delete Button Section Error:', err);
+        const { handleError } = await import("../../error-messages/handleError.js");
+        await handleError({
+            filename: 'buildSubmitDeleteButtonSectionError',
+            consoleMsg: 'Build submit/delete button section error: ',
+            err,
+            userMsg: 'Unable to create form buttons',
+            errorEle: 'page-msg'
+        });
         throw err;
     }
 }

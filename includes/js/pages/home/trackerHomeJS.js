@@ -4,23 +4,50 @@
  * @module trackerHomeJS
  */
 import setupBackupNotice from "../../utils/backup-notice/backupNotice.js";
-import handleInstallAppModal from "./helpers/handleInstallAppModal.js";
-import { installPromptState } from "../../classes/InstallPromptManager.js";
-import ManageUser from "../../classes/ManageUser.js";
 
 // Initialize in order of importance
 setupBackupNotice();
 
 // Set the install app reminder duration for 3 days
 const THREE_DAYS = 3 * 24 * 60 * 60 * 1000; // 3 days in milliseconds
-// const THREE_DAYS = 3 * 60 * 1000; // 3 minutes in milliseconds
-const manageUser = new ManageUser();
 
-// Listen for the beforeinstallprompt event
-window.addEventListener('beforeinstallprompt', (evt) => {
-	evt.preventDefault();
-	installPromptState.setPrompt(evt);
-});
+/**
+ * Checks if the device/browser supports PWA installation
+ * @returns {boolean} True if PWA installation is supported
+ */
+function isPWASupported() {
+	const userAgent = navigator.userAgent.toLowerCase();
+
+	// Check for iOS devices
+	const isIOS = /iphone|ipad|ipod/.test(userAgent);
+
+	// Check for Safari or iOS browsers
+	const isSafari = /^((?!chrome|android).)*safari/i.test(userAgent);
+
+	// Some iOS browsers might use different engines but still be iOS
+	const isIOSBrowser = userAgent.includes('iphone os') || userAgent.includes('ipad');
+
+	// Check if it's a standalone PWA already
+	const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+
+	// Return false if it's iOS, Safari, or already installed
+	return !(isIOS || isSafari || isIOSBrowser || isStandalone);
+}
+
+// Only proceed with PWA features if supported
+if (isPWASupported()) {
+	const { installPromptState } = await import("../../classes/InstallPromptManager.js");
+	// Listen for the beforeinstallprompt event
+	window.addEventListener('beforeinstallprompt', (evt) => {
+		evt.preventDefault();
+		installPromptState.setPrompt(evt);
+	});
+
+	// Show the modal on load only if PWA is supported
+	showModalOnLoad();
+} else {
+	console.debug('PWA installation not supported on this device/browser');
+}
 
 /**
  * Shows the install app modal based on user settings and installation status.
@@ -33,42 +60,35 @@ window.addEventListener('beforeinstallprompt', (evt) => {
  */
 async function showModalOnLoad() {
 	try {
+		const { default: ManageUser } = await import("../../classes/ManageUser.js");
+		const manageUser = new ManageUser();
+
 		// Check if this user has any data in the user_settings store
 		const userSettings = await manageUser.getSettings();
-		const status = userSettings.installApp.status;
-		const timestamp = userSettings.installApp.timestamp;
-
-		// Check if the app is installed
+		const { status, timestamp } = userSettings.installApp;
 		const isInstalled = window.matchMedia('(display-mode: standalone)').matches;
+		const currentTimestamp = Date.now();
 
-		// User possibly viewing the app in the browser. return early.
-		if (!isInstalled && status === 'installed') return;
+		// Early returns for cases where we don't need to show the modal
+		if (isInstalled) return; // Already installed as PWA
+		if (status === 'installed') return; // User prefers browser version
+		if (status === 'never') return; // User explicitly declined installation
 
-		// User's initial page landing, media says not installed and install app says default.
-		if (!isInstalled && status === 'default') {
-			// Show the install app modal
-			await handleInstallAppModal({ settings: userSettings});
+		// Only import handleInstallAppModal if we actually need to show the modal
+		if (status === 'default' ||
+			(status === 'no' && (timestamp + THREE_DAYS) <= currentTimestamp)) {
+			const { default: handleInstallAppModal } = await import("./helpers/handleInstallAppModal.js");
+			await handleInstallAppModal({ settings: userSettings });
 		}
-		// else if (!isInstalled && userDataStructure.installApp.status === 'no') {
-		// 	// Check to see how much time has gone by
-		// 	const userTimeStamp = userDataStructure.installApp.timestamp;
-		// 	const currentTimestamp = new Date().getTime();
-
-		// 	if(((userTimeStamp + THREE_DAYS) <= currentTimestamp) && userDataStructure.installApp.status !== 'never'){
-		// 		await handleInstallAppModal(userDataStructure);
-		// 	}
-		// }
-		// else if(isInstalled){
-		// 	if(userDataStructure.installApp.status === 'no' || userDataStructure.installApp.status === 'default' || userDataStructure.installApp.status === 'never'){
-		// 		await updateUserSettings('installed', 'installApp', userDataStructure);
-		// 	}
-		// }
 	}
 	catch (err) {
-		const { default: errorLogs } = await import("../../utils/error-messages/errorLogs.js");
-		await errorLogs('updateUserSettingsInstallAppError.txt', 'App install show modal error.', err);
+		const { handleError } = await import("../../utils/error-messages/handleError.js");
+		await handleError({
+			filename: 'showModalOnLoadError',
+			consoleMsg: 'Error showing install modal: ',
+			err,
+			userMsg: 'Unable to show installation prompt',
+			errorEle: 'page-msg'
+		});
 	}
 }
-
-// Show the modal on load
-showModalOnLoad();

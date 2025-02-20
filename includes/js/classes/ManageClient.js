@@ -29,7 +29,6 @@ export default class ManageClient {
 
 			// Open the idb
 			const db = await this.indexed.openDBPromise();
-
 			const clientInfo = await this.indexed.getStorePromise(db, this.indexed.stores.CLIENTLIST, primaryKey);
 
 			return clientInfo;

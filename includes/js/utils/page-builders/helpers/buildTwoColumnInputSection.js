@@ -96,8 +96,14 @@ export default async function buildTwoColumnInputSection({
         return row;
 
     } catch (err) {
-        const { default: errorLogs } = await import("../../../utils/error-messages/errorLogs.js");
-        await errorLogs('buildTwoColumnInputSectionError', 'Build Two Column Input Section Error:', err);
+        const { handleError } = await import("../../error-messages/handleError.js");
+        await handleError({
+            filename: 'buildTwoColumnInputSectionError',
+            consoleMsg: 'Build Two Column Input Section Error:',
+            err,
+            userMsg: 'Unable to create the input section.',
+            errorEle: 'page-msg'
+        });
         throw err;
     }
 }

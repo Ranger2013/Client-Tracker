@@ -33,8 +33,14 @@ export default async function buildSubmitButtonSection(buttonText, buttonColor =
         return container;
 
     } catch (err) {
-        const { default: errorLogs } = await import("../../../utils/error-messages/errorLogs.js");
-        await errorLogs('buildSubmitButtonSectionError', 'Build submit button section error:', err);
+        const { handleError } = await import("../../error-messages/handleError.js");
+        await handleError({
+            filename: 'buildSubmitButtonSectionError',
+            consoleMsg: 'Build submit button section error: ',
+            err,
+            userMsg: 'Unable to create form button',
+            errorEle: 'page-msg'
+        });
         throw err;
     }
 }

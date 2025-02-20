@@ -1,8 +1,13 @@
 import { myError } from "../dom/domUtils.js";
 
 /**
- * Handles error logging and optional user feedback
- * @param {ErrorHandlerParams} params - Object containing all error handling parameters
+ * Handles errors by logging them and optionally displaying user messages
+ * @param {Object} options - Error handling options
+ * @param {string} options.filename - Name of file for error logging
+ * @param {string} options.consoleMsg - Message to show in console
+ * @param {Error} options.err - The error object
+ * @param {string} [options.userMsg] - Optional message to show to user
+ * @param {string} [options.errorEle] - Optional DOM element ID for displaying error
  * @returns {Promise<void>}
  * @throws {Error} If the error logging itself fails
  * 

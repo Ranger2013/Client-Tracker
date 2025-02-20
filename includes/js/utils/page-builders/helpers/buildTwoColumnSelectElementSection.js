@@ -16,13 +16,13 @@ import buildErrorDiv from "./buildErrorDiv.js";
  * @param {string} params.options[].text - The display text for the option element.
  * @returns {Promise<HTMLElement>} A promise that resolves to the row element containing the section.
  */
-export default async function buildTwoColumnSelectElementSection({ 
-    labelText, 
-    selectID, 
-    selectName, 
-    selectTitle, 
-    required = undefined, 
-    options 
+export default async function buildTwoColumnSelectElementSection({
+    labelText,
+    selectID,
+    selectName,
+    selectTitle,
+    required = undefined,
+    options
 }) {
     try {
         // Build base elements all at once - only configurations
@@ -30,7 +30,7 @@ export default async function buildTwoColumnSelectElementSection({
             { type: 'div', myClass: ['w3-row', 'w3-padding'] },
             { type: 'div', myClass: ['w3-col', 'm6'] },
             { type: 'div', myClass: ['w3-col', 'm6'] },
-            { 
+            {
                 type: 'select',
                 attributes: {
                     id: selectID,
@@ -46,10 +46,10 @@ export default async function buildTwoColumnSelectElementSection({
         const errorDiv = buildErrorDiv(selectID);
 
         // Add label
-        colOne.appendChild(buildEle({ 
-            type: 'label', 
-            attributes: { for: selectID }, 
-            text: labelText 
+        colOne.appendChild(buildEle({
+            type: 'label',
+            attributes: { for: selectID },
+            text: labelText
         }));
 
         // Add options if they exist
@@ -73,8 +73,14 @@ export default async function buildTwoColumnSelectElementSection({
         return row;
 
     } catch (err) {
-        const { default: errorLogs } = await import("../../../utils/error-messages/errorLogs.js");
-        await errorLogs('buildTwoColumnSelectElementSectionError', 'Build Two Column Select Element Section Error:', err);
+        const { handleError } = await import("../../error-messages/handleError.js");
+        await handleError({
+            filename: 'buildTwoColumnSelectElementSectionError',
+            consoleMsg: 'Build Two Column Select Element Section Error:',
+            err,
+            userMsg: 'Unable to create Select element section.',
+            errorEle: 'page-msg'
+        });
         throw err;
     }
 }

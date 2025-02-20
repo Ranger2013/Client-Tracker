@@ -19,15 +19,10 @@ export default async function userAuthorization(urlPath) {
         return null;
     }
     
-    console.log('In userAuthorization: urlPath: ', urlPath);
     try {
-        console.log('In userAuthorization: getting userToken.');
-        
         // 1. Get stored token
         const tokenValidation = new TokenValidation();
         const userToken = await tokenValidation.getUserToken();
-        
-        console.log('userToken: ', userToken);
         
         if (!userToken) {
             redirectToLogin(commonErrors.tokenValidationError);

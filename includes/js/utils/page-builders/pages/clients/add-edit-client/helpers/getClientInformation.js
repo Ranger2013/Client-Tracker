@@ -27,8 +27,14 @@ export default async function getClientInformation({cID, primaryKey}) {
             }
         };
     } catch (err) {
-        const { default: errorLogs } = await import("../../../../../../utils/error-messages/errorLogs.js");
-        await errorLogs('getClientInformationError', 'Get client information error:', err);
+        const { handleError } = await import("../../../../../../utils/error-messages/handleError.js");
+        await handleError({
+            filename: 'getClientInformationError',
+            consoleMsg: 'Get client information error:',
+            err,
+            userMsg: 'Unable to get the clients information.',
+            errorEle: 'page-msg'
+        });
         throw err;
     }
 }

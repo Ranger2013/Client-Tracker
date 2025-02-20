@@ -48,8 +48,14 @@ export default async function buildTwoColumnRadioButtonSection({ labelText, requ
         return row;
 
     } catch (err) {
-        const { default: errorLogs } = await import("../../../utils/error-messages/errorLogs.js");
-        await errorLogs('buildTwoColumnRadioButtonSectionError', 'Build Two Column Radio Button Section Error:', err);
+        const { handleError } = await import("../../error-messages/handleError.js");
+        await handleError({
+            filename: 'buildTwoColumnRadioButtonSectionError',
+            consoleMsg: 'Build Two Column Radio Button Section Error:',
+            err,
+            userMsg: 'Unable to create radio buttons.',
+            errorEle: 'page-msg'
+        });
         throw err;
     }
 }
