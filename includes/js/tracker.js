@@ -7,6 +7,11 @@ import selectPage from "./utils/navigation/selectPage.js";
 // Token stored in memory for security - cleared on page refresh
 let validationToken = null;
 
+import setupBackupNotice from "./utils/backup-notice/backupNotice.js";
+
+// Initialize in order of importance
+setupBackupNotice();
+
 /**
  * Initializes the application, handling auth, navigation, and error boundaries
  * Ensures proper cleanup of event listeners on errors
@@ -38,7 +43,7 @@ const initializeApp = async () => {
             consoleMsg: 'Init app error: ',
             err: err,
             userMsg: 'Failed to initialize application',
-            errorEle: DOM_IDS.PAGE_MSG,
+            errorEle: 'page-msg',
         });
     } 
     finally {
@@ -66,7 +71,7 @@ async function handlePageNavigation(evt) {
             consoleMsg: 'Navigation error: ',
             err: err,
             userMsg: 'Failed to navigate to page',
-            errorEle: DOM_IDS.PAGE_MSG,
+            errorEle: 'page-msg',
         });
     }
 }

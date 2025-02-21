@@ -1,79 +1,78 @@
-
-import ManageUser from "../../../classes/ManageUser.js";
-import setupBackupNotice from "../../../utils/backup-notice/backupNotice.js";
-import displayFormValidationErrors from "../../../utils/dom/displayFormValidationErrors.js";
-import { clearMsg, myError, mySuccess, top } from "../../../utils/dom/domUtils.js";
-import { helpDeskTicket } from "../../../utils/error-messages/errorMessages.js";
 import { addListener } from "../../../utils/event-listeners/listeners.js";
+import { clearMsg, myError, mySuccess, top } from "../../../utils/dom/domUtils.js";
+import ManageUser from "../../../classes/ManageUser.js";
+import displayFormValidationErrors from "../../../utils/dom/displayFormValidationErrors.js";
 
-// DOM Elements
-const fm = document.getElementById('form-msg');
-const colorOptionsForm = document.getElementById('color-options-form');
+const COMPONENT_ID = 'color-options';
 
-// Set the back-up data reminder
-setupBackupNotice();
+/**
+ * Validates color input values against hex color format
+ * @param {Object} userData - Form data object containing color values
+ * @returns {Array|null} Array of validation errors or null if valid
+ * @example
+ * validateColor({ text_color: '#000000', background: 'invalid' })
+ * // Returns [{ input: 'background', msg: 'Invalid color format.' }]
+ */
+function validateColor(userData) {
+    const hexColorRegex = /^#[0-9a-fA-F]{6}$/;
+    const errors = [];
 
+    for (const [field, color] of Object.entries(userData)) {
+        if (!hexColorRegex.test(color)) {
+            errors.push({ input: field, msg: "Invalid color format." });
+        }
+    }
+
+    return errors.length > 0 ? errors : null;
+}
+
+/**
+ * Handles the submission of the color options form
+ * Validates colors and updates user settings
+ * @param {Event} evt - Form submission event
+ * @returns {Promise<void>}
+ * @throws {Error} If settings update fails
+ */
 async function handleColorOptionFormSubmission(evt) {
-	// Prevent form submission
-	evt.preventDefault();
+    evt.preventDefault();
+    
+    try {
+        clearMsg({ container: 'form-msg' });
+        const userData = Object.fromEntries(new FormData(evt.target));
+        
+        const validate = validateColor(userData);
+        if (validate) {
+            await displayFormValidationErrors(validate);
+            return;
+        }
 
-	try{
-		// Clear any messages
-		clearMsg({container: fm});
+        const manageUser = new ManageUser();
+        const stores = manageUser.getStoreNames();
 
-		// Get the user Data
-		const userData = Object.fromEntries(new FormData(evt.target));
+        if (await manageUser.updateLocalUserSettings({
+            userData,
+            settingsProperty: 'color_options',
+            backupStore: stores.COLOROPTIONS,
+            backupAPITag: 'add_colorOptions'
+        })) {
+            mySuccess('form-msg', 'Color Options have been saved');
+            top();
+            return;
+        }
 
-		// Validate the colors
-		const validate = validateColor(userData);
-
-		if(validate){
-			await displayFormValidationErrors(validate);
-			return;
-		}
-
-		// Include the Manage user class
-		const manageUser = new ManageUser();
-		const stores = manageUser.getStoreNames();
-
-		if(await manageUser.updateLocalUserSettings({
-			userData,
-			settingsProperty: 'color_options',
-			backupStore: stores.COLOROPTIONS,
-			backupAPITag: 'add_colorOptions'
-		})){
-			mySuccess(fm, 'Color Options have been saved');
-			top();
-			return;
-		}
-		myError(fm, `Unable to save color options at this time.<br>${helpDeskTicket}`);
-		return;
-	}
-	catch(err){
-		console.warn('Handle color options form submissin error: ', err);		
-	}
+        myError('form-msg', 'Unable to save color options at this time.');
+    }
+    catch (err) {
+        const { handleError } = await import("../../../utils/error-messages/handleError.js");
+        await handleError({
+            filename: 'colorOptionsFormError',
+            consoleMsg: 'Color options form submission error: ',
+            err,
+            userMsg: 'Unable to save color options',
+            errorEle: 'form-msg'
+        });
+    }
 }
 
-function validateColor(userData){
-	// Set the regex to validate the color
-	const hexColorRegex = /^#[0-9a-fA-F]{6}$/;
-
-	// Set the array to handle any errors
-	let errors = [];
-
-	// Loop through the userData checking for appropriate colors
-	for(let field in userData){
-		// get the color
-		let color = userData[field];
-
-		// Do the check
-		if(!hexColorRegex.test(color)){
-			errors.push({input: field, msg: "Invalid color format."});
-		}
-	}
-
-	return errors.length > 0 ? errors : null;
-}
-
-// Listen for the form submission
-addListener(colorOptionsForm, 'submit', handleColorOptionFormSubmission);
+// Initialize listener - that's all we need
+addListener('color-options-form', 'submit', handleColorOptionFormSubmission, COMPONENT_ID);

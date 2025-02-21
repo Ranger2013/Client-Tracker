@@ -7,7 +7,7 @@ import { DOM_IDS } from "../utils/dom/domConstants.js";
 // Extract form validation to separate function
 function validateForm(userData) {
     if (!userData.username || !userData.password) {
-        myError(DOM_IDS.FORM_MSG, 'User Name and Password are required.');
+        myError('form-msg', 'User Name and Password are required.');
         return false;
     }
     return true;
@@ -17,7 +17,7 @@ async function handleLogIn(evt) {
     evt.preventDefault();
 
     try {
-        mySuccess(DOM_IDS.FORM_MSG, 'Processing...', 'w3-text-blue');
+        mySuccess('form-msg', 'Processing...', 'w3-text-blue');
         const userData = Object.fromEntries(new FormData(evt.target));
 
         if (!validateForm(userData)) return;
@@ -31,13 +31,13 @@ async function handleLogIn(evt) {
         console.log('In handleLogin: req: ', req);
 
         if (req.status !== 'ok') {
-            myError(DOM_IDS.FORM_MSG, req.msg);
+            myError('form-msg', req.msg);
             return;
         }
 
         const token = req.msg;
         if (!token) {
-            myError(DOM_IDS.FORM_MSG, 'Token validation issue. Please contact the administrator.');
+            myError('form-msg', 'Token validation issue. Please contact the administrator.');
             return;
         }
 
@@ -63,7 +63,7 @@ async function handleLogIn(evt) {
             consoleMsg: 'Error in the handle login function.',
             error: err
         });
-        myError(DOM_IDS.FORM_MSG, 'Login failed. Please contact administrator.');
+        myError('form-msg', 'Login failed. Please contact administrator.');
     }
 }
 

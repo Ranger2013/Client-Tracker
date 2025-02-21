@@ -1,100 +1,105 @@
-
 import { buildEle } from "../../../../utils/dom/domUtils.js";
-import makeInputsGreen from "./makeInputsGreen.js";
 
-export default function buildInputBlocks(numBlocks, inputName, form, display, value = null) {
-	try {
-		if (typeof display === 'string') {
-			display = document.getElementById(display);
-			if (!display) {
-				console.warn('Display element not found:', display);
-				return;
-			}
-		}
+export default async function buildInputBlocks(numBlocks, inputName, form, display, value = null) {
+    try {
+        // Resolve display element
+        const displayEle = typeof display === 'string' 
+            ? document.getElementById(display)
+            : display;
 
-		const children = display.children.length;
+        if (!displayEle) {
+            throw new Error(`Display element not found: ${display}`);
+        }
 
-		if (numBlocks > children) {
-			// Add input blocks
-			for (let i = children; i < numBlocks; i++) {
-				const iterationValue = (value && value.length > i) ? value[i] : null;
-				display.appendChild(buildBlock(i + 1, inputName, iterationValue));
-			}
-		} else if (numBlocks < children && numBlocks !== 0 && numBlocks !== '') {
-			// Remove excess blocks
-			for (let i = children; i > numBlocks; i--) {
-				display.removeChild(display.lastChild);
-			}
-		}
+        const currentBlocks = displayEle.children.length;
 
-		if (numBlocks === 0) {
-			display.innerHTML = '';
-		}
-
-		// Apply green class to inputs
-		makeInputsGreen(form);
-	}
-	catch (err) {
-		console.warn('build input blocks error: ', err);
-		throw err;
-	}
+        if (numBlocks > currentBlocks) {
+            // Add new blocks
+            for (let i = currentBlocks; i < numBlocks; i++) {
+                const blockValue = value?.[i] ?? null;
+                displayEle.appendChild(buildBlock(i + 1, inputName, blockValue));
+            }
+        }
+		  else if (numBlocks < currentBlocks && numBlocks !== 0 && numBlocks !== '') {
+            // Remove excess blocks
+            while (displayEle.children.length > numBlocks) {
+                displayEle.removeChild(displayEle.lastChild);
+            }
+        }
+		  else if (numBlocks === 0) {
+            displayEle.innerHTML = '';
+        }
+    }
+    catch (err) {
+        const { handleError } = await import("../../../../utils/error-messages/handleError.js");
+        await handleError({
+            filename: 'buildInputBlocksError',
+            consoleMsg: 'Build input blocks error: ',
+            err,
+            userMsg: 'Unable to create accessory input blocks',
+            errorEle: display
+        });
+        throw err; // Propagate error for caller handling
+    }
 }
 
-function buildBlock(i, name, value = null) {
-	const block = buildEle({
-		type: 'div',
-		attributes: { id: `${name}-block-${i}` },
-		myClass: ['w3-margin-top-small', 'w3-padding-small'],
-	});
+function buildBlock(index, name, value = null) {
+    const blockConfig = {
+        container: {
+            type: 'div',
+            attributes: { id: `${name}-block-${index}` },
+            myClass: ['w3-margin-top-small', 'w3-padding-small']
+        },
+        nameLabel: {
+            type: 'label',
+            myClass: ['w3-margin-top-small', 'w3-small'],
+            text: 'Product Name:'
+        },
+        nameInput: {
+            type: 'input',
+            attributes: {
+                id: `${name}-name-${index}`,
+                type: 'text',
+                name: `${name}_name_${index}`,
+                required: 'required',
+                placeholder: 'Name of Product',
+                title: 'Name of Product'
+            },
+            myClass: ['w3-input', 'w3-border', 'w3-medium']
+        },
+        costLabel: {
+            type: 'label',
+            myClass: ['w3-small'],
+            text: 'Product Cost'
+        },
+        costInput: {
+            type: 'input',
+            attributes: {
+                id: `${name}-cost-${index}`,
+                type: 'number',
+                name: `${name}_cost_${index}`,
+                required: 'required',
+                placeholder: 'Cost of Product',
+                title: 'Cost of Product'
+            },
+            myClass: ['w3-input', 'w3-border', 'w3-medium']
+        }
+    };
 
-	const productNameLabel = buildEle({
-		type: 'label',
-		myClass: ['w3-margin-top-small', 'w3-small'],
-		text: 'Product Name:',
-	});
+    // Build all elements in one go using map
+    const [block, nameLabel, nameInput, costLabel, costInput] = 
+        Object.entries(blockConfig).map(([_, config]) => buildEle(config));
 
-	const productNameInput = buildEle({
-		type: 'input',
-		attributes: {
-			id: `${name}-name-${i}`,
-			type: 'text',
-			name: `${name}_name_${i}`,
-			required: 'required',
-			placeholder: 'Name of Product',
-			title: 'Name of Product',
-		},
-		myClass: ['w3-input', 'w3-border', 'w3-medium'],
-	});
+    // Set values and build structure
+    if (value) {
+        nameInput.value = value.name ?? '';
+        costInput.value = value.cost ?? '';
+    }
 
-	// Input the name value if we have one
-	productNameInput.value = value && value.name ? value.name : '';
+    // Append in correct order
+    nameLabel.appendChild(nameInput);
+    costLabel.appendChild(costInput);
+    block.append(nameLabel, costLabel);
 
-	const productCostLabel = buildEle({
-		type: 'label',
-		myClass: ['w3-small'],
-		text: 'Product Cost',
-	});
-
-	const productCostInput = buildEle({
-		type: 'input',
-		attributes: {
-			id: `${name}-cost-${i}`,
-			type: 'number',
-			name: `${name}_cost_${i}`,
-			required: 'required',
-			placeholder: 'Cost of Product',
-			title: 'Cost of Product'
-		},
-		myClass: ['w3-input', 'w3-border', 'w3-medium']
-	});
-
-	// Input the cost value if we have one
-	productCostInput.value = value && value.cost ? value.cost : '';
-
-	productNameLabel.appendChild(productNameInput);
-	productCostLabel.appendChild(productCostInput);
-	block.appendChild(productNameLabel);
-	block.appendChild(productCostLabel);
-
-	return block;
+    return block;
 }

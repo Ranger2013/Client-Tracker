@@ -1,27 +1,57 @@
-
 import { addListener } from "../../../../utils/event-listeners/listeners.js";
+import getAllFormIdElements from "../../../../utils/dom/getAllFormIDElements.js";
 
-export default function makeInputsGreen(form){
-	// Get the form inputs
-	form.querySelectorAll('input').forEach(input => {
-		// Add a listener to change input fields green on blur
-		addListener(input, 'blur', (evt) => {
-			if(evt.target.value !== ''){
-				evt.target.classList.add('w3-light-green');
-			}
-			else {
-				evt.target.classList.remove('w3-light-green');
-			}
-		});
+const GREEN_CLASS = 'w3-light-green';
+const COMPONENT_ID = 'farrier-inputs';
 
-		// Add a listener to remove the green while the user adjusts the input
-		addListener(input, 'focus', (evt) => {
-			evt.target.classList.remove('w3-light-green');
-		});
+/**
+ * Adds green highlighting to form inputs when they contain values
+ * @param {HTMLFormElement} form - The form containing inputs to monitor
+ */
+export default async function makeInputsGreen(form) {
+    try {
+        const elements = await getAllFormIdElements(form);
+        
+        Object.entries(elements).forEach(([_, input]) => {
+            if (input instanceof HTMLInputElement) {
+                // Add listeners with component tracking
+                addListener(input, 'blur', handleInputBlur, COMPONENT_ID);
+                addListener(input, 'focus', handleInputFocus, COMPONENT_ID);
 
-		// Check if input values are already populated. if they are turn them green
-		if(input.value !== ''){
-			input.classList.add('w3-light-green');
-		}
-	});	
+                // Set initial state
+                if (input.value) {
+                    input.classList.add(GREEN_CLASS);
+                }
+            }
+        });
+    }
+    catch (err) {
+        const { handleError } = await import("../../../../utils/error-messages/handleError.js");
+        await handleError({
+            filename: 'makeInputsGreenError',
+            consoleMsg: 'Make inputs green error: ',
+            err
+        });
+    }
+}
+
+/**
+ * Handles blur event to add green highlight if input has value
+ * @param {Event} evt - The blur event
+ */
+function handleInputBlur(evt) {
+    const input = evt.target;
+    if (input.value) {
+        input.classList.add(GREEN_CLASS);
+    } else {
+        input.classList.remove(GREEN_CLASS);
+    }
+}
+
+/**
+ * Handles focus event to remove green highlight while editing
+ * @param {Event} evt - The focus event
+ */
+function handleInputFocus(evt) {
+    evt.target.classList.remove(GREEN_CLASS);
 }

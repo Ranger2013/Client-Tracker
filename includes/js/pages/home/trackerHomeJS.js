@@ -3,10 +3,6 @@
  * Handles PWA installation prompts and user settings management.
  * @module trackerHomeJS
  */
-import setupBackupNotice from "../../utils/backup-notice/backupNotice.js";
-
-// Initialize in order of importance
-setupBackupNotice();
 
 // Set the install app reminder duration for 3 days
 const THREE_DAYS = 3 * 24 * 60 * 60 * 1000; // 3 days in milliseconds

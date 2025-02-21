@@ -1,35 +1,45 @@
-
-import { myError, top } from "../../../../utils/dom/domUtils.js";
 import { addListener } from "../../../../utils/event-listeners/listeners.js";
 import buildInputBlocks from "./buildInputBlocks.js";
 
-export default function displayMultipleInputs(fm, form) {
-	try {
-		// Set up the id's for the pads, packing and wedges
-		const inputs = {
-			pads: {
-				eleId: 'num-pads',
-				displayEle: 'display-pads'
-			},
-			packing: {
-				eleId: 'num-packing',
-				displayEle: 'display-packing'
-			},
-			wedges: {
-				eleId: 'num-wedges',
-				displayEle: 'display-wedges'
-			},
-		};
+const COMPONENT_ID = 'multiple-inputs';
 
-		for (const input in inputs) {
-			addListener(inputs[input].eleId, 'input', (evt) => {
-				buildInputBlocks(evt.target.value, input, form, inputs[input].displayEle)
-			});
-		}
-	}
-	catch (err) {
-		console.warn('display multiple inputs error: ', err);
-		myError(fm, 'There was an error building the accessory blocks.');
-		top();
-	}
+// Configuration for accessory inputs that can have multiple values
+const ACCESSORY_INPUTS = {
+    pads: {
+        eleId: 'num-pads',
+        displayEle: 'display-pads'
+    },
+    packing: {
+        eleId: 'num-packing',
+        displayEle: 'display-packing'
+    },
+    wedges: {
+        eleId: 'num-wedges',
+        displayEle: 'display-wedges'
+    }
+};
+
+export default function displayMultipleInputs(form) {
+    Object.entries(ACCESSORY_INPUTS).forEach(([accessory, config]) => {
+        addListener(
+            config.eleId, 
+            'input', 
+            async evt => {
+                try {
+                    await buildInputBlocks(evt.target.value, accessory, form, config.displayEle);
+                }
+					 catch (err) {
+                    const { handleError } = await import("../../../../utils/error-messages/handleError.js");
+                    await handleError({
+                        filename: `buildInputBlocksError_${accessory}`,
+                        consoleMsg: `Build input blocks error for ${accessory}: `,
+                        err,
+                        userMsg: 'Unable to create accessory inputs',
+                        errorEle: config.displayEle
+                    });
+                }
+            },
+            COMPONENT_ID
+        );
+    });
 }

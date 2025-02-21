@@ -25,6 +25,9 @@ const main = document.getElementById('main');
 export default async function selectPage({ evt, page, cID = null, closeMenu = null, primaryKey }) {
     evt.preventDefault();
     try {
+// Clean up any server-rendered page listeners before SPA navigation
+        cleanupServerRenderedListeners();
+
         // Page configuration map
         const PAGE_CONFIG = {
             clients: {
@@ -182,4 +185,11 @@ async function handlePageError(err) {
 
     backupErrorPage();
     await errorLogs('selectPageError', 'Select Page Error: ', err);
+}
+
+function cleanupServerRenderedListeners() {
+    removeListeners('color-options');       // From colorOptionsJS.js
+    removeListeners('farrier-prices');      // From farrierPricesJS.js
+    removeListeners('date-time');           // From dateTimeJS.js
+    // We'll add more as we work through other server-rendered pages
 }

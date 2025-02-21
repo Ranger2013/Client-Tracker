@@ -1,75 +1,82 @@
-
-import ManageUser from "../../../../classes/ManageUser.js";
-import { myError } from "../../../../utils/dom/domUtils.js";
+import getAllFormIdElements from "../../../../utils/dom/getAllFormIDElements.js";
 import buildInputBlocks from "./buildInputBlocks.js";
 
-export default async function populateFarrierPricesForm(fm, form) {
-	try {
-		const manageUser = new ManageUser();
-		const farrierPrices = await manageUser.getFarrierPrices();
-		
-		if(farrierPrices){
-			handleFarrierPrices(form, farrierPrices);
-			handleAccessories(form, farrierPrices.accessories);
-		}
-	}
-	catch (err) {
-		console.warn('populate farrier prices form error: ', err);
-		myError(fm, 'There was a problem populating the form with your current pricing.');
-	}
+export default async function populateFarrierPricesForm(formEle, manageUser) {
+    try {
+        const farrierPrices = await manageUser.getFarrierPrices();
+
+        if(Object.keys(farrierPrices).length === 0) return;
+        
+        if(farrierPrices){
+            handleFarrierPrices(formEle, farrierPrices);
+            handleAccessories(formEle, farrierPrices.accessories);
+        }
+    }
+    catch (err) {
+        const { handleError } = await import("../../../../utils/error-messages/handleError.js");
+        await handleError({
+            filename: 'populateFarrierPricesFormError',
+            consoleMsg: 'Populate farrier prices form error: ',
+            err,
+            userMsg: 'Unable to load saved pricing.',
+            errorEle: 'form-msg'
+        });
+    }
 }
 
-function handleFarrierPrices(form, farrierPrices) {
-	try {
-		// Get the form elements
-		form.querySelectorAll('input').forEach(input => {
-			// This takes care of the farrier prices
-			if (farrierPrices[input.name]) {
-				input.value = farrierPrices[input.name];
-			}
-		});
-	}
-	catch (err) {
-		console.warn('handle farrier prices error: ', err);
-		throw err;
-	}
+function handleFarrierPrices(formEle, farrierPrices) {
+    try {
+        const elements = getAllFormIdElements(formEle);
+        
+        // Populate the farrier prices
+        Object.entries(elements).forEach(([_, ele]) => {
+            if(farrierPrices[ele.name]){
+                ele.value = farrierPrices[ele.name];
+            }
+        });
+    }
+    catch (err) {
+        throw err;
+    }
 }
 
 function handleAccessories(form, accessoryPrices) {
-	try {
-		// Set the accessory inputs
-		const accessories = [
-			'pads',
-			'packing',
-			'wedges',
-			'rockers',
-			'clips',
-			'casting',
-			'sedation',
-		];
+    try {
+        // Set the accessory inputs
+        const accessories = [
+            'pads',
+            'packing',
+            'wedges',
+            'rockers',
+            'clips',
+            'casting',
+            'sedation',
+        ];
 
-		accessories.forEach(accessory => {
-			const accessoryValues = accessoryPrices[accessory];
-			if (accessoryValues) {
-				const numberInput = document.getElementById(`num-${accessory}`);
-				const displayElement = document.getElementById(`display-${accessory}`);
-				const singleInput = document.getElementById(accessory);
+        accessories.forEach(accessory => {
+            const accessoryValues = accessoryPrices[accessory];
+            // Check if the accessory has values
+            if (accessoryValues && accessoryValues.length > 0) {
+                const numberInputEle = document.getElementById(`num-${accessory}`);
+                const displayElement = document.getElementById(`display-${accessory}`);
+                const singleInputEle = document.getElementById(accessory);
 
-				if (numberInput) {
-					const valueLength = accessoryValues.length;
-					numberInput.value = valueLength > 0 ? valueLength : '';
+                // Double check to make sure we have a num-accessory. E.G. num-pads
+                if (numberInputEle) {
+                    // Get the length of the accessory values and set the number
+                    const valueLength = accessoryValues.length;
+                    numberInputEle.value = valueLength > 0 ? valueLength : '';
 
-					if (valueLength > 0 && displayElement) {
-						buildInputBlocks(valueLength, accessory, form, displayElement, accessoryValues);
-					}
-				} else if (singleInput && accessoryValues.length > 0) {
-					singleInput.value = accessoryValues[0].cost;
-				}
-			}
-		});
-	}
-	catch (err) {
-		console.warn('handle accessories error: ', err);
-		throw err;
-	}
+                    if (valueLength > 0 && displayElement) {
+                        buildInputBlocks(valueLength, accessory, form, displayElement, accessoryValues);
+                    }
+                } else if (singleInputEle && accessoryValues.length > 0) {
+                    singleInputEle.value = accessoryValues[0].cost;
+                }
+            }
+        });
+    }
+    catch (err) {
+        throw err;
+    }
 }

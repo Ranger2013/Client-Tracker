@@ -129,7 +129,7 @@ export default class IndexedDBOperations {
         
         await handleError({
             ...details,
-            errorEle: DOM_IDS.PAGE_MSG
+            errorEle: 'page-msg'
         });
     }
 
