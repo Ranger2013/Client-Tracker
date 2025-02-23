@@ -88,15 +88,15 @@ export default class ManageUser {
      * @returns {Promise<Object|null>} Mileage charges or null if not available
      */
     async getMileageCharges() {
-        const { mileage_charges } = await this.getSettings('mileage_charges') ?? {};
-        if (!mileage_charges) return null;
+        const { mileage_charges } = await this.getSettings('mileage_charges');
+        const { per_mile: perMile, range } = mileage_charges;
 
-        const { per_mile: perMile = {}, range = [] } = mileage_charges;
-
+        // Check if per_mile has valid data
         if (perMile.cost_per_mile != null && perMile.starting_mile != null) {
             return perMile;
         }
 
+        // Return range array if it has entries, null otherwise
         return range.length > 0 ? range : null;
     }
 
@@ -158,7 +158,7 @@ export default class ManageUser {
                 userMsg: 'Unable to update local user settings',
                 errorEle: 'page-msg'
             });
-            return false;
+            throw err;
         }
     }
 
@@ -170,7 +170,12 @@ export default class ManageUser {
     async #updateSettings({ userData, settingsProperty, backupStore = null, backupAPITag = null, backupData = null }) {
         try {
             let userSettings = await this.getSettings();
-
+            console.log('In #updateSettings: userData: ', userData);
+            console.log('In #updateSettings: settingsProperty: ', settingsProperty);
+            console.log('In #updateSettings: backupStore: ', backupStore);
+            console.log('In #updateSettings: backupAPITag: ', backupAPITag);
+            console.log('In #updateSettings: backupData: ', backupData);
+            
             
             // If there are no user settings, then we to build the structure
             if (!userSettings) {

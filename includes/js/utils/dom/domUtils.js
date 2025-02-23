@@ -191,7 +191,7 @@ export async function disableEnableSubmitButton(button) {
  * Srolls the window to the top of the page.
  */
 export function top() {
-	window.scrollTo(0, 0);
+	window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 /**

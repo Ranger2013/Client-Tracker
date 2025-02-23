@@ -1,52 +1,48 @@
-
-import buildSubmitButtonSection from "../../../../utils/page-builders/helpers/buildSubmitButtonSection.js";
 import buildFuelRangeSection from "./buildFuelRangeSection.js";
 
-export default async function buildMileageRangeInputs(evt, rangeContainer, values) {
-	try {
-		const ranges = parseInt(evt.target.value, 10);
-		const currentChildren = rangeContainer.children.length;
+/**
+ * Builds fuel range input sections based on user input
+ * @param {InputEvent} evt - Event from number input
+ * @param {HTMLElement} rangeContainer - Container to hold the range sections
+ * @param {Array|null} values - Existing values to populate inputs
+ * @param {string} componentId - Component ID for event listener tracking
+ * @returns {Promise<void>}
+ */
+export default async function buildMileageRangeInputs({evt, rangeContainer, fuelRangeContainer, values = null, componentId}) {
+    try {
+        const rangeInput = parseInt(evt.target.value, 10);
+        const currentChildren = fuelRangeContainer.children.length;
 
-		// Clear the container if ranges is explicitly set to 0
-		if (ranges === 0) {
-			rangeContainer.innerHTML = '';
-			await handleSubmitButtonVisibility(rangeContainer, 0);
-			return;
-		}
+        if (rangeInput === 0) {
+            fuelRangeContainer.innerHTML = '';
+            return;
+        }
 
-		// Add or remove range sections as needed
-		if (ranges > currentChildren) {
-			for (let i = currentChildren; i < ranges; i++) {
-				const rangeSection = buildFuelRangeSection(i + 1, values?.[i] || {});
-				rangeContainer.appendChild(rangeSection);
-			}
-		} else if (ranges < currentChildren && ranges !== 0 && evt.target.value !== '') {
-			for (let i = currentChildren; i > ranges; i--) {
-				rangeContainer.removeChild(rangeContainer.lastChild);
-			}
-		}
-
-		// Handle the submit button visibility
-		await handleSubmitButtonVisibility(rangeContainer, ranges);
-	}
-	catch (err) {
-		const { handleError } = await import("../../../../utils/error-messages/handleError.js");
-		await handleError('buildMileageRangeInputsError', 'Build mileage range input error: ', err);
-	}
-}
-
-async function handleSubmitButtonVisibility(container, numberChildren) {
-	// Create the submit button
-	const buttonSection = document.getElementById('button-section');
-	
-	// If we don't have the submit button, add it.
-	if (!buttonSection && numberChildren > 0) {
-		const submitButton = await buildSubmitButtonSection('Add Fuel Charges');
-		// Add the submit button
-		container.parentElement.appendChild(submitButton);
-	}
-	// If number children is 0, remove the submit button
-	else if (numberChildren === 0 && buttonSection) {
-		buttonSection.remove();
-	}
+        if (rangeInput > currentChildren) {
+            // Add new range sections
+            for (let i = currentChildren; i < rangeInput; i++) {
+                const valueData = values ? values[i] : {};
+                const rangeSection = await buildFuelRangeSection(i + 1, valueData, componentId);
+                if (rangeSection) {
+                    fuelRangeContainer.append(rangeSection);
+                }
+            }
+        }
+        else if (rangeInput < currentChildren && rangeInput !== 0) {
+            // Remove excess range sections
+            for (let i = currentChildren; i > rangeInput; i--) {
+                fuelRangeContainer.removeChild(fuelRangeContainer.lastChild);
+            }
+        }
+    }
+    catch (err) {
+        const { handleError } = await import("../../../../utils/error-messages/handleError.js");
+        await handleError({
+            filename: 'buildMileageRangeInputsError',
+            consoleMsg: 'Build mileage range inputs error: ',
+            err,
+            userMsg: 'Unable to create mileage range inputs',
+            errorEle: 'form-msg'
+        });
+    }
 }

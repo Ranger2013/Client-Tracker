@@ -1,70 +1,98 @@
-import ManageFuelCharges from "../../../classes/ManageFuelCharges.js";
-import displayFormValidationErrors from "../../../utils/dom/displayFormValidationErrors.js";
-import { clearMsg, myError, mySuccess, top } from "../../../utils/dom/domUtils.js";
-import { isNumeric, validateRange } from "../../../utils/validation/validationUtils.js";
+import { clearMsg, mySuccess, top } from "../../../utils/dom/domUtils.js";
+import { isNumeric } from "../../../utils/validation/validationUtils.js";
 
-export default async function handleByRangeFormSubmission(evt) {
-	evt.preventDefault();
+/**
+ * Handles submission of fuel range form
+ * @param {SubmitEvent} evt - Form submission event
+ */
+export default async function handleByRangeFormSubmission({evt, manageUser}) {
+    evt.preventDefault();
 
-		// DOM Elements
-		const fm = document.getElementById('form-msg');
+    try {
+        clearMsg({ container: 'form-msg' });
+        const byRangeContainer = document.getElementById('by-range-container'); // Used to hide the section
+        const fuelRangeContainer = document.getElementById('fuel-range-container'); // Dynamic container for fuel ranges
+        
+        const userData = Object.fromEntries(new FormData(evt.target));
 
-	try {
-		// Clear any messages
-		clearMsg({ container: fm });
+        // Validate first before loading other modules
+        const validationErrors = validateFormInputs(userData);
 
-		// Get the user data
-		const userData = Object.fromEntries(new FormData(evt.target));
+        if (validationErrors.length > 0) {
+            const { default: displayFormValidationErrors } = await import("../../../utils/dom/displayFormValidationErrors.js");
+            await displayFormValidationErrors(validationErrors);
+            return;
+        }
 
-		// Validate the form
-		const validate = validateForm(userData);
-
-		if(!validate) return;
-
-		// Manage User class
-		const manageFuelCharges = new ManageFuelCharges();
-
-		// Add the fuel charges
-		if(manageFuelCharges.addFuelChargesByRange(userData)){
-			mySuccess(fm, 'Fuel Charges have been added');
-			top();
-		}
-	}
-	catch (err) {
-		const {default: errorLogs} = await import("../../../utils/error-messages/errorLogs.js");
-		await errorLogs('handleByRangeFormSubmissionError', 'Handle by range form submission error: ', err);
-
-		const { helpDeskTicket } = await import("../../../utils/error-messages/errorMessages.js");
-		myError(fm, `Unable to add mileage charges at this time.<br>${helpDeskTicket}`);
-	}
+        // Only import and instantiate if validation passes
+        const { addFuelCharges } = await import("./helpers/manageFuelCharges.js");
+        const manageFuelCharges = await addFuelCharges({ userData, formType: 'range', manageUser });
+        
+        if (manageFuelCharges) {
+            mySuccess('form-msg', 'Fuel Charges have been added');
+            evt.target.reset();
+            fuelRangeContainer.innerHTML = '';
+            byRangeContainer.classList.add('w3-hide');
+            top();
+        }
+        else {
+            throw new Error('Failed to add fuel charges');
+        }
+    }
+    catch (err) {
+        top();
+        const { handleError } = await import("../../../utils/error-messages/handleError.js");
+        await handleError({
+            filename: 'handleByRangeFormSubmissionError',
+            consoleMsg: 'Handle by range form submission error: ',
+            err,
+            userMsg: 'Unable to add mileage charges at this time',
+            errorEle: 'form-msg'
+        });
+    }
 }
 
-function validateForm(userData) {
-	let validationError = [];
+/**
+ * Validates form inputs for fuel range submission
+ * @param {Object} userData - Form data from FormData
+ * @param {string} userData.ranges - Number of ranges
+ * @param {string} userData.cost - Cost per range
+ * @param {string} userData.mileage - Mileage range string (e.g., "50-60")
+ * @returns {Array<{input: string, msg: string}>} Array of validation errors
+ */
+function validateFormInputs(userData) {
+    const errors = [];
 
-	// Loop through the userData for form validation
-	for (const data in userData) {
-		if (data.includes('ranges') || data.includes('cost')) {
-			const validate = isNumeric(userData[data]);
+    for (const [key, value] of Object.entries(userData)) {
+        if (key.includes('ranges') || key.includes('cost')) {
+            if (!isNumeric(value)) {
+                errors.push({
+                    input: key,
+                    msg: 'Input must be numeric.'
+                });
+            }
+        }
+        else if (key.includes('mileage')) {
+            if (!validateRange(value)) {
+                errors.push({
+                    input: key,
+                    msg: 'Improper range format.'
+                });
+            }
+        }
+    }
 
-			if (!validate) {
-				validationError.push({ input: data, msg: 'Input must be numeric.' });
-			}
-		}
-		else if (data.includes('mileage')) {
-			const validate = validateRange(userData[data]);
+    return errors;
+}
 
-			if (!validate) {
-				validationError.push({ input: data, msg: 'Improper range format.' })
-			}
-		}
-	}
-
-
-	if (validationError.length > 0) {
-		displayFormValidationErrors(validationError);
-		return false;
-	}
-
-	return true;
+/**
+ * Validates mileage range format (e.g., "50-60")
+ * @param {string} range - Range string to validate
+ * @returns {boolean} True if valid range format
+ * @private
+ */
+function validateRange(range) {
+    // Matches pattern: number-number or number-number+
+    const rangePattern = /^\d+\-\d+\+?$/;
+    return rangePattern.test(range);
 }

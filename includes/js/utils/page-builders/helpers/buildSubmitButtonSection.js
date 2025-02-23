@@ -6,7 +6,7 @@ import { buildEle } from "../../dom/domUtils.js";
  * @param {string} [buttonColor=null] - Optional CSS class for button color.
  * @returns {Promise<HTMLElement>} The button container element.
  */
-export default async function buildSubmitButtonSection(buttonText, buttonColor = null) {
+export default async function buildSubmitButtonSection(buttonText, buttonColor = null, id = null) {
     try {
         if (!buttonText) throw new Error('Button Text is required');
 
@@ -20,7 +20,7 @@ export default async function buildSubmitButtonSection(buttonText, buttonColor =
             {
                 type: 'button',
                 attributes: {
-                    id: 'submit-button',
+                    id: id || 'submit-button',
                     type: 'submit',
                     name: 'submit'
                 },

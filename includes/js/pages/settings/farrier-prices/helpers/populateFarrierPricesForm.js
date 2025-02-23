@@ -1,8 +1,11 @@
+import ManageUser from "../../../../classes/ManageUser.js";
+import { myError } from "../../../../utils/dom/domUtils.js";
 import getAllFormIdElements from "../../../../utils/dom/getAllFormIDElements.js";
 import buildInputBlocks from "./buildInputBlocks.js";
 
-export default async function populateFarrierPricesForm(formEle, manageUser) {
+export default async function populateFarrierPricesForm(fm, formEle) {
     try {
+        const manageUser = new ManageUser();
         const farrierPrices = await manageUser.getFarrierPrices();
 
         if(Object.keys(farrierPrices).length === 0) return;
@@ -19,7 +22,7 @@ export default async function populateFarrierPricesForm(formEle, manageUser) {
             consoleMsg: 'Populate farrier prices form error: ',
             err,
             userMsg: 'Unable to load saved pricing.',
-            errorEle: 'form-msg'
+            errorEle: fm
         });
     }
 }

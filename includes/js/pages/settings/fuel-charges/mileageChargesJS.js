@@ -1,18 +1,33 @@
-
+import { addListener } from "../../../utils/event-listeners/listeners.js";
+import ManageUser from "../../../classes/ManageUser.js";
+import handleByRangeFormSubmission from "./handleByRangeFormSubmission.js";
+import handlePerMileFormSubmission from "./handlePerMileFormSubmission.js";
 import handleRadioButtonSelect from "./helpers/handleRadioButtonSelect.js";
-import setupBackupNotice from "../../../utils/backup-notice/backupNotice.js";
+
+const COMPONENT_ID = 'mileage-charges';
+const manageUser = new ManageUser();
 
 // DOM Elements
-const byRange = document.getElementById('per-range'); // Radio button for mileage ranges
-const byRangeContainer = document.getElementById('by-range-container'); // Toggle to show the fuel ranges input
-const byPerMile = document.getElementById('per-mile'); // Radio button for the cost per mile
-const byMileContainer = document.getElementById('by-mile-container'); // Toggle to show the starting mile and cost per mile
-const perMileSubmitButton = document.getElementById('per-mile-submit-button-container'); // The container we will need to build a submit button for to prevent duplicate submit-button id's on the page
+const byRangeRadioButton = document.getElementById('per-range');
+const byPerMileRadioButton = document.getElementById('per-mile');
+const byRangeContainer = document.getElementById('by-range-container');
+const byMileContainer = document.getElementById('by-mile-container');
 
-// Set the back-up data reminder
-setupBackupNotice();
+// Initialize radio handling
+handleRadioButtonSelect(
+    byRangeRadioButton,
+    byRangeContainer,
+    byPerMileRadioButton,
+    byMileContainer,
+    manageUser
+);
 
-// This will add event listeners to the radio buttons.
-// It will then handle getting which section to open
-// It handles all the UI for the mileage ranges and adds a submit button for perMileForm
-handleRadioButtonSelect(byRange, byRangeContainer, byPerMile, byMileContainer, perMileSubmitButton); // Adds event listeners to the radio buttons, and will display the appropriate page
+// Add form submission listeners
+addListener('per-mile-form', 'submit', 
+    evt => handlePerMileFormSubmission({evt, manageUser}), 
+    COMPONENT_ID
+);
+addListener('by-range-form', 'submit', 
+    evt => handleByRangeFormSubmission({evt, manageUser}), 
+    COMPONENT_ID
+);

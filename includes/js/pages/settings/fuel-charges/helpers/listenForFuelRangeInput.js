@@ -1,30 +1,27 @@
-
-import ManageUser from "../../../../classes/ManageUser.js";
-import { addListener } from "../../../../utils/event-listeners/listeners.js";
+import { addListener, removeListeners } from "../../../../utils/event-listeners/listeners.js";
 import buildMileageRangeInputs from "./buildMileageRangeInputs.js";
 
-export default async function listenForFuelRangeInput(){
-	// DOM Elements
-	const rangeInput = document.getElementById('fuel-ranges'); // Input element the user inputs the number of ranges
-	const fuelRangeContainer = document.getElementById('fuel-range-container'); // This will hold the ranges form
-	const buttonSection = document.getElementById('button-section');
+export default async function listenForFuelRangeInput({userClass, rangeContainer, rangeInputId}) {
+    const rangeInput = document.getElementById('fuel-ranges');
+    const fuelRangeContainer = document.getElementById('fuel-range-container');
+    
+    const mileageCharges = await userClass.getMileageCharges();
 
-	if(buttonSection){
-		buttonSection.remove();
-	}
+    // Remove existing listeners
+    removeListeners(rangeInputId);
 
-	const manageUser = new ManageUser();
-	
-	// Get the fuel-ranges
-	const mileageCharges = await manageUser.getMileageCharges();
+    addListener(
+        rangeInput, 
+        'input', 
+        evt => buildMileageRangeInputs({evt, rangeContainer, fuelRangeContainer, values: mileageCharges, componentId: rangeInputId}),
+        rangeInputId
+    );
 
-	addListener(rangeInput, 'input', (evt) => buildMileageRangeInputs(evt, fuelRangeContainer, mileageCharges));
-
-	if(mileageCharges && mileageCharges.length > 0){
-		rangeInput.value = mileageCharges.length;
-
-		// Manually trigger the input event after setting the value
-		const event = new Event('input', { bubbles: true, cancelable: true});
-		rangeInput.dispatchEvent(event);
-	}
+    if (mileageCharges?.length > 0) {
+        rangeInput.value = mileageCharges.length;
+        rangeInput.dispatchEvent(new Event('input', { 
+            bubbles: true, 
+            cancelable: true 
+        }));
+    }
 }
