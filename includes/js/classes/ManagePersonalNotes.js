@@ -64,8 +64,6 @@ export default class ManagePersonalNotes {
 
 	async handleEditingPersonalnotes(evt){
 		try{
-			console.log('handleEditingPersonalnotes');
-			
 			// Get the form data
 			const userData = Object.fromEntries(new FormData(evt.target));
 			

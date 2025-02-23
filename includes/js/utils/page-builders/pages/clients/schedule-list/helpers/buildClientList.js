@@ -12,7 +12,7 @@ import ManageUser from "../../../../../../classes/ManageUser.js";
  * @param {string} [options.active=''] - The active status filter.
  * @param {number} [options.clientID=null] - The client ID.
  * @param {string} [options.primaryKey=null] - The primary key.
- * @returns {Promise<[DocumentFragment, number]>} - A promise that resolves to a tuple containing the document fragment and the client count.
+ * @returns {Promise<[DocumentFragment, number]>} - A promise that resolves to a array containing the document fragment and the client count.
  * @throws {Error} - Throws an error if there is an issue with building the client list.
  */
 export default async function buildClientList({ active = '', clientID = null, primaryKey = null }) {

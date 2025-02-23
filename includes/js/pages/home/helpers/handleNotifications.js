@@ -7,8 +7,6 @@ import getListenersForNotifications from "./getListenersForNotifications.js";
 
 export default async function handleNotifications(updateUserSettings, userDataStructure) {
 	try {
-		console.log('In handleNotifications');
-		
 		// Check permissions for the app
 		if (Notification.permission === 'granted') {
 			// Update the status for notifications

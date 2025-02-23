@@ -1,80 +1,97 @@
 import ManageUser from "../../../classes/ManageUser.js";
-import setupBackupNotice from "../../../utils/backup-notice/backupNotice.js";
-import displayFormValidationErrors from "../../../utils/dom/displayFormValidationErrors.js";
-import { clearMsg, myError, mySuccess } from "../../../utils/dom/domUtils.js";
-import { helpDeskTicket } from "../../../utils/error-messages/errorMessages.js";
+import { clearMsg, mySuccess, top } from "../../../utils/dom/domUtils.js";
 import { addListener } from "../../../utils/event-listeners/listeners.js";
 import { isNumeric } from "../../../utils/validation/validationUtils.js";
 import listenersToClearErrors from "./helpers/listenersToClearErrors.js";
 import populateScheduleOptionsForm from "./helpers/populateScheduleOptionsForm.js";
 
-// DOM Elements
-const fm = document.getElementById('form-msg');
+const COMPONENT_ID = 'schedule-options';
+const manageUser = new ManageUser();
 const scheduleOptionsForm = document.getElementById('schedule-options-form');
 
-// Set the back-up data reminder
-setupBackupNotice();
+// Initialize form
+await populateScheduleOptionsForm({ 
+    form: scheduleOptionsForm, 
+    manageUser 
+});
 
-// Set event listeners to clear any messages
-listenersToClearErrors(scheduleOptionsForm);
+listenersToClearErrors({ 
+    form: scheduleOptionsForm, 
+    componentId: COMPONENT_ID 
+});
 
-// Populate the form
-await populateScheduleOptionsForm(scheduleOptionsForm);
+/**
+ * Validates schedule options form data
+ * @param {Object} userData - Form data to validate
+ * @returns {Array<{input: string, msg: string}>} Array of validation errors
+ */
+function validateFormInputs(userData) {
+    const errors = [];
+    
+    Object.entries(userData).forEach(([key, value]) => {
+        if (value === '' || !isNumeric(value)) {
+            errors.push({
+                input: key,
+                msg: 'Field must be a valid number'
+            });
+        }
+    });
 
-// Handle the form submission
-async function handleScheduleFormSubmission(evt){
-	evt.preventDefault();
-
-	try{
-		// Clear any messages
-		clearMsg({container: fm});
-
-		const userData = Object.fromEntries(new FormData(evt.target));
-
-		// Validate the fields to ensure they are not empty and they are numeric
-		const validate = validateForm(userData);
-
-		// Check for errors
-		if(validate && validate.length > 0){
-			await displayFormValidationErrors(validate);
-			return;
-		}
-
-		const manageUser = new ManageUser();
-
-		if(await manageUser.updateLocalUserSettings({
-			userData,
-			settingsProperty: 'schedule_options',
-			backupStore: manageUser.indexed.stores.SCHEDULINGOPTIONS,
-			backupAPITag: 'add_scheduleOptions'
-		})){
-			mySuccess(fm, 'Schedule Options have been saved.');
-			return;
-		};
-
-		myError(fm, `Unable to save your Schedule Options at this time.<br>${helpDeskTicket}`);
-		return;
-	}
-	catch(err){
-		myError(fm, `Unable to save your Schedule Options at this time.<br>${helpDeskTicket}`);
-		const { default: errorLogs } = await import("../../../utils/error-messages/errorLogs.js");
-		await errorLogs('handleScheduleFormSubmissionError', 'Handle Schedule Form Submission Error: ', err);
-	}
+    return errors;
 }
 
-// Validate the form
-function validateForm(userData){
-	const errors = [];
+/**
+ * Handles schedule options form submission
+ * @param {SubmitEvent} evt - Form submission event
+ */
+async function handleScheduleFormSubmission({ evt }) {
+    evt.preventDefault();
 
-	for(const data in userData){
-		if(userData[data] === '' || !isNumeric(userData[data])){
-			errors.push({input: data, msg: 'Field cannot be empty or non-numeric.'});
-		}
-	}
+    try {
+        clearMsg({ container: 'form-msg' });
+        const userData = Object.fromEntries(new FormData(evt.target));
 
-	if(errors.length > 0) return errors;
-	return false;
+        const validationErrors = validateFormInputs(userData);
+        
+        if (validationErrors.length > 0) {
+            const { default: displayFormValidationErrors } = 
+                await import("../../../utils/dom/displayFormValidationErrors.js");
+            await displayFormValidationErrors(validationErrors);
+            return;
+        }
+
+        const stores = manageUser.getStoreNames();
+        const success = await manageUser.updateLocalUserSettings({
+            userData,
+            settingsProperty: 'schedule_options',
+            backupStore: stores.SCHEDULINGOPTIONS,
+            backupAPITag: 'add_scheduleOptions'
+        });
+
+        if (success) {
+            mySuccess('form-msg', 'Schedule Options have been saved.');
+            top();
+            return;
+        }
+
+        throw new Error('Failed to save schedule options');
+    }
+    catch (err) {
+        const { handleError } = await import("../../../utils/error-messages/handleError.js");
+        await handleError({
+            filename: 'handleScheduleFormSubmissionError',
+            consoleMsg: 'Schedule form submission error: ',
+            err,
+            userMsg: 'Unable to save schedule options at this time',
+            errorEle: 'form-msg'
+        });
+    }
 }
 
-// Add the event listener for the form submission
-addListener(scheduleOptionsForm, 'submit', handleScheduleFormSubmission);
+// Add form submission listener
+addListener(
+    scheduleOptionsForm, 
+    'submit', 
+    evt => handleScheduleFormSubmission({ evt }), 
+    COMPONENT_ID
+);

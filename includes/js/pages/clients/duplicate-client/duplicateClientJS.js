@@ -138,8 +138,6 @@ async function handleFormSubmission(evt, clientContainer) {
         const { default: validateTrimCycle } = await import("../../../utils/validation/helpers/validateTrimCycle.js");
         const isTrimCycleValid = validateTrimCycle(trimCycle);
 
-console.log('isTrimCycleValid', isTrimCycleValid);
-
         // const response = await handleDuplicateClientFormSubmission(evt);
 
         // if (response.status === 'success') {

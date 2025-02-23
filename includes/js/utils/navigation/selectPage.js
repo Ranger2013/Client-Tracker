@@ -1,3 +1,4 @@
+import { removeListeners } from "../event-listeners/listeners.js";
 import closeNavigationMenu from "./closeNavigationMenu.js";
 
 /** @type {Function|null} */
@@ -121,6 +122,8 @@ export default async function selectPage({ evt, page, cID = null, closeMenu = nu
         arrows.forEach(arrow => arrow.classList.remove('up'));
 
         const pageConfig = PAGE_MAPPINGS[page];
+        console.log('In selectPage: pageConfig:', pageConfig);
+        
         if (!pageConfig) throw new Error(`Unknown page: ${page}`);
 
         await loadNewPage(pageConfig, page, cID, primaryKey); // Pass page here
@@ -191,5 +194,7 @@ function cleanupServerRenderedListeners() {
     removeListeners('color-options');       // From colorOptionsJS.js
     removeListeners('farrier-prices');      // From farrierPricesJS.js
     removeListeners('date-time');           // From dateTimeJS.js
+    removeListeners('mileage-charges');     // From mileageCharges.js
+    removeListeners('schedule-options');     // From scheduleOptionsJS.js
     // We'll add more as we work through other server-rendered pages
 }

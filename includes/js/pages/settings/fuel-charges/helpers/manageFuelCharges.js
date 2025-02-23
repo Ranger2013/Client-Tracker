@@ -107,8 +107,6 @@ export async function addFuelCharges({ userData, formType, manageUser }) {
 // Helper function for data transformation
 async function buildRangeData({ userData }) {
     try {
-        console.log('In buildRangeData: userData: ', userData);
-
         return Array.from(
             { length: parseInt(userData.fuel_ranges, 10) },
             (_, i) => ({

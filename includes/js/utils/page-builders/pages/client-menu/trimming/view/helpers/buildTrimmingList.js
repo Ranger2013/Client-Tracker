@@ -135,8 +135,6 @@ function buildColumnOne(dateTrimmed, weeks, days) {
  */
 function buildColumnTwo(horses) {
 	try {
-		console.log('In buildColumnTwo: horses: ', horses);
-		
 		 const colTwo = buildEle({
 			  type: 'div',
 			  myClass: ['w3-col', 's4'],

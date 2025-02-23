@@ -1,5 +1,6 @@
+import { clearMsg, top } from "../../../../dom/domUtils.js";
 import { removeAllListeners } from "../../../../event-listeners/listeners.js";
-import { initializePage, buildPageElements } from "./helpers/pageBuilder.js";
+import { buildPageElements } from "./helpers/pageBuilder.js";
 
 const PAGE_BUILDER_ID = 'schedule-list-builder';
 
@@ -16,13 +17,13 @@ export default async function buildScheduleListPage({ active, cID = null, primar
     try {
         await initializePage(mainContainer);
         const pageElements = await buildPageElements({ active, cID, primaryKey });
-        console.log('pageElements: ', pageElements);
         
-        await initializeHandlers();
+        mainContainer.innerHTML = '';
+        mainContainer.appendChild(pageElements);
         
+        await initializeHandlers(); // Calls the clientListJS.js file.
         return () => {
             removeAllListeners(PAGE_BUILDER_ID);
-            mainContainer.innerHTML = '';
         };
     } 
     catch (err) {
@@ -31,9 +32,32 @@ export default async function buildScheduleListPage({ active, cID = null, primar
             filename: 'buildScheduleListPageError',
             consoleMsg: 'Build schedule list page error: ',
             err,
-            userMsg: 'Unable to build the schedule list page',
-            errorEle: 'page-msg'
         });
+        throw err;
+    }
+}
+
+/**
+ * Initializes the page by clearing messages and scrolling to top
+ * @param {HTMLElement} mainContainer - Main container element
+ * @throws {Error} If mainContainer is missing
+ */
+async function initializePage(mainContainer) {
+    try {
+        clearMsg({ container: 'page-msg' });
+        top();
+        if (!mainContainer) {
+            throw new Error('mainContainer is required');
+        }
+    }
+    catch (err) {
+        const { handleError } = await import("../../../../error-messages/handleError.js");
+        await handleError({
+            filename: 'initializePageError',
+            consoleMsg: 'Initialize page error: ',
+            err,
+        });
+        throw err; // Propagate error to caller
     }
 }
 
@@ -51,5 +75,6 @@ async function initializeHandlers() {
             userMsg: 'Unable to initialize page handlers',
             errorEle: 'page-msg'
         });
+        throw err;
     }
 }

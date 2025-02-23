@@ -28,8 +28,6 @@ async function handleLogIn(evt) {
             timeout: 10000 // Longer timeout for login
         });
 
-        console.log('In handleLogin: req: ', req);
-
         if (req.status !== 'ok') {
             myError('form-msg', req.msg);
             return;

@@ -170,13 +170,7 @@ export default class ManageUser {
     async #updateSettings({ userData, settingsProperty, backupStore = null, backupAPITag = null, backupData = null }) {
         try {
             let userSettings = await this.getSettings();
-            console.log('In #updateSettings: userData: ', userData);
-            console.log('In #updateSettings: settingsProperty: ', settingsProperty);
-            console.log('In #updateSettings: backupStore: ', backupStore);
-            console.log('In #updateSettings: backupAPITag: ', backupAPITag);
-            console.log('In #updateSettings: backupData: ', backupData);
-            
-            
+
             // If there are no user settings, then we to build the structure
             if (!userSettings) {
                 // Dynamically import the userSettingsDataStructure.js file and then set the userSettings to that structure

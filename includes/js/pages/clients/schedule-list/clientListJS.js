@@ -13,8 +13,15 @@ const COMPONENT_ID = 'schedule-list';
  */
 export default async function clientList() {
     try {
+        console.log('In clientList');
+        
         initializeSearchHandlers();
+
+        console.log('Initialized search handlers');
+
         initializeMenuHandlers();
+
+        console.log('Initialized menu handlers');
         return () => removeListeners(COMPONENT_ID);
     } catch (err) {
         const { default: errorLogs } = await import("../../../utils/error-messages/errorLogs.js");

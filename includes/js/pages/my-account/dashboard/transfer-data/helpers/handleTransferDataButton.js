@@ -10,15 +10,12 @@ const indexed = new IndexedDBOperations();
 
 const handleUpdatingIDBOperations = async (response) => {
     try {
-		console.log('response', response);
-		
         const { data, property, store, maxID } = response;
         const db = await indexed.openDBPromise();
 
         // Handle user settings separately (this part remains unchanged)
         if (store === 'user_settings' && property) {
             const userSettings = await indexed.getAllStorePromise(db, indexed.stores.USERSETTINGS);
-				console.log('Transfer Data: userSettings', userSettings);
 				
             if (userSettings.length > 0) {
                 const userSetting = userSettings[0];
