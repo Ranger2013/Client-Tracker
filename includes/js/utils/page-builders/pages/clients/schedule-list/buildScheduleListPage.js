@@ -2,7 +2,7 @@ import { clearMsg, top } from "../../../../dom/domUtils.js";
 import { removeAllListeners } from "../../../../event-listeners/listeners.js";
 import { buildPageElements } from "./helpers/pageBuilder.js";
 
-const PAGE_BUILDER_ID = 'schedule-list-builder';
+export const PAGE_BUILDER_ID = 'schedule-list-builder';
 
 /**
  * Builds the schedule list page
@@ -16,12 +16,16 @@ const PAGE_BUILDER_ID = 'schedule-list-builder';
 export default async function buildScheduleListPage({ active, cID = null, primaryKey = null, mainContainer }) {
     try {
         await initializePage(mainContainer);
-        const pageElements = await buildPageElements({ active, cID, primaryKey });
+        const pageElements = await buildPageElements({ 
+            active, 
+            cID, 
+            primaryKey,
+        });
         
         mainContainer.innerHTML = '';
         mainContainer.appendChild(pageElements);
         
-        await initializeHandlers(); // Calls the clientListJS.js file.
+        await initializeHandlers(); // This sets up UI in clientListJS.js
         return () => {
             removeAllListeners(PAGE_BUILDER_ID);
         };

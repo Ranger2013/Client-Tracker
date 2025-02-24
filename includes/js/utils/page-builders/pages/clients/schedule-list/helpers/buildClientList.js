@@ -316,34 +316,6 @@ async function buildClientTrimDate(client, dateTime) {
 }
 
 /**
- * Builds the no clients message element.
- * @param {string} active - The active status of the clients ('yes' or 'no').
- * @returns {Promise<HTMLElement>} The no clients message element.
- */
-async function buildNoClientsMessage(active) {
-	try {
-		const noClients = buildEle({
-			type: 'div',
-			myClass: ['w3-center', 'w3-padding-small']
-		});
-
-		const noClientsTitle = buildEle({
-			type: 'h5',
-			myClass: ['w3-text-red'],
-			text: `You currently do not have any ${active === 'yes' ? 'active' : 'inactive'} clients`
-		});
-
-		noClients.appendChild(noClientsTitle);
-		return noClients;
-	}
-	catch (err) {
-		const { default: errorLogs } = await import("../../../../../../utils/error-messages/errorLogs.js");
-		await errorLogs('buildNoClientsMessageError', 'Build no clients message error: ', err);
-		throw err;
-	}
-}
-
-/**
  * Builds the client menu element.
  * @param {Object} client - The client object.
  * @param {number} index - The index of the client in the list.
@@ -616,7 +588,7 @@ async function fetchClientList(active, clientID, primaryKey) {
     } else {
         const cID = Number(clientID);
         const clientInfo = await manageClient.getClientInfo({ primaryKey });
-        return [clientInfo];
+        return clientInfo;
     }
 }
 

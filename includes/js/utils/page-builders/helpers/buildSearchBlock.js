@@ -1,89 +1,112 @@
+import { buildGenericSelectOptions } from "../../dom/buildGenericSelectOptions.js";
 import { buildEle } from "../../dom/domUtils.js";
 
 /**
- * Builds the search block with filter options and search input.
- * @param {Array<Object>} filterOptions - Array of filter options for the select element.
- * @param {string} filterOptions[].value - The value attribute for the option element.
- * @param {string} filterOptions[].text - The text content for the option element.
- * @returns {HTMLElement} The constructed search block element.
+ * Configuration for search block UI elements
+ * @typedef {Object} SearchBlockConfig
+ * @property {Object} searchBlock - Main container configuration
+ * @property {Object} searchMsg - Message display container
+ * @property {Object} searchRow - Row container for inputs
+ * @property {Object} filterCol - Column for filter select
+ * @property {Object} filterSelect - Filter dropdown configuration
+ * @property {Object} searchCol - Column for search input
+ * @property {Object} searchInput - Search input configuration
+ */
+
+/**
+ * Builds the search block with filter options and search input
+ * @param {Object} filterOptions - Options configuration
+ * @param {Array} filterOptions.list - Array of option items
+ * @param {Function} filterOptions.value - Value extractor function
+ * @param {Function} filterOptions.text - Text extractor function
+ * @returns {Promise<HTMLElement>} The constructed search block
+ * @throws {Error} If building elements fails
  */
 export default async function buildSearchBlock(filterOptions) {
-	// Build the search block container
-	const searchBlock = buildEle({
-		type: 'div',
-		attributes: { id: 'search-block' },
-		myClass: ['w3-padding']
-	});
-
 	try {
-		// Build and append the search message container
-		const searchMsg = buildEle({
-			type: 'div',
-			attributes: { id: 'search-msg' },
-			myClass: ['w3-center']
-		});
-		searchBlock.appendChild(searchMsg);
-
-		// Build and append the search row container
-		const searchRow = buildEle({ type: 'div', myClass: ['w3-row'] });
-		searchBlock.appendChild(searchRow);
-
-		// Build and append the filter column
-		const filterCol = buildEle({ type: 'div', myClass: ['w3-col', 'm6', 'w3-padding-small'] });
-		searchRow.appendChild(filterCol);
-
-		// Build and append the filter select element
-		const filterSelect = buildEle({
-			type: 'select',
-			attributes: {
-				id: 'filter',
-				name: 'filter',
-				title: 'Filter Search'
+		const PAGE_CONFIG = {
+			searchBlock: {
+				type: 'div',
+				attributes: { id: 'search-block' },
+				myClass: ['w3-padding'],
 			},
-			myClass: ['w3-input', 'w3-border']
-		});
-		filterCol.appendChild(filterSelect);
-
-		// Add options to the filter select element
-		filterOptions.forEach(option => {
-			const optionElement = buildEle({
-				type: 'option',
-				attributes: { value: option.value },
-				text: option.text
-			});
-			filterSelect.appendChild(optionElement);
-		});
-
-		// Build and append the search input column
-		const searchCol = buildEle({ type: 'div', myClass: ['w3-col', 'm6', 'w3-padding-small'] });
-		searchRow.appendChild(searchCol);
-
-		// Build and append the search input element
-		const searchInput = buildEle({
-			type: 'input',
-			attributes: {
-				id: 'search',
-				type: 'search',
-				name: 'search',
-				placeholder: 'Search'
+			searchMsg: {
+				type: 'div',
+				attributes: { id: 'search-msg' },
+				myClass: ['w3-center']
 			},
-			myClass: ['w3-input', 'w3-border']
-		});
-		searchCol.appendChild(searchInput);
+			searchRow: {
+				type: 'div',
+				myClass: ['w3-row']
+			},
+			filterCol: {
+				type: 'div',
+				myClass: ['w3-col', 'm6', 'w3-padding-small'],
+			},
+			filterSelect: {
+				type: 'select',
+				attributes: {
+					id: 'filter',
+					name: 'filter',
+					title: 'Filter Search'
+				},
+				myClass: ['w3-input', 'w3-border']
+			},
+			searchCol: {
+				type: 'div',
+				myClass: ['w3-col', 'm6', 'w3-padding-small'],
+			},
+			searchInput: {
+				type: 'input',
+				attributes: {
+					id: 'search',
+					type: 'search',
+					name: 'search',
+					placeholder: 'Search'
+				},
+				myClass: ['w3-input', 'w3-border']
+			},
+		};
 
-		return searchBlock;
+		const elements = buildElementsFromConfig(PAGE_CONFIG);
+		
+		// Build options separately
+		const selectOptions = buildGenericSelectOptions(filterOptions);
+		
+		// Assembly
+		elements.searchBlock.append(elements.searchMsg, elements.searchRow);
+		elements.searchRow.append(elements.filterCol, elements.searchCol);
+		elements.searchCol.appendChild(elements.searchInput);
+		elements.filterCol.appendChild(elements.filterSelect);
+		elements.filterSelect.append(...selectOptions);  // Append options to select
+
+		return elements.searchBlock;
 	}
 	catch (err) {
-		const { default: errorLogs } = await import("../../../utils/error-messages/errorLogs.js");
-		await errorLogs('buildSearchBlockError', 'Build search block error: ', err);
-		
-		const errorEle = buildEle({
-			type: 'div',
-			myClass: ['w3-text-red'],
-			text: 'An error occurred while building the search block.',
+		const { handleError } = await import("../../../utils/error-messages/handleError.js");
+		await handleError({
+			filename: 'buildSearchBlockError',
+			consoleMsg: 'Build search block error: ',
+			err,
 		});
-
-		searchBlock.appendChild(errorEle);
-		return searchBlock;
+		
+		return buildEle({
+			type: 'div',
+			myClass: ['w3-center', 'w3-text-red'],
+			text: 'Unable to build the search block.'
+		});
 	}
+}
+
+/**
+ * Builds DOM elements from configuration
+ * @private
+ * @param {SearchBlockConfig} config - Element configurations
+ * @returns {Object.<string, HTMLElement>} Map of built elements
+ */
+function buildElementsFromConfig(config){
+	return Object.entries(config).reduce((elements, [key, value]) => {
+		elements[key] = buildEle(value);
+		return elements;
+	}, {});
 }
