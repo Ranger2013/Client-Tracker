@@ -1,3 +1,6 @@
+import { addListener } from '../../utils/dom/listeners.js';
+import { errorLogs } from '../../errors/services/errorLogs.js';
+
 /** 
  * Constants 
  */
@@ -8,24 +11,39 @@ const BACKUP_NOTICE_ID = 'backup-notice-component';  // Add consistent component
 /**
  * Sets up the backup notice by updating it and adding an event listener to close it.
  */
-export default async function setupBackupNotice() {
+export default async function setupBackupNotice({ errorEleID }) {
     try {
-        const { addListener } = await import("../event-listeners/listeners.js");
-        
-        // Update the backup notice
-        await updateBackupNotice();
+        const noticeDiv = document.getElementById(errorEleID);
+        if (!noticeDiv) {
+            throw new Error('Backup notice element not found.');
+        }
 
-        // Add the event listener to close the notice with proper tracking
-        addListener('backup-data-notice-close', 'click', closeBackupNotice, BACKUP_NOTICE_ID);
-    } catch (err) {
-        const { handleError } = await import("../error-messages/handleError.js");
-        await handleError({
-            filename: 'setupBackupNoticeError',
-            consoleMsg: 'Setup backup notice error: ',
-            err,
-            errorEle: 'page-msg'
-        });
+        await updateBackupNotice();
+        addListener(`${errorEleID}-close`, 'click', closeBackupNotice, BACKUP_NOTICE_ID);
     }
+    catch (err) {
+        await errorLogs('backupNotice', 'Failed to setup backup notice', err);
+        updateNoticeContent(noticeDiv, 'Unable to check backup status', true);
+    }
+}
+
+/**
+ * Updates notice content while preserving structure
+ * @param {HTMLElement} noticeDiv - The notice element
+ * @param {string} message - Message to display
+ * @param {boolean} [isError=false] - Whether this is an error message
+ */
+function updateNoticeContent(noticeDiv, message, isError = false) {
+    // Clear existing message but preserve close button
+    const closeButton = noticeDiv.querySelector('#backup-data-notice-close');
+    noticeDiv.innerHTML = '';
+    if (closeButton) noticeDiv.appendChild(closeButton);
+
+    const messageEl = document.createElement('span');
+    messageEl.textContent = message;
+    if (isError) messageEl.classList.add('w3-text-red');
+    noticeDiv.insertBefore(messageEl, closeButton);
+    noticeDiv.classList.remove('w3-hide');
 }
 
 /**
@@ -33,10 +51,9 @@ export default async function setupBackupNotice() {
  */
 async function updateBackupNotice() {
     const noticeDiv = document.getElementById('backup-data-notice');
-    clearPreviousMessage(noticeDiv);
 
     try {
-        const { default: IndexedDBOperations } = await import("../../classes/IndexedDBOperations.js");
+        const { default: IndexedDBOperations } = await import("../../database/IndexedDBOperations.js");
         const indexed = new IndexedDBOperations();
 
         const db = await indexed.openDBPromise();
@@ -47,19 +64,15 @@ async function updateBackupNotice() {
             const hasDataToBackup = await checkStoresForData(db, stores, indexed);
 
             if (hasDataToBackup) {
-                showBackupNotice(noticeDiv);
+                updateNoticeContent(noticeDiv, 'You currently have data that needs to be backed up to the server.');
             } else {
                 hideBackupNotice(noticeDiv);
             }
         }
-    } catch (err) {
-        const { handleError } = await import("../error-messages/handleError.js");
-        await handleError({
-            filename: 'updateBackupNoticeError',
-            consoleMsg: 'Update backup notice error: ',
-            err,
-            errorEle: 'page-msg'
-        });
+    }
+    catch (err) {
+        await errorLogs('backupNotice', 'Failed to check backup status', err);
+        updateNoticeContent(noticeDiv, 'Unable to check for pending backups', true);
     }
 }
 
@@ -144,28 +157,29 @@ function hideBackupNotice(noticeDiv) {
  * Closes the backup notice and updates the user settings in IndexedDB.
  */
 async function closeBackupNotice() {
+    const noticeDiv = document.getElementById('backup-data-notice');
+
     try {
-        const { default: IndexedDBOperations } = await import("../../classes/IndexedDBOperations.js");
-        const { removeListeners } = await import("../event-listeners/listeners.js");
+        const { default: IndexedDBOperations } = await import("../../database/IndexedDBOperations.js");
+        const { removeListeners } = await import("../../utils/dom/listeners.js");
         const indexed = new IndexedDBOperations();
 
         const db = await indexed.openDBPromise();
         const userSettings = await indexed.getAllStorePromise(db, indexed.stores.USERSETTINGS);
 
-        userSettings[0].reminders.timestamp = Date.now();
+        if (!userSettings?.[0]) {
+            throw new Error('No user settings found');
+        }
 
+        userSettings[0].reminders.timestamp = Date.now();
         await indexed.clearStorePromise(db, indexed.stores.USERSETTINGS);
         await indexed.putStorePromise(db, userSettings[0], indexed.stores.USERSETTINGS);
 
-        hideBackupNotice(document.getElementById('backup-data-notice'));
-        removeListeners(BACKUP_NOTICE_ID);  // Use the component constant here too
-    } catch (err) {
-        const { handleError } = await import("../error-messages/handleError.js");
-        await handleError({
-            filename: 'closeBackupNoticeError',
-            consoleMsg: 'Close backup notice error: ',
-            err,
-            errorEle: 'page-msg'
-        });
+        hideBackupNotice(noticeDiv);
+        removeListeners(BACKUP_NOTICE_ID);
+    }
+    catch (err) {
+        await errorLogs('backupNotice', 'Failed to close backup notice', err);
+        updateNoticeContent(noticeDiv, 'Unable to update notification settings', true);
     }
 }

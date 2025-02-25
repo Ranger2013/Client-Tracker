@@ -1,4 +1,4 @@
-import { logServerSideError } from '../network/api.js';
+import { logServerSideError } from "./errorLogger";
 
 /**
  * Middleware for error logging

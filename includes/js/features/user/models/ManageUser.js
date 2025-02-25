@@ -1,4 +1,4 @@
-import IndexedDBOperations from "./IndexedDBOperations.js";
+import IndexedDBOperations from "../../../core/database/IndexedDBOperations.js";
 
 /**
  * Manages user-related operations and settings using IndexedDB
@@ -27,7 +27,7 @@ export default class ManageUser {
             this.#initialized = true;
         }
         catch (err) {
-            const { handleError } = await import("../utils/error-messages/handleError.js");
+            const { handleError } = await import("../../../../../old-js-code/js/utils/error-messages/handleError.js");
             await handleError({
                 filename: 'initializeSettingsError',
                 consoleMsg: 'Settings initialization error: ',
@@ -62,7 +62,7 @@ export default class ManageUser {
         catch (err) {
             console.warn('In getSettings: err: ', err);
             
-            const { handleError } = await import("../utils/error-messages/handleError.js");
+            const { handleError } = await import("../../../../../old-js-code/js/utils/error-messages/handleError.js");
             await handleError({
                 filename: 'getSettingsError',
                 consoleMsg: 'Get settings error: ',
@@ -150,7 +150,7 @@ export default class ManageUser {
             return result;
         }
         catch (err) {
-            const { handleError } = await import("../utils/error-messages/handleError.js");
+            const { handleError } = await import("../../../../../old-js-code/js/utils/error-messages/handleError.js");
             await handleError({
                 filename: 'updateLocalUserSettingsError',
                 consoleMsg: 'Update local user settings error: ',
@@ -174,7 +174,7 @@ export default class ManageUser {
             // If there are no user settings, then we to build the structure
             if (!userSettings) {
                 // Dynamically import the userSettingsDataStructure.js file and then set the userSettings to that structure
-                const { default: userSettingsDataStructure } = await import("../utils/configurations/user-settings-structure/userSettingsDataStructure.js");
+                const { default: userSettingsDataStructure } = await import("../../../../../old-js-code/js/utils/configurations/user-settings-structure/userSettingsDataStructure.js");
                 const setUserSettings = userSettingsDataStructure();
                 
                 const db = await this.#indexed.openDBPromise();
@@ -200,7 +200,7 @@ export default class ManageUser {
             return true;
         }
         catch (err) {
-            const { handleError } = await import("../utils/error-messages/handleError.js");
+            const { handleError } = await import("../../../../../old-js-code/js/utils/error-messages/handleError.js");
             await handleError({
                 filename: 'updateSettingsError',
                 consoleMsg: 'Settings update error: ',
@@ -236,7 +236,7 @@ export default class ManageUser {
             return true;
         }
         catch (err) {
-            const { handleError } = await import("../utils/error-messages/handleError.js");
+            const { handleError } = await import("../../../../../old-js-code/js/utils/error-messages/handleError.js");
             await handleError({
                 filename: 'manageIDBTransactionsError',
                 consoleMsg: 'Manage IDB transactions error: ',
@@ -258,7 +258,7 @@ export default class ManageUser {
             await this.#indexed.putStorePromise(db, data, backupStore, true);
         }
         catch (err) {
-            const { handleError } = await import("../utils/error-messages/handleError.js");
+            const { handleError } = await import("../../../../../old-js-code/js/utils/error-messages/handleError.js");
             await handleError({
                 filename: 'backupDataError',
                 consoleMsg: 'Backup data error: ',

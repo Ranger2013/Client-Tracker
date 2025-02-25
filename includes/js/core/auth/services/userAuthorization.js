@@ -1,11 +1,10 @@
 import { AuthorizationError } from '../../errors/models/AuthorizationError.js';
 import { commonErrors } from '../../errors/constants/errorMessages.js';
-import ManageUser from '../../../../old-js-code/js/classes/ManageUser.js';
-import TokenValidation from '../../../../old-js-code/js/classes/TokenValidation.js';
+import TokenValidation from './TokenValidation.js';
+import ManageUser from '../../../features/user/models/ManageUser.js';
 
 const PROTECTED_ROUTES = ['/login/', '/register/'];
 const ADMIN_EMAIL = 'farriers.clienttracker@gmail.com';
-const PAGE_MSG = 'page-msg';
 
 /**
  * Validates user authorization and handles token management

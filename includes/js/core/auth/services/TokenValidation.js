@@ -1,4 +1,4 @@
-import ManageUser from "./ManageUser.js";
+import ManageUser from "../../../features/user/models/ManageUser.js";
 
 export default class TokenValidation {
     #token = null;

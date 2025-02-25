@@ -1,5 +1,6 @@
-import { removeListeners } from '../../../utils/dom/listeners.js';
+import { removeListeners } from "../../utils/dom/listeners.js";
 import closeNavigationMenu from "./closeNavigationMenu.js";
+import { displayNavigationError } from '../components/backupErrorPage.js';
 
 /** @type {Function|null} */
 let cleanup = null;
@@ -129,7 +130,15 @@ export default async function selectPage({ evt, page, cID = null, closeMenu = nu
         await loadNewPage(pageConfig, page, cID, primaryKey); // Pass page here
 
     } catch (err) {
-        await handlePageError(err);
+        // Log the error but handle display separately
+        const { errorLogs } = await import('../../errors/services/errorLogs.js');
+        await errorLogs('selectPageError', `Navigation failed for page: ${page}`, err);
+
+        // Display backup page with context
+        displayNavigationError({ 
+            requestedPage: page,
+            errorType: err.name === 'ImportError' ? 'load' : 'build'
+        });
     }
 }
 
