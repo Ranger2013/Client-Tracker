@@ -1,13 +1,13 @@
-import userAuthorization from "./utils/security/userAuthorization.js";
-import mainTrackerNavigation from "./utils/navigation/trackerAppMainNavigation.js";
-import selectPage from "./utils/navigation/selectPage.js";
+import userAuthorization from "../../old-js-code/js/utils/security/userAuthorization.js";
+import mainTrackerNavigation from "../../old-js-code/js/utils/navigation/trackerAppMainNavigation.js";
+import selectPage from "../../old-js-code/js/utils/navigation/selectPage.js";
 
 /** @typedef {string} ValidationToken */
 
 // Token stored in memory for security - cleared on page refresh
 let validationToken = null;
 
-import setupBackupNotice from "./utils/backup-notice/backupNotice.js";
+import setupBackupNotice from "../../old-js-code/js/utils/backup-notice/backupNotice.js";
 
 // Initialize in order of importance
 setupBackupNotice();
@@ -36,8 +36,8 @@ const initializeApp = async () => {
     catch (err) {
         console.warn('Init app error: ', err);
         
-        const { DOM_IDS } = await import("./utils/dom/domConstants.js");
-        const { handleError } = await import("./utils/error-messages/handleError.js");
+        const { DOM_IDS } = await import("../../old-js-code/js/utils/dom/domConstants.js");
+        const { handleError } = await import("../../old-js-code/js/utils/error-messages/handleError.js");
         await handleError({
             filename: 'trackerError',
             consoleMsg: 'Init app error: ',
@@ -64,8 +64,8 @@ async function handlePageNavigation(evt) {
         await selectPage({ evt, page });
     } 
     catch (err) {
-        const { DOM_IDS } = await import("./utils/dom/domConstants.js");
-        const { handleError } = await import("./utils/error-messages/handleError.js");
+        const { DOM_IDS } = await import("../../old-js-code/js/utils/dom/domConstants.js");
+        const { handleError } = await import("../../old-js-code/js/utils/error-messages/handleError.js");
         await handleError({
             filename: 'handlePaegNavigationError',
             consoleMsg: 'Navigation error: ',
