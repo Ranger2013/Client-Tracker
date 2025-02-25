@@ -1,8 +1,8 @@
-import { clearMsg } from "../utils/dom/domUtils.js";
-import { addListener } from "../utils/event-listeners/listeners.js";
-import { ucwords } from "../utils/string/stringUtils.js";
-import { checkForDuplicate, checkPasswordStrength, comparePasswords, formatPhone } from "../utils/validation/validationUtils.js";
-import { handleUserRegistration, getTerms } from "./helpers/registerUserHelpers.js";
+import { clearMsg } from "../../../../../old-js-code/js/utils/dom/domUtils.js";
+import { addListener } from "../../../../../old-js-code/js/utils/event-listeners/listeners.js";
+import { ucwords } from "../../../../../old-js-code/js/utils/string/stringUtils.js";
+import { checkForDuplicate, checkPasswordStrength, comparePasswords, formatPhone } from "../../../../../old-js-code/js/utils/validation/validationUtils.js";
+import { handleUserRegistration, getTerms } from "./components/registerUserHelpers.js";
 
 // Select all the DOM elements that have a -error in the id
 const errorElements = document.querySelectorAll('[id$="-error"]');

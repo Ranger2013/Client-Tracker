@@ -1,9 +1,9 @@
 
-import { clearMsg, myError, mySuccess, top } from "../../utils/dom/domUtils.js";
-import openModal from "../../../js/utils/modal/openModal.js";
-import { getTermsAPI, registerUserAPI } from "../../utils/network/apiEndpoints.js";
-import { fetchData } from "../../utils/network/network.js";
-import { handleFormValidationErrors } from "../../utils/validation/validationUtils.js";
+import { clearMsg, myError, mySuccess, top } from "../../../../../../old-js-code/js/utils/dom/domUtils.js";
+import openModal from "../../../../../../old-js-code/js/utils/modal/openModal.js";
+import { getTermsAPI, registerUserAPI } from "../../../../../../old-js-code/js/utils/network/apiEndpoints.js";
+import { fetchData } from "../../../../../../old-js-code/js/utils/network/network.js";
+import { handleFormValidationErrors } from "../../../../../../old-js-code/js/utils/validation/validationUtils.js";
 
 /**
  * Gets either the terms of service or the privacy policy for the modal
@@ -33,7 +33,7 @@ export async function handleUserRegistration(evt) {
 	evt.preventDefault();
 
 	// Imports
-	const { unexpectedErrorMsg, possibleConnectionErrorMsg } = await import("../../utils/error-messages/errorMessages.js");
+	const { unexpectedErrorMsg, possibleConnectionErrorMsg } = await import("../../../../../../old-js-code/js/utils/error-messages/errorMessages.js");
 	
 	// DOM elements
 	const formContainer = document.getElementById('form-container');

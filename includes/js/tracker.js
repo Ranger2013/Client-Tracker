@@ -1,43 +1,28 @@
 import userAuthorization from "../../old-js-code/js/utils/security/userAuthorization.js";
-import mainTrackerNavigation from "../../old-js-code/js/utils/navigation/trackerAppMainNavigation.js";
 import selectPage from "../../old-js-code/js/utils/navigation/selectPage.js";
 
 /** @typedef {string} ValidationToken */
-
-// Token stored in memory for security - cleared on page refresh
 let validationToken = null;
 
-import setupBackupNotice from "../../old-js-code/js/utils/backup-notice/backupNotice.js";
-
 // Initialize in order of importance
-setupBackupNotice();
+initializeTracker();
 
 /**
- * Initializes the application, handling auth, navigation, and error boundaries
- * Ensures proper cleanup of event listeners on errors
-*/
+ * Initializes the application, handling auth and navigation
+ */
 const initializeApp = async () => {
     try {
-        // Get current URL path
         const path = window.location.pathname;
-        
-        // This handles entire auth flow
         validationToken = await userAuthorization(path);
 
         if (validationToken) {
-            // Continue app initialization
-            await mainTrackerNavigation();
-            // Handle browser back/forward navigation
+            await initializeTracker();
             window.addEventListener('popstate', handlePageNavigation);
-            // Set up global error catching for unhandled errors
             setupErrorBoundaries();
         }
     } 
     catch (err) {
-        console.warn('Init app error: ', err);
-        
-        const { DOM_IDS } = await import("../../old-js-code/js/utils/dom/domConstants.js");
-        const { handleError } = await import("../../old-js-code/js/utils/error-messages/handleError.js");
+        const { handleError } = await import('./core/errors/errorHandler.js');
         await handleError({
             filename: 'trackerError',
             consoleMsg: 'Init app error: ',
@@ -45,29 +30,23 @@ const initializeApp = async () => {
             userMsg: 'Failed to initialize application',
             errorEle: 'page-msg',
         });
-    } 
-    finally {
-        document.body.classList.remove('app-initializing');
     }
 };
 
-// Sets up global error boundaries to catch unhandled errors and rejections
 function setupErrorBoundaries() {
     window.addEventListener('error', handleGlobalError);
     window.addEventListener('unhandledrejection', handleGlobalPromiseError);
 }
 
-// Handles browser navigation events (back/forward) and updates content
 async function handlePageNavigation(evt) {
     try {
         const page = evt?.state?.page || null;
         await selectPage({ evt, page });
     } 
     catch (err) {
-        const { DOM_IDS } = await import("../../old-js-code/js/utils/dom/domConstants.js");
-        const { handleError } = await import("../../old-js-code/js/utils/error-messages/handleError.js");
+        const { handleError } = await import('./core/errors/errorHandler.js');
         await handleError({
-            filename: 'handlePaegNavigationError',
+            filename: 'handlePageNavigationError',
             consoleMsg: 'Navigation error: ',
             err: err,
             userMsg: 'Failed to navigate to page',
@@ -76,24 +55,53 @@ async function handlePageNavigation(evt) {
     }
 }
 
-// Global error handlers with recovery mechanisms
-function handleGlobalError(error) {
+async function handleGlobalError(error) {
     console.error('Global error:', error);
-    errorRecovery();
+    const { handleError } = await import('./core/errors/errorHandler.js');
+    await handleError({
+        filename: 'globalError',
+        consoleMsg: 'Global error: ',
+        err: error,
+        userMsg: 'An unexpected error occurred',
+        errorEle: 'page-msg',
+    });
 }
 
-function handleGlobalPromiseError(error) {
+async function handleGlobalPromiseError(error) {
     console.error('Unhandled promise rejection:', error);
-    errorRecovery();
+    const { handleError } = await import('./core/errors/errorHandler.js');
+    await handleError({
+        filename: 'promiseError',
+        consoleMsg: 'Unhandled promise rejection: ',
+        err: error,
+        userMsg: 'An unexpected error occurred',
+        errorEle: 'page-msg',
+    });
 }
 
-function errorRecovery() {
-    document.body.classList.remove('app-initializing');
-    // Add any other cleanup needed
-}
-
-// Initialize the app
-await initializeApp();
-
-// Provide controlled access to token
 export const getValidationToken = () => validationToken;
+
+async function initializeTracker() {
+    try {
+        const { default: mainTrackerNavigation } = await import('./navigation/mainTrackerNavigation.js');
+        await mainTrackerNavigation();
+
+        try {
+            const { default: setupBackupNotice } = await import('./features/backup/backupNotice.js');
+            await setupBackupNotice();
+        } catch (backupError) {
+            const { AppError, ErrorTypes } = await import('./core/errors/AppError.js');
+            throw new AppError('Backup notice initialization failed', {
+                originalError: backupError,
+                errorCode: ErrorTypes.BACKUP_ERROR,
+                userMessage: 'Unable to check for pending backups',
+                displayTarget: 'backup-data-notice'
+            });
+        }
+    } catch (error) {
+        const { handleError } = await import('./core/errors/errorHandler.js');
+        await handleError(error);
+    }
+}
+
+await initializeApp();

@@ -1,8 +1,8 @@
-import { loginAPI } from "../utils/network/apiEndpoints.js";
-import { fetchData } from "../utils/network/network.js";
-import { myError, mySuccess } from "../utils/dom/domUtils.js";
-import ManageUser from "../classes/ManageUser.js";
-import { DOM_IDS } from "../utils/dom/domConstants.js";
+import { loginAPI } from "../../../../../old-js-code/js/utils/network/apiEndpoints.js";
+import { fetchData } from "../../../../../old-js-code/js/utils/network/network.js";
+import { myError, mySuccess } from "../../../../../old-js-code/js/utils/dom/domUtils.js";
+import ManageUser from "../../../../../old-js-code/js/classes/ManageUser.js";
+import { DOM_IDS } from "../../../../../old-js-code/js/utils/dom/domConstants.js";
 
 // Extract form validation to separate function
 function validateForm(userData) {
@@ -55,7 +55,7 @@ async function handleLogIn(evt) {
 
     }
     catch (err) {
-        const { handleError } = await import("../utils/error-messages/handleError.js");
+        const { handleError } = await import("../../../../../old-js-code/js/utils/error-messages/handleError.js");
         await handleError({
             fileName: 'handleLogInError',
             consoleMsg: 'Error in the handle login function.',

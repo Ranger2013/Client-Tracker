@@ -1,0 +1,16 @@
+export const ErrorTypes = {
+    // Core Application
+    INITIALIZATION_ERROR: 'INITIALIZATION_ERROR',
+    NAVIGATION_ERROR: 'NAVIGATION_ERROR',
+    // Features
+    BACKUP_ERROR: 'BACKUP_ERROR',
+    SETTINGS_ERROR: 'SETTINGS_ERROR',
+    
+    // Data
+    DATABASE_ERROR: 'DATABASE_ERROR',
+    API_ERROR: 'API_ERROR',
+    
+    // UI
+    RENDER_ERROR: 'RENDER_ERROR',
+    INPUT_ERROR: 'INPUT_ERROR'
+};
