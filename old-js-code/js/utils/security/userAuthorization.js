@@ -13,7 +13,6 @@ const PAGE_MSG = 'page-msg';
  * @throws {Error} When token validation fails
  */
 export default async function userAuthorization(urlPath) {
-    
     // Skip auth for login/register pages
     if (PROTECTED_ROUTES.some(route => urlPath.includes(route))) {
         return null;

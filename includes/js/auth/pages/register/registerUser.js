@@ -1,4 +1,4 @@
-import { clearMsg } from "../../../../../old-js-code/js/utils/dom/domUtils.js";
+import { clearMsg } from "../../../core/utils/dom/domUtils.js";
 import { addListener } from "../../../../../old-js-code/js/utils/event-listeners/listeners.js";
 import { ucwords } from "../../../../../old-js-code/js/utils/string/stringUtils.js";
 import { checkForDuplicate, checkPasswordStrength, comparePasswords, formatPhone } from "../../../../../old-js-code/js/utils/validation/validationUtils.js";

@@ -10,6 +10,9 @@ export const ErrorTypes = {
     DATABASE_ERROR: 'DATABASE_ERROR',
     API_ERROR: 'API_ERROR',
     
+    // Authentication & Authorization
+    AUTHORIZATION_ERROR: 'AUTHORIZATION_ERROR',
+    
     // UI
     RENDER_ERROR: 'RENDER_ERROR',
     INPUT_ERROR: 'INPUT_ERROR'

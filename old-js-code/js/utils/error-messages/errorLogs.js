@@ -1,5 +1,5 @@
 import { errorLogAPI } from "../network/apiEndpoints.js";
-import { logServerSideError } from "../network/network.js";
+import { logServerSideError } from "../../../../includes/js/core/network/services/network.js";
 
 export default async function errorLogs(fileName, msg, err){
 	try{

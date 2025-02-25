@@ -1,4 +1,4 @@
-import { clearMsg, disableEnableSubmitButton, myError } from "../dom/domUtils.js";
+import { clearMsg, disableEnableSubmitButton, myError } from "../../../../includes/js/core/utils/dom/domUtils.js";
 import { fetchData } from "../network/network.js";
 import { checkForDuplicatesAPI } from "../network/apiEndpoints.js";
 import { underscoreToHyphen, underscoreToHyphenPlusError } from "../string/stringUtils.js";

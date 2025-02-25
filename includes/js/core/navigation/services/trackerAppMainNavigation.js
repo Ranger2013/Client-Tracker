@@ -80,7 +80,7 @@ export default async function mainTrackerNavigation() {
         await setupRouteListeners();
     } 
     catch (err) {
-        const { handleError } = await import("../error-messages/handleError.js");
+        const { handleError } = await import("../../../../../old-js-code/js/utils/error-messages/handleError.js");
         await handleError({
             filename: 'mainTrackerNavigationError',
             consoleMsg: 'Navigation setup error: ',
@@ -111,7 +111,7 @@ async function setupNavigationControls() {
         sideBar.addEventListener('click', sideBarNavigation);
     } 
     catch (err) {
-        const { handleError } = await import("../error-messages/handleError.js");
+        const { handleError } = await import("../../../../../old-js-code/js/utils/error-messages/handleError.js");
         await handleError({
             filename: 'setupNavigationControlsError',
             consoleMsg: 'Navigation controls setup error: ',
@@ -139,7 +139,7 @@ async function setupRouteListeners() {
                                     await selectPage({ evt, page: route.page });
                                 } 
                                 catch (err) {
-                                    const { handleError } = await import("../error-messages/handleError.js");
+                                    const { handleError } = await import("../../../../../old-js-code/js/utils/error-messages/handleError.js");
                                     await handleError({
                                         filename: 'handleRouteClickError',
                                         consoleMsg: `Route listener error for ${route.page}: `,
@@ -156,7 +156,7 @@ async function setupRouteListeners() {
         });
     } 
     catch (err) {
-        const { handleError } = await import("../error-messages/handleError.js");
+        const { handleError } = await import("../../../../../old-js-code/js/utils/error-messages/handleError.js");
         await handleError({
             filename: 'setupRouteListenersError',
             consoleMsg: 'Route listeners setup error: ',

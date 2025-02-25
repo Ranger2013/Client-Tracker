@@ -1,5 +1,5 @@
 // Install the app api
-export const getInstallAppAPI = "/includes/api/home/getInstallAppAPI.php";
+// export const getInstallAppAPI = "/includes/api/home/getInstallAppAPI.php";
 
 export const getNotificationsAPI = "/includes/api/home/getNotificationsAPI.php";
 

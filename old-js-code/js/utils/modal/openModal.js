@@ -1,4 +1,4 @@
-import { buildEle } from "../dom/domUtils.js";
+import { buildEle } from "../../../../includes/js/core/utils/dom/domUtils.js";
 import { addListener } from "../event-listeners/listeners.js";
 
 // DOM Elements

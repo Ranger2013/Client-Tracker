@@ -1,4 +1,4 @@
-import { removeListeners } from "../event-listeners/listeners.js";
+import { removeListeners } from '../../../utils/dom/listeners.js';
 import closeNavigationMenu from "./closeNavigationMenu.js";
 
 /** @type {Function|null} */
@@ -183,8 +183,8 @@ async function importModule(modulePath) {
 }
 
 async function handlePageError(err) {
-    const { default: backupErrorPage } = await import("../error-messages/backupErrorPage.js");
-    const { default: errorLogs } = await import('../error-messages/errorLogs.js');
+    const { default: backupErrorPage } = await import("../../../../../old-js-code/js/utils/error-messages/backupErrorPage.js");
+    const { default: errorLogs } = await import('../../../../../old-js-code/js/utils/error-messages/errorLogs.js');
 
     backupErrorPage();
     await errorLogs('selectPageError', 'Select Page Error: ', err);

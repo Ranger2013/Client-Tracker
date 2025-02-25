@@ -1,5 +1,5 @@
 
-import { clearMsg, myError, mySuccess, top } from "../../../../../../old-js-code/js/utils/dom/domUtils.js";
+import { clearMsg, myError, mySuccess, top } from "../../../../core/utils/dom/domUtils.js";
 import openModal from "../../../../../../old-js-code/js/utils/modal/openModal.js";
 import { getTermsAPI, registerUserAPI } from "../../../../../../old-js-code/js/utils/network/apiEndpoints.js";
 import { fetchData } from "../../../../../../old-js-code/js/utils/network/network.js";
