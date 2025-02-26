@@ -1,5 +1,6 @@
-import { isNumeric } from "../../../utils/validation/validationUtils.js";
-import { mySuccess, top } from "../../../utils/dom/domUtils.js";
+import { safeDisplayMessage } from "../../../../../../core/utils/dom/messages.js";
+import { isNumeric } from "../../../../../../core/utils/validation/validators.js";
+import { top } from "../../../../../../core/utils/window/scroll.js";
 
 export default async function handlePerMileFormSubmission({ evt, manageUser }) {
 	evt.preventDefault();
@@ -12,17 +13,20 @@ export default async function handlePerMileFormSubmission({ evt, manageUser }) {
 		const errors = validateForm(userData);
 
 		if (errors.length > 0) {
-			const { default: displayFormValidationErrors } =
-				await import("../../../utils/dom/displayFormValidationErrors.js");
+			const { default: displayFormValidationErrors } = await import("../../../../../../core/utils/dom/forms/displayFormValidationErrors.js");
 			await displayFormValidationErrors(errors);
 			return;
 		}
 
-		const { addFuelCharges } = await import("./helpers/manageFuelCharges.js");
+		const { addFuelCharges } = await import("./manageFuelCharges.js");
 		const manageFuelCharges = await addFuelCharges({ userData, formType: 'mile', manageUser });
 
 		if (manageFuelCharges) {
-			mySuccess('form-msg', 'Fuel Charges have been added');
+			await safeDisplayMessage({
+				elementId: 'form-msg',
+				message: 'Fuel Charges have been added',
+				isSuccess: true,
+			});
 			evt.target.reset();
 			byMileContainer.classList.add('w3-hide');
 			top();

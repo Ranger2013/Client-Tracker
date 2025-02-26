@@ -1,4 +1,4 @@
-import { cleanUserOutput } from "../../../../utils/string/stringUtils.js";
+import { cleanUserOutput } from "../../../../../../core/utils/string/stringUtils.js";
 
 /**
  * Checks for and populates form with local IDB data if it exists.
@@ -27,7 +27,7 @@ export default async function populateDateTimeForm(manageUser, domElements) {
             ?.setAttribute('checked', 'checked');
 
     } catch (err) {
-        const { handleError } = await import("../../../../utils/error-messages/handleError.js");
+        const { handleError } = await import("../../../../../../old-js-code/js/utils/error-messages/handleError.js");
         await handleError({
             filename: 'populateDateTimeFormError',
             consoleMsg: 'Populate date/time form error: ',

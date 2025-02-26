@@ -12,10 +12,11 @@
  * @requires mySuccess
  */
 
-import { addListener } from "../../../utils/event-listeners/listeners.js";
-import { clearMsg, disableEnableSubmitButton, myError, mySuccess } from "../../../utils/dom/domUtils.js";
-import ManageUser from "../../../classes/ManageUser.js";
-import populateDateTimeForm from "./helpers/populateDateTimeForm.js";
+import { addListener } from "../../../../core/utils/dom/listeners.js";
+import { clearMsg, safeDisplayMessage } from "../../../../core/utils/dom/messages.js";
+import { disableEnableSubmitButton } from "../../../../core/utils/dom/elements.js";
+import ManageUser from "../../models/ManageUser.js";
+import populateDateTimeForm from "./components/date-time/populateDateTimeForm.js";
 
 /**
  * Component ID for event listener tracking
@@ -36,9 +37,9 @@ populateDateTimeForm(manageUser, { timeZone, dateFormat });
  * Validates the selected date format against allowed patterns
  * @param {Event} evt - Change event from date format select
  * @param {HTMLElement} dateFormatError - Error container element
- * @returns {void}
+ * @returns {Promise<void>}
  */
-function validateDateFormat(evt, dateFormatError) {
+async function validateDateFormat(evt, dateFormatError) {
 	// Set the date formats
 	const dateFormats = [
 		'Y-m-d',
@@ -59,7 +60,10 @@ function validateDateFormat(evt, dateFormatError) {
 	}
 
 	// No match from the form, show error message;
-	myError(dateFormatError, 'Please select a valid date format.', evt.target);
+	await safeDisplayMessage({
+		elementId: dateFormatError,
+		message: 'Please select a valid date format.',
+	})
 
 	// Disable the submit button
 	disableEnableSubmitButton('submit-button');
@@ -72,7 +76,7 @@ function validateDateFormat(evt, dateFormatError) {
  * @param {HTMLElement} timeZoneError - Error container element
  * @returns {void}
  */
-function validateTimeZone(evt, timeZoneError) {
+async function validateTimeZone(evt, timeZoneError) {
 	// Set all the time zones for the continental U.S.
 	const timeZones = {
 		'America/New_York': 'Eastern Time Zone',
@@ -102,7 +106,12 @@ function validateTimeZone(evt, timeZoneError) {
 	}
 	// No match was found, show the error message and disable the submit button
 	else {
-		myError(timeZoneError, 'Please select a valid time zone.', evt.target);
+		await safeDisplayMessage({
+			elementId: timeZoneError,
+			message: 'Please select a valid time zone.',
+			targetId: evt.target,
+		});
+
 		disableEnableSubmitButton('submit-button');
 	}
 }
@@ -118,7 +127,12 @@ async function handleFormSubmission(evt) {
 	evt.preventDefault();
 	try {
 		// Add a processing message
-		mySuccess('form-msg', 'Processing...', 'w3-text-blue');
+		await safeDisplayMessage({
+			elementId: 'form-msg',
+			message: 'Processing...',
+			isSuccess: true,
+			color: 'w3-text-blue',
+		});
 
 		// Get the userData
 		const userData = Object.fromEntries(new FormData(evt.target));
@@ -133,14 +147,21 @@ async function handleFormSubmission(evt) {
 		});
 
 		if (updateSettings) {
-			mySuccess('form-msg', 'Date/Time Options have been saved.');
+			await safeDisplayMessage({
+				elementId: 'form-msg',
+				message: 'Date/Time Options have been saved.',
+				isSuccess: true,
+			});
 		}
 		else {
-			myError('form-msg', 'We were unable to save your Date/Time Options.');
+			await safeDisplayMessage({
+				elementId: 'form-msg',
+				message: 'We were unable to save your Date/Time Options.',
+			});
 		}
 	}
 	catch (err) {
-		const { handleError } = await import("../../../utils/error-messages/handleError.js");
+		const { handleError } = await import("../../../../../../old-js-code/js/utils/error-messages/handleError.js");
 		await handleError({
 			filename: 'dateTimeFormError',
 			consoleMsg: 'Date/Time form submission error: ',

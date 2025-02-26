@@ -26,7 +26,7 @@ export default async function getAllFormIdElements(form) {
             )
         );
     } catch (err) {
-        const { handleError } = await import("../error-messages/handleError.js");
+        const { handleError } = await import("../../../../../../old-js-code/js/utils/error-messages/handleError.js");
         await handleError({
             filename: 'getAllFormIdElementsError',
             consoleMsg: 'Get all form ID elements error: ',

@@ -1,11 +1,8 @@
-import ManageUser from "../../../../classes/ManageUser.js";
-import { myError } from "../../../../utils/dom/domUtils.js";
-import getAllFormIdElements from "../../../../utils/dom/getAllFormIDElements.js";
+import getAllFormIdElements from "../../../../../../core/utils/dom/forms/getAllFormIDElements.js";
 import buildInputBlocks from "./buildInputBlocks.js";
 
-export default async function populateFarrierPricesForm(fm, formEle) {
+export default async function populateFarrierPricesForm({formEle, manageUser}) {
     try {
-        const manageUser = new ManageUser();
         const farrierPrices = await manageUser.getFarrierPrices();
 
         if(Object.keys(farrierPrices).length === 0) return;
@@ -16,7 +13,7 @@ export default async function populateFarrierPricesForm(fm, formEle) {
         }
     }
     catch (err) {
-        const { handleError } = await import("../../../../utils/error-messages/handleError.js");
+        const { handleError } = await import("../../../../../../../../old-js-code/js/utils/error-messages/handleError.js");
         await handleError({
             filename: 'populateFarrierPricesFormError',
             consoleMsg: 'Populate farrier prices form error: ',

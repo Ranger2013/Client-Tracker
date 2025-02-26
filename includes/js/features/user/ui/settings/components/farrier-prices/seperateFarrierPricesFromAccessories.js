@@ -1,5 +1,4 @@
-
-import { isNumeric } from "../../../../utils/validation/validationUtils.js";
+import { isNumeric } from "../../../../../../core/utils/validation/validators.js";
 
 export default function seperateFarrierPricesFromAccessories(userData) {
 	try{

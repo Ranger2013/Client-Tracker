@@ -1,5 +1,5 @@
-import { addListener } from "../../../../utils/event-listeners/listeners.js";
-import getAllFormIdElements from "../../../../utils/dom/getAllFormIDElements.js";
+import getAllFormIdElements from "../../../../../../core/utils/dom/forms/getAllFormIDElements.js";
+import { addListener } from "../../../../../../core/utils/dom/listeners.js";
 
 const GREEN_CLASS = 'w3-light-green';
 const COMPONENT_ID = 'farrier-inputs';
@@ -26,7 +26,7 @@ export default async function makeInputsGreen(form) {
         });
     }
     catch (err) {
-        const { handleError } = await import("../../../../utils/error-messages/handleError.js");
+        const { handleError } = await import("../../../../../../../../old-js-code/js/utils/error-messages/handleError.js");
         await handleError({
             filename: 'makeInputsGreenError',
             consoleMsg: 'Make inputs green error: ',

@@ -1,4 +1,4 @@
-import { addListener } from "../../../../utils/event-listeners/listeners.js";
+import { addListener } from "../../../../../../core/utils/dom/listeners.js";
 import buildInputBlocks from "./buildInputBlocks.js";
 
 const COMPONENT_ID = 'multiple-inputs';
@@ -29,7 +29,7 @@ export default function displayMultipleInputs(form) {
                     await buildInputBlocks(evt.target.value, accessory, form, config.displayEle);
                 }
 					 catch (err) {
-                    const { handleError } = await import("../../../../utils/error-messages/handleError.js");
+                    const { handleError } = await import("../../../../../../../../old-js-code/js/utils/error-messages/handleError.js");
                     await handleError({
                         filename: `buildInputBlocksError_${accessory}`,
                         consoleMsg: `Build input blocks error for ${accessory}: `,

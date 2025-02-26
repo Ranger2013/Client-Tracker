@@ -56,7 +56,7 @@ export async function addFuelCharges({ userData, formType, manageUser }) {
         return await handleMileageChargesIDBOoperation({ userData: mileageCharges, manageUser });
     }
     catch(err){
-        const { handleError } = await import("../../../../utils/error-messages/handleError.js");
+        const { handleError } = await import("../../../../../../../../old-js-code/js/utils/error-messages/handleError.js");
         await handleError({
             filename: 'addFuelChargesError',
             consoleMsg: 'Add fuel charges error: ',
@@ -116,7 +116,7 @@ async function buildRangeData({ userData }) {
         );
     }
     catch (err) {
-        const { handleError } = await import("../../../../utils/error-messages/handleError.js");
+        const { handleError } = await import("../../../../../../../../old-js-code/js/utils/error-messages/handleError.js");
         await handleError({
             filename: 'buildRangeDataError',
             consoleMsg: 'Build range data error: ',
@@ -174,7 +174,7 @@ async function handleMileageChargesIDBOoperation({ userData, manageUser }) {
         return true;
     }
     catch (err) {
-        const { handleError } = await import("../../../../utils/error-messages/handleError.js");
+        const { handleError } = await import("../../../../../../../../old-js-code/js/utils/error-messages/handleError.js");
         await handleError({
             filename: 'handleIDBOoperationError',
             consoleMsg: 'Handle IDBO operation error: ',

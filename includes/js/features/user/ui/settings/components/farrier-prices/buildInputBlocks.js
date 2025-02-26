@@ -1,4 +1,4 @@
-import { buildEle } from "../../../../utils/dom/domUtils.js";
+import { buildEle } from "../../../../../../core/utils/dom/elements.js";
 
 export default async function buildInputBlocks(numBlocks, inputName, form, display, value = null) {
     try {
@@ -31,7 +31,7 @@ export default async function buildInputBlocks(numBlocks, inputName, form, displ
         }
     }
     catch (err) {
-        const { handleError } = await import("../../../../utils/error-messages/handleError.js");
+        const { handleError } = await import("../../../../../../../../old-js-code/js/utils/error-messages/handleError.js");
         await handleError({
             filename: 'buildInputBlocksError',
             consoleMsg: 'Build input blocks error: ',

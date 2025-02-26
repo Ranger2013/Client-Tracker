@@ -1,5 +1,5 @@
 export const commonErrors = {
-	tokenValidationError: 'Your session has expired. Please log in again.',
+	tokenValidationError: 'Unable to validate your credentials. Please log in again.',
 	unauthorized: 'You are not authorized to access this resource.',
 	sessionExpired: 'Your session has expired.',
 	networkError: 'Network connection error. Please check your connection.',

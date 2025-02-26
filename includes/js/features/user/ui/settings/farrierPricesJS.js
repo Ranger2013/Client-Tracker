@@ -1,11 +1,11 @@
-import ManageUser from "../../../classes/ManageUser.js";
-import setupBackupNotice from "../../../utils/backup-notice/backupNotice.js";
-import { myError, mySuccess, top } from "../../../utils/dom/domUtils.js";
-import { addListener } from "../../../utils/event-listeners/listeners.js";
-import displayMultipleInputs from "./helpers/displayMultipleInputs.js";
-import makeInputsGreen from "./helpers/makeInputsGreen.js";
-import populateFarrierPricesForm from "./helpers/populateFarrierPricesForm.js";
-import seperateFarrierPricesFromAccessories from "./helpers/seperateFarrierPricesFromAccessories.js";
+import { addListener } from "../../../../core/utils/dom/listeners.js";
+import { safeDisplayMessage } from "../../../../core/utils/dom/messages.js";
+import { top } from "../../../../core/utils/window/scroll.js";
+import ManageUser from "../../models/ManageUser.js";
+import displayMultipleInputs from "./components/farrier-prices/displayMultipleInputs.js";
+import makeInputsGreen from "./components/farrier-prices/makeInputsGreen.js";
+import populateFarrierPricesForm from "./components/farrier-prices/populateFarrierPricesForm.js";
+import seperateFarrierPricesFromAccessories from "./components/farrier-prices/seperateFarrierPricesFromAccessories.js";
 
 const COMPONENT_ID = 'farrier-prices';
 const manageUser = new ManageUser();
@@ -14,8 +14,7 @@ const manageUser = new ManageUser();
 const farrierPricesForm = document.getElementById('farrier-prices-form');
 
 // Initialize form
-setupBackupNotice();
-await populateFarrierPricesForm(farrierPricesForm, manageUser);
+await populateFarrierPricesForm({formEle: farrierPricesForm, manageUser});
 makeInputsGreen(farrierPricesForm);
 displayMultipleInputs(farrierPricesForm);
 
@@ -26,8 +25,14 @@ displayMultipleInputs(farrierPricesForm);
  */
 async function handleFormSubmission(evt) {
     evt.preventDefault();
+
     try {
-        mySuccess('form-msg', 'Processing...', 'w3-text-blue');
+        await safeDisplayMessage({
+            elementId: 'form-msg',
+            message: 'Processing...',
+            color: 'w3-text-blue',
+            isSuccess: true
+        });
         top();
 
         const stores = manageUser.getStoreNames();
@@ -42,13 +47,20 @@ async function handleFormSubmission(evt) {
         });
 
         if (updateSuccess) {
-            mySuccess('form-msg', 'Your pricing has been set.');
+            await safeDisplayMessage({
+                elementId: 'form-msg',
+                message: 'Your pricing has been set.',
+                isSuccess: true,
+            });
         } else {
-            myError('form-msg', 'Unable to save pricing at this time.');
+            await safeDisplayMessage({
+                elementId: 'form-msg',
+                message: 'We were unable to save your pricing.',
+            });
         }
     }
     catch (err) {
-        const { handleError } = await import("../../../utils/error-messages/handleError.js");
+        const { handleError } = await import("../../../../../../old-js-code/js/utils/error-messages/handleError.js");
         await handleError({
             filename: 'farrierPricesFormError',
             consoleMsg: 'Farrier prices form submission error: ',

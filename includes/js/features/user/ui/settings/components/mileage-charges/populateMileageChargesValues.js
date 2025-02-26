@@ -1,5 +1,4 @@
-
-function populateMileageChargesValues(mileageRanges) {
+export default function populateMileageChargesValues(mileageRanges) {
 	if (mileageRanges) {
 		// Set the number of fuel ranges the user has
 		fuelRanges.value = mileageRanges.length;

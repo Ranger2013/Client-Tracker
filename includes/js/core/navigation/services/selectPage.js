@@ -1,6 +1,5 @@
-import { removeListeners } from "../../utils/dom/listeners.js";
 import closeNavigationMenu from "./closeNavigationMenu.js";
-import { displayNavigationError } from '../components/backupErrorPage.js';
+import { removeListeners } from "../../utils/dom/listeners.js";
 
 /** @type {Function|null} */
 let cleanup = null;
@@ -27,7 +26,7 @@ const main = document.getElementById('main');
 export default async function selectPage({ evt, page, cID = null, closeMenu = null, primaryKey }) {
     evt.preventDefault();
     try {
-// Clean up any server-rendered page listeners before SPA navigation
+        // Clean up any server-rendered page listeners before SPA navigation
         cleanupServerRenderedListeners();
 
         // Page configuration map
@@ -112,7 +111,7 @@ export default async function selectPage({ evt, page, cID = null, closeMenu = nu
         };
 
         await cleanupPreviousPage();
-        
+
         // Conditional full navigation reset
         if (!closeMenu) closeNavigationMenu();
 
@@ -123,19 +122,20 @@ export default async function selectPage({ evt, page, cID = null, closeMenu = nu
         arrows.forEach(arrow => arrow.classList.remove('up'));
 
         const pageConfig = PAGE_MAPPINGS[page];
-        console.log('In selectPage: pageConfig:', pageConfig);
-        
+
         if (!pageConfig) throw new Error(`Unknown page: ${page}`);
 
         await loadNewPage(pageConfig, page, cID, primaryKey); // Pass page here
 
     } catch (err) {
+        const { displayNavigationError } = await import('../components/backupErrorPage.js');
+        
         // Log the error but handle display separately
         const { errorLogs } = await import('../../errors/services/errorLogs.js');
         await errorLogs('selectPageError', `Navigation failed for page: ${page}`, err);
 
         // Display backup page with context
-        displayNavigationError({ 
+        displayNavigationError({
             requestedPage: page,
             errorType: err.name === 'ImportError' ? 'load' : 'build'
         });

@@ -1,5 +1,4 @@
 import { addListener } from '../../utils/dom/listeners.js';
-import { errorLogs } from '../../errors/services/errorLogs.js';
 
 /** 
  * Constants 
@@ -22,6 +21,7 @@ export default async function setupBackupNotice({ errorEleID }) {
         addListener(`${errorEleID}-close`, 'click', closeBackupNotice, BACKUP_NOTICE_ID);
     }
     catch (err) {
+        const { errorLogs } = await import("../../errors/services/errorLogs.js");
         await errorLogs('backupNotice', 'Failed to setup backup notice', err);
         updateNoticeContent(noticeDiv, 'Unable to check backup status', true);
     }
@@ -71,6 +71,7 @@ async function updateBackupNotice() {
         }
     }
     catch (err) {
+        const { errorLogs } = await import("../../errors/services/errorLogs.js");
         await errorLogs('backupNotice', 'Failed to check backup status', err);
         updateNoticeContent(noticeDiv, 'Unable to check for pending backups', true);
     }

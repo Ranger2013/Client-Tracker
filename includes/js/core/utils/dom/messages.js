@@ -104,19 +104,21 @@ export async function mySuccess(ele, msg, color = 'w3-text-green') {
  * @param {string} options.message Message to display
  * @param {boolean} [options.isSuccess=false] If true, shows as success message
  * @param {string} [options.color='w3-text-green'] CSS class for success color
+ * @returns {Promise<void>}
  */
 export async function safeDisplayMessage({ 
     elementId, 
     message, 
     isSuccess = false, 
-    color = 'w3-text-green' 
+    color = 'w3-text-green',
+    targetId = null,
 }) {
     try {
         if (isSuccess) {
             await mySuccess(elementId, message, color);
         }
         else {
-            await myError(elementId, message);
+            await myError(elementId, message, targetId);
         }
     }
     catch (displayError) {

@@ -1,4 +1,4 @@
-import { addListener, removeListeners } from "../../../../utils/event-listeners/listeners.js";
+import { addListener, removeListeners } from "../../../../../../core/utils/dom/listeners.js";
 import buildMileageRangeInputs from "./buildMileageRangeInputs.js";
 
 export default async function listenForFuelRangeInput({userClass, rangeContainer, rangeInputId}) {

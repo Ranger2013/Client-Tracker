@@ -1,4 +1,4 @@
-import { myError } from "../../../../includes/js/core/utils/dom/domUtils.js";
+import { myError } from "../dom/domUtils.js";
 
 /**
  * Handles errors by logging them and optionally displaying user messages

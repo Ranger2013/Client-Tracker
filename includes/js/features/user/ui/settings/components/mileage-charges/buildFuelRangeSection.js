@@ -1,4 +1,4 @@
-import { buildEle, clearMsg } from "../../../../utils/dom/domUtils.js";
+import { buildEle, clearMsg } from "../../../../../../../../old-js-code/js/utils/dom/domUtils.js";
 import { addListener } from "../../../../utils/event-listeners/listeners.js";
 
 /**
@@ -46,7 +46,7 @@ export default async function buildFuelRangeSection(iteration, values = {}, comp
         return elements.row;
     }
     catch (err) {
-        const { handleError } = await import("../../../../utils/error-messages/handleError.js");
+        const { handleError } = await import("../../../../../../../../old-js-code/js/utils/error-messages/handleError.js");
         await handleError({
             filename: 'buildFuelRangeSectionError',
             consoleMsg: 'Build fuel range section error: ',
@@ -140,7 +140,7 @@ async function buildMileageRangeInput(iteration, value, componentID) {
                     clearMsg({ container: rangeInputError, input: rangeInput });
                 }
 					 catch (err) {
-                    const { handleError } = await import("../../../../utils/error-messages/handleError.js");
+                    const { handleError } = await import("../../../../../../../../old-js-code/js/utils/error-messages/handleError.js");
                     await handleError({
                         filename: 'clearMileageRangeError',
                         consoleMsg: `Clear mileage range ${iteration} error: `,
@@ -155,7 +155,7 @@ async function buildMileageRangeInput(iteration, value, componentID) {
         return p1;
     }
 	 catch (err) {
-        const { handleError } = await import("../../../../utils/error-messages/handleError.js");
+        const { handleError } = await import("../../../../../../../../old-js-code/js/utils/error-messages/handleError.js");
         await handleError({
             filename: 'buildMileageRangeInputError',
             consoleMsg: `Build mileage range ${iteration} error: `,
@@ -216,7 +216,7 @@ async function buildCostInput(iteration, value, componentID) {
                     clearMsg({ container: rangeInputError, input: rangeInput });
                 }
 					 catch (err) {
-                    const { handleError } = await import("../../../../utils/error-messages/handleError.js");
+                    const { handleError } = await import("../../../../../../../../old-js-code/js/utils/error-messages/handleError.js");
                     await handleError({
                         filename: 'clearCostInputError',
                         consoleMsg: `Clear cost input ${iteration} error: `,
@@ -231,7 +231,7 @@ async function buildCostInput(iteration, value, componentID) {
         return p1;
     }
 	 catch (err) {
-        const { handleError } = await import("../../../../utils/error-messages/handleError.js");
+        const { handleError } = await import("../../../../../../../../old-js-code/js/utils/error-messages/handleError.js");
         await handleError({
             filename: 'buildCostInputError',
             consoleMsg: `Build cost input ${iteration} error: `,

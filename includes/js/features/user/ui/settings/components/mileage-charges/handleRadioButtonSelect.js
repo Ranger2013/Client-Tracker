@@ -1,6 +1,6 @@
-import { clearMsg } from "../../../../utils/dom/domUtils.js";
-import { addListener } from "../../../../utils/event-listeners/listeners.js";
-import listenForFuelRangeInput from "./listenForFuelRangeInput.js";
+import { addListener } from "../../../../../../core/utils/dom/listeners.js";
+// import { clearMsg } from "../../../../../../core/utils/dom/messages.js";
+// import listenForFuelRangeInput from "./listenForFuelRangeInput.js";
 
 const COMPONENT_ID = 'fuel-charges-radio';
 const RANGE_INPUT_ID = 'fuel-range-input';
@@ -28,7 +28,7 @@ export default function handleRadioButtonSelect(range, rangeContainer, mile, mil
                 rangeContainer.classList.add('w3-hide');
                 mileContainer.classList.remove('w3-hide');
 
-                const { default: populateByMileForm } = await import("./populateByMileForm.js");
+                const { default: populateByMileForm } = await import("./populateMileageChargesValues.js");
                 await populateByMileForm({form: 'per-mile-form', manageUser});
             }
         }
