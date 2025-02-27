@@ -40,6 +40,7 @@ export async function handleError({ filename, consoleMsg, err, userMsg = null, e
             myError(errorEle, formattedMsg);
         }
     } catch (logError) {
+        console.warn('Error while handling error:', logError);
         if (errorEle) {
             const element = typeof errorEle === 'string' ? 
                 document.getElementById(errorEle) 

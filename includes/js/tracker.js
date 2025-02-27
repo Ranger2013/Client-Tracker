@@ -21,15 +21,13 @@ import { userAuthorization } from './core/auth/services/userAuthorization.js';
 import selectPage from './core/navigation/services/selectPage.js';
 import mainTrackerNavigation from './core/navigation/services/trackerAppMainNavigation.js';
 import setupBackupNotice from './core/services/backup-notice/backupNotice.js';
+import { setValidationToken, getValidationToken } from './core/auth/services/tokenUtils.js';
 
 /** 
  * @typedef {string} ValidationToken - User's authentication token
  * @type {ValidationToken|null}
  */
 let validationToken = null;
-
-// Initialize in order of importance
-initializeTracker();
 
 /**
  * Initializes the tracker application components
@@ -77,6 +75,7 @@ const initializeApp = async () => {
     try {
         const path = window.location.pathname;
         validationToken = await userAuthorization(path);
+        setValidationToken(validationToken);
 
         if (validationToken) {
             await initializeTracker();
@@ -192,7 +191,7 @@ async function handleGlobalPromiseError(event) {
  * Gets the current validation token
  * @returns {ValidationToken|null} Current validation token or null if not authenticated
  */
-export const getValidationToken = () => validationToken;
+export { getValidationToken };
 
 // Initialize application
 await initializeApp();

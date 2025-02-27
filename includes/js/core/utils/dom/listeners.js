@@ -1,64 +1,107 @@
-// Store listeners by component/page ID to allow selective cleanup
-const listenerMap = new Map();
+import { getValidElement } from './elements.js';
 
 /**
- * Adds an event listener with cleanup tracking
- * @param {Object} params Listener parameters
- * @param {HTMLElement|string} params.element - DOM element or element ID
- * @param {string} params.event - Event type (e.g., 'click', 'input')
- * @param {Function} params.handler - Event handler function
- * @param {string} [params.componentId='global'] - ID for grouping related listeners
- * @returns {void}
+ * Tracks event listeners by component for cleanup
+ * @type {Map<string, Set<{element: HTMLElement, type: string, listener: Function}>>}
  */
-export function addListener({ element, event, handler, componentId = 'global' }) {
-    // Special handling for document object
-    if (element === document) {
-        document.addEventListener(event, handler);
-        if (!listenerMap.has(componentId)) {
-            listenerMap.set(componentId, []);
+const listenerRegistry = new Map();
+
+/**
+ * Adds an event listener and tracks it by component ID
+ * @param {string|HTMLElement} elementOrId - Element or element ID to attach listener to
+ * @param {string} eventType - Type of event to listen for
+ * @param {Function} listener - Event handler function
+ * @param {string} componentId - ID for grouping related listeners
+ * @throws {AppError} If element not found or listener registration fails
+ */
+export function addListener(elementOrId, eventType, listener, componentId) {
+    try {
+        // Input validation first
+        if (!eventType || typeof listener !== 'function' || !componentId) {
+            throw new Error(`Invalid listener parameters: eventType=${eventType}, hasListener=${!!listener}, componentId=${componentId}`);
         }
-        listenerMap.get(componentId).push({ element: document, event, handler });
-        return;
-    }
 
-    // Convert string ID to element
-    if (typeof element === 'string') {
-        element = document.getElementById(element);
-        if (!element) {
-            console.warn(`Element with ID '${element}' not found`);
-            return;
+        // Use our utility function instead
+        const element = getValidElement(elementOrId);
+
+        // Add listener
+        element.addEventListener(eventType, listener);
+
+        // Track for cleanup
+        if (!listenerRegistry.has(componentId)) {
+            listenerRegistry.set(componentId, new Set());
         }
+
+        listenerRegistry.get(componentId).add({
+            element,
+            type: eventType,
+            listener
+        });
+
+    }
+    catch (error) {
+        const elementDesc = typeof elementOrId === 'string'
+            ? `element with ID "${elementOrId}"`
+            : `element ${elementOrId?.id ? `with ID "${elementOrId.id}"` : '(no ID)'}`;
+
+        import('../../errors/models/AppError.js')
+            .then(({ AppError }) => {
+                const appError = new AppError(`Failed to attach ${eventType} listener`, {
+                    originalError: error,
+                    errorCode: AppError.Types.INITIALIZATION_ERROR,
+                    userMessage: AppError.Messages.system.initialization,
+                    shouldLog: true,
+                    // Add diagnostic info to the technical message
+                    message: `Failed to attach ${eventType} listener to ${elementDesc} for component "${componentId}"`
+                });
+                return appError.handle();
+            })
+            .catch(err => {
+                console.error('Listener registration failed:', {
+                    element: elementDesc,
+                    event: eventType,
+                    component: componentId,
+                    error: error,
+                    handlingError: err
+                });
+            });
+
+        return false;
     }
 
-    // Validate element
-    if (!(element instanceof HTMLElement)) {
-        console.warn('Invalid element provided. It must be a DOM element or a valid element ID.');
-        return;
-    }
-
-    // Initialize component listeners if not exists
-    if (!listenerMap.has(componentId)) {
-        listenerMap.set(componentId, []);
-    }
-
-    // Add listener
-    element.addEventListener(event, handler);
-    listenerMap.get(componentId).push({ element, event, handler });
+    return true;
 }
 
-export function removeListeners(componentId = 'global') {
-    const listeners = listenerMap.get(componentId);
+/**
+ * Removes all listeners for a component
+ * @param {string} componentId - ID of component whose listeners should be removed
+ */
+export function removeListeners(componentId) {
+    const listeners = listenerRegistry.get(componentId);
     if (!listeners) return;
 
-    listeners.forEach(({ element, event, handler }) => {
-        element.removeEventListener(event, handler);
+    listeners.forEach(({ element, type, listener }) => {
+        element.removeEventListener(type, listener);
     });
-    
-    listenerMap.delete(componentId);
+
+    listenerRegistry.delete(componentId);
 }
 
+/**
+ * Checks if a component has registered listeners
+ * @param {string} componentId - Component ID to check
+ * @returns {boolean} True if component has listeners
+ */
+export function hasListeners(componentId) {
+    return listenerRegistry.has(componentId) &&
+        listenerRegistry.get(componentId).size > 0;
+}
+
+/**
+ * Removes all listeners for all components
+ */
 export function removeAllListeners() {
-    for (const componentId of listenerMap.keys()) {
+    for (const componentId of listenerRegistry.keys()) {
         removeListeners(componentId);
     }
 }

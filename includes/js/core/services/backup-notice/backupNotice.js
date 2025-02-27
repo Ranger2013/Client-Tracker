@@ -18,7 +18,11 @@ export default async function setupBackupNotice({ errorEleID }) {
         }
 
         await updateBackupNotice();
-        addListener(`${errorEleID}-close`, 'click', closeBackupNotice, BACKUP_NOTICE_ID);
+        addListener({
+            element: `${errorEleID}-close`,
+            event: 'click', 
+            handler: closeBackupNotice,
+            componentId: BACKUP_NOTICE_ID});
     }
     catch (err) {
         const { errorLogs } = await import("../../errors/services/errorLogs.js");

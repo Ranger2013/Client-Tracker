@@ -59,3 +59,23 @@ export async function disableEnableSubmitButton(button) {
 	}
 }
 
+/**
+ * Gets element by ID or validates HTMLElement
+ * @throws {Error} If element is invalid or not found
+ */
+export function getValidElement(element) {
+	if (typeof element === 'string') {
+		const ele = document.getElementById(element);
+		if (!ele) {
+			throw new Error(`Element with ID "${element}" not found.`);
+		}
+		return ele;
+	}
+
+	if (!(element instanceof HTMLElement)) {
+		throw new Error('The provided element is not valid.');
+	}
+
+	return element;
+}
+

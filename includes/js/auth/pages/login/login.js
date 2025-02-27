@@ -1,13 +1,12 @@
-import { loginAPI } from "../../../../../old-js-code/js/utils/network/apiEndpoints.js";
-import { fetchData } from "../../../../../old-js-code/js/utils/network/network.js";
-import { myError, mySuccess } from "../../../../../old-js-code/js/utils/dom/domUtils.js";
-import ManageUser from "../../../../../old-js-code/js/classes/ManageUser.js";
-import { DOM_IDS } from "../../../../../old-js-code/js/utils/dom/domConstants.js";
+import { authAPI } from "../../../core/network/api/apiEndpoints.js";
+import { fetchData } from "../../../core/network/services/network.js";
+import { safeDisplayMessage } from "../../../core/utils/dom/messages.js";
+import ManageUser from "../../../features/user/models/ManageUser.js";
 
 // Extract form validation to separate function
 function validateForm(userData) {
     if (!userData.username || !userData.password) {
-        myError('form-msg', 'User Name and Password are required.');
+        safeDisplayMessage({ elementId: 'form-msg', message: 'Usr Name and Password are required.'});
         return false;
     }
     return true;
@@ -17,25 +16,30 @@ async function handleLogIn(evt) {
     evt.preventDefault();
 
     try {
-        mySuccess('form-msg', 'Processing...', 'w3-text-blue');
+        safeDisplayMessage({
+            elementId: 'form-msg',
+            message: 'Processing...',
+            color: 'w3-text-blue',
+            isSuccess: true,
+        })
         const userData = Object.fromEntries(new FormData(evt.target));
 
         if (!validateForm(userData)) return;
 
         const req = await fetchData({
-            api: loginAPI,
+            api: authAPI.login,
             data: userData,
             timeout: 10000 // Longer timeout for login
         });
 
         if (req.status !== 'ok') {
-            myError('form-msg', req.msg);
+            safeDisplayMessage({elementId: 'form-msg', message: req.msg});
             return;
         }
 
         const token = req.msg;
         if (!token) {
-            myError('form-msg', 'Token validation issue. Please contact the administrator.');
+            safeDisplayMessage({elementId: 'form-msg', message: 'Token validation issue. Please contact the administrator.'});
             return;
         }
 
@@ -61,7 +65,7 @@ async function handleLogIn(evt) {
             consoleMsg: 'Error in the handle login function.',
             error: err
         });
-        myError('form-msg', 'Login failed. Please contact administrator.');
+        safeDisplayMessage({elementId: 'form-msg', message: 'Login failed. Please contact administrator.'});
     }
 }
 

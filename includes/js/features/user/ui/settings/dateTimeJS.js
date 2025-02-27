@@ -173,8 +173,7 @@ async function handleFormSubmission(evt) {
 }
 
 // Add listeners with component tracking
-addListener('date-format', 'change', 
-    evt => validateDateFormat(evt, 'date-format-error'), 
+addListener('date-format', 'change', evt => validateDateFormat(evt, 'date-format-error'), 
     COMPONENT_ID
 );
 

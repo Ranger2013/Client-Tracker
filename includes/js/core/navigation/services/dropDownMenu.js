@@ -27,7 +27,7 @@ export default function dropDownMenu(evt) {
 
     const content = document.getElementById(contentId);
     const arrow = trigger.querySelector('.arrow');
-    
+
     if (!content || !arrow) return;
 
     // Toggle the clicked dropdown and its arrow

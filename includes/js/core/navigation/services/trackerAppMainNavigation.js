@@ -1,69 +1,102 @@
-// Route definitions with metadata
+import  dropDownMenu  from './dropDownMenu.js';
+import selectPage from './selectPage.js';
+import sideBarNavigation from './sideBarNavigation.js';
+
+// Remove ErrorTypes import since it's now part of AppError class
+
 const ROUTES = {
-    // Client management routes
-    clients: {
-        active: {
-            id: ['active-client-link'],
-            page: 'activeClients'
-        },
-        inactive: {
-            id: ['inactive-client-link'],
-            page: 'inactiveClients'
-        },
-        add: {
-            id: ['add-client-link'],
-            page: 'addClient'
-        },
-        duplicate: {
-            id: ['duplicate-client-link'],
-            page: 'duplicateClient'
-        },
-        deleteDuplicate: {
-            id: ['delete-duplicate-client-link'],
-            page: 'deleteDuplicateClient'
-        }
-    },
-    // Business management routes
-    business: {
-        mileage: {
-            id: ['add-mileage-link', 'add-mileage-link-small'],
-            page: 'addMileage'
-        },
-        expenses: {
+    // Dynamic (JS-managed) routes
+    dynamic: {
+        clients: {
+            active: {
+                id: ['active-client-link'],
+                page: 'activeClients',
+                access: 'full' // Only for full access users
+            },
+            inactive: {
+                id: ['inactive-client-link'],
+                page: 'inactiveClients',
+                access: 'full'
+            },
             add: {
-                id: ['add-expenses-link', 'add-expenses-link-small'],
-                page: 'addExpenses'
+                id: ['add-client-link'],
+                page: 'addClient',
+                access: 'full'
+            },
+            duplicate: {
+                id: ['duplicate-client-link'],
+                page: 'duplicateClient',
+                access: 'full'
+            },
+            deleteDuplicate: {
+                id: ['delete-duplicate-client-link'],
+                page: 'deleteDuplicateClient',
+                access: 'full'
+            }
+        },
+        business: {
+            mileage: {
+                id: ['add-mileage-link', 'add-mileage-link-small'],
+                page: 'addMileage',
+                access: 'full'
+            },
+            expenses: {
+                add: {
+                    id: ['add-expenses-link', 'add-expenses-link-small'],
+                    page: 'addExpenses',
+                    access: 'full'
+                },
+                edit: {
+                    id: ['edit-expenses-link', 'edit-expenses-link-small'],
+                    page: 'editExpenses',
+                    access: 'full'
+                }
+            }
+        },
+        notes: {
+            add: {
+                id: ['add-personal-notes-link', 'add-personal-notes-link-small'],
+                page: 'addPersonalNotes',
+                access: 'full'
             },
             edit: {
-                id: ['edit-expenses-link', 'edit-expenses-link-small'],
-                page: 'editExpenses'
+                id: ['edit-personal-notes-link', 'edit-personal-notes-link-small'],
+                page: 'editPersonalNotes',
+                access: 'full'
             }
         }
     },
-    // Notes management routes
-    notes: {
-        view: {
-            id: ['view-personal-notes-link', 'view-personal-notes-link-small'],
-            page: 'viewPersonalNotes'
-        },
-        add: {
-            id: ['add-personal-notes-link', 'add-personal-notes-link-small'],
-            page: 'addPersonalNotes'
-        },
-        edit: {
-            id: ['edit-personal-notes-link', 'edit-personal-notes-link-small'],
-            page: 'editPersonalNotes'
-        }
-    },
-    // Navigation controls
-    navigation: {
+
+    // Navigation controls (common to both user types)
+    controls: {
         mainMenu: {
             selector: '.drop-menu',
             handler: 'dropDownMenu'
         },
         sideBar: {
-            id: ['side-bar-navigation'],
+            id: 'side-bar-navigation',
             handler: 'sideBarNavigation'
+        }
+    },
+
+    // Static (server-rendered) routes - for reference only
+    static: {
+        settings: {
+            dateTime: '/tracker/settings/date-time/',
+            farrierPrices: '/tracker/settings/farrier-prices/',
+            mileageCharges: '/tracker/settings/mileage-charges/',
+            scheduleOptions: '/tracker/settings/schedule-options/',
+            colorOptions: '/tracker/settings/color-options/'
+        },
+        reports: {
+            income: '/tracker/reports/income/',
+            expenses: '/tracker/reports/expenses/',
+            mileage: '/tracker/reports/mileage/'
+        },
+        account: {
+            userAccount: '/tracker/my-account/user-account/',
+            dashboard: '/tracker/my-account/dashboard/',
+            helpDesk: '/tracker/my-account/help-desk/'
         }
     }
 };
@@ -71,98 +104,86 @@ const ROUTES = {
 // Define the error handling dom element
 const PAGE_MSG = 'page-msg';
 
-/**
- * Sets up all navigation event listeners
- */
 export default async function mainTrackerNavigation() {
     try {
         await setupNavigationControls();
         await setupRouteListeners();
-    } 
-    catch (err) {
-        const { handleError } = await import("../../../../../old-js-code/js/utils/error-messages/handleError.js");
-        await handleError({
-            filename: 'mainTrackerNavigationError',
-            consoleMsg: 'Navigation setup error: ',
-            err: err,
-            userMsg: 'Failed to initialize navigation',
-            errorEle: PAGE_MSG
-        });
+    }
+    catch (error) {
+        try {
+            const { AppError } = await import('../../errors/models/AppError.js');
+            
+            const appError = new AppError('Navigation initialization failed', {
+                originalError: error,
+                errorCode: AppError.Types.NAVIGATION_ERROR,
+                userMessage: 'Failed to initialize navigation. Please refresh the page.',
+                displayTarget: PAGE_MSG,
+                shouldLog: true
+            });
+            
+            await appError.handle();
+            
+        } catch (handlingError) {
+            console.error('Error handling failed:', handlingError);
+            const msg = document.getElementById(PAGE_MSG);
+            if (msg) {
+                msg.textContent = 'Navigation failed. Please refresh the page.';
+                msg.classList.remove('w3-hide');
+            }
+        }
     }
 }
 
 async function setupNavigationControls() {
     try {
-        const { default: dropDownMenu } = await import("./dropDownMenu.js");
-        const { default: sideBarNavigation } = await import("./sideBarNavigation.js");
-        
-        // Setup main menu dropdown
-        const dropMenus = document.querySelectorAll(ROUTES.navigation.mainMenu.selector);
+        const dropMenus = document.querySelectorAll(ROUTES.controls.mainMenu.selector);
         if (!dropMenus.length) {
-            throw new Error('Drop-down menu elements not found');
+            console.warn('No dropdown menus found');
+        } else {
+            dropMenus.forEach(el => el.addEventListener('click', dropDownMenu));
         }
-        dropMenus.forEach(el => el.addEventListener('click', dropDownMenu));
-        
-        // Setup sidebar
-        const sideBar = document.getElementById(ROUTES.navigation.sideBar.id[0]);
-        if (!sideBar) {
-            throw new Error('Sidebar element not found');
+
+        const sideBar = document.getElementById(ROUTES.controls.sideBar.id);
+        if (sideBar) {
+            sideBar.addEventListener('click', sideBarNavigation);
         }
-        sideBar.addEventListener('click', sideBarNavigation);
-    } 
-    catch (err) {
-        const { handleError } = await import("../../../../../old-js-code/js/utils/error-messages/handleError.js");
-        await handleError({
-            filename: 'setupNavigationControlsError',
-            consoleMsg: 'Navigation controls setup error: ',
-            err: err,
-            userMsg: 'Failed to setup navigation controls',
-            errorEle: PAGE_MSG
-        });
+
+        return true;
+    } catch (error) {
+        throw error;
     }
 }
 
 async function setupRouteListeners() {
     try {
-        const { default: selectPage } = await import("./selectPage.js");
-
         // Setup route handlers
-        Object.values(ROUTES).forEach(section => {
+        Object.values(ROUTES.dynamic).forEach(section => {
             Object.values(section).forEach(route => {
                 if (route.page && route.id) {
                     route.id.forEach(id => {
                         const element = document.getElementById(id);
                         if (element) {
                             element.addEventListener('click', async (evt) => {
-                                try {
-                                    evt.preventDefault();
-                                    await selectPage({ evt, page: route.page });
-                                } 
-                                catch (err) {
-                                    const { handleError } = await import("../../../../../old-js-code/js/utils/error-messages/handleError.js");
-                                    await handleError({
-                                        filename: 'handleRouteClickError',
-                                        consoleMsg: `Route listener error for ${route.page}: `,
-                                        err: err,
-                                        userMsg: 'Failed to navigate to page',
-                                        errorEle: PAGE_MSG
-                                    });
-                                }
+                                evt.preventDefault();
+                                await selectPage({ evt, page: route.page });
                             });
                         }
                     });
                 }
             });
         });
-    } 
-    catch (err) {
-        const { handleError } = await import("../../../../../old-js-code/js/utils/error-messages/handleError.js");
-        await handleError({
-            filename: 'setupRouteListenersError',
-            consoleMsg: 'Route listeners setup error: ',
-            err: err,
-            userMsg: 'Failed to setup page navigation',
-            errorEle: PAGE_MSG
+    }
+    catch (error) {
+        const { AppError } = await import('../../errors/models/AppError.js');
+
+        const appError = new AppError('Route listeners setup failed', {
+            originalError: error,
+            errorCode: AppError.Types.INITIALIZATION_ERROR,
+            userMessage: 'Failed to setup page navigation. Please refresh the page.',
+            displayTarget: PAGE_MSG,
+            shouldLog: true
         });
+
+        await appError.handle();
     }
 }
