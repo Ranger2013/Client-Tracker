@@ -2,6 +2,7 @@
 export const authAPI = {
     login: "/includes/api/login/loginAPI.php",
     register: "/includes/api/register-user/registerUserAPI.php",
+    checkDuplicate: "/includes/api/duplicate-validation/checkForDuplicatesAPI.php",
     terms: "/includes/api/register-user/getTermsAPI.php",
 };
 

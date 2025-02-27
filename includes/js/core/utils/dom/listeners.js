@@ -1,7 +1,16 @@
 // Store listeners by component/page ID to allow selective cleanup
 const listenerMap = new Map();
 
-export function addListener(element, event, handler, componentId = 'global') {
+/**
+ * Adds an event listener with cleanup tracking
+ * @param {Object} params Listener parameters
+ * @param {HTMLElement|string} params.element - DOM element or element ID
+ * @param {string} params.event - Event type (e.g., 'click', 'input')
+ * @param {Function} params.handler - Event handler function
+ * @param {string} [params.componentId='global'] - ID for grouping related listeners
+ * @returns {void}
+ */
+export function addListener({ element, event, handler, componentId = 'global' }) {
     // Special handling for document object
     if (element === document) {
         document.addEventListener(event, handler);

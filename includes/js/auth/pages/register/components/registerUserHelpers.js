@@ -1,74 +1,103 @@
+import { authAPI } from "../../../../core/network/api/apiEndpoints.js";
+import { fetchData } from "../../../../core/network/services/network.js";
+import { clearMsg, safeDisplayMessage } from "../../../../core/utils/dom/messages.js";
+import { top } from "../../../../core/utils/window/scroll.js";
 
-import { clearMsg, myError, mySuccess, top } from "../../../../core/utils/dom/domUtils.js";
-import openModal from "../../../../../../old-js-code/js/utils/modal/openModal.js";
-import { getTermsAPI, registerUserAPI } from "../../../../../../old-js-code/js/utils/network/apiEndpoints.js";
-import { fetchData } from "../../../../../../old-js-code/js/utils/network/network.js";
-import { handleFormValidationErrors } from "../../../../../../old-js-code/js/utils/validation/validationUtils.js";
-
-/**
- * Gets either the terms of service or the privacy policy for the modal
- * @param {string} type - Get either the 'terms' or 'privacy'
- * @return {void}
- */
 export async function getTerms(type) {
-	// Set the params
-	const params = {
-		'type': type
-	};
-
-	try {
-		// Send the request
-		const data = await fetchData({ api: getTermsAPI, data: params });
-
-		if (data.message) {
-			openModal({ content: data.message });
-		}
-	}
-	catch (err) {
-		// handleError(`Error getting ${type} contract.`, err);
-	}
+    try {
+        const data = await fetchData({ api: authAPI.terms, data: { type } });
+        
+        // Simple dynamic import when needed
+        const { default: openModal } = await import("../../../../core/services/modal/openModal.js");
+        
+        if (data.message) {
+            openModal({ content: data.message });
+        } else {
+            throw new Error('Unable to load terms content');
+        }
+    }
+    catch (err) {
+        const { errorLogs } = await import("../../../../core/errors/services/errorLogs.js");
+        await errorLogs('getTermsError', `Error loading ${type}`, err);
+        
+        const { default: openModal } = await import("../../../../core/services/modal/openModal.js");
+        openModal({ 
+            content: `
+                <div class="w3-container w3-center">
+                    <h4 class="w3-text-red">Error</h4>
+                    <p>Unable to load content. Please try again later.</p>
+                </div>
+            `
+        });
+    }
 }
 
 export async function handleUserRegistration(evt) {
-	evt.preventDefault();
+    evt.preventDefault();
+    const formContainer = document.getElementById('form-container');
 
-	// Imports
-	const { unexpectedErrorMsg, possibleConnectionErrorMsg } = await import("../../../../../../old-js-code/js/utils/error-messages/errorMessages.js");
-	
-	// DOM elements
-	const formContainer = document.getElementById('form-container');
-	const fm = document.getElementById('form-msg');
+    try {
+        await safeDisplayMessage({
+            elementId: 'form-msg',
+            message: 'Registering...',
+            color: 'w3-text-blue',
+            isSuccess: true,
+        });
 
-	// Give a message the user is registering
-	mySuccess(fm, 'Registering...', 'w3-text-blue');
+        const userData = Object.fromEntries(new FormData(evt.target));
+        top();
 
-	// Get the user data
-	const userData = Object.fromEntries(new FormData(evt.target));
+        const req = await fetchData({ api: authAPI.register, data: userData });
 
-	try {
-		// Take user to top of page.
-		top();
+        if (req.status === 'ok') {
+            // Clear the registering message
+            clearMsg({ container: 'form-msg' });
 
-		// Send the data to the server
-		const req = await fetchData({ api: registerUserAPI, data: userData });
+            await safeDisplayMessage({
+                elementId: formContainer,
+                message: req.msg,
+                color: 'w3-text-black',
+                isSuccess: true,
+            });
+        }
+        else if (req.status === 'form-errors') {
+            const { default: displayFormValidationErrors } = await import("../../../../core/utils/dom/forms/displayFormValidationErrors.js");
+            displayFormValidationErrors(req.errors);
+        }
+        else if (req.status === 'error' || req.status === 'server-error') {
+            await safeDisplayMessage({
+                elementId: 'form-msg',
+                message: req.msg,
+            });
+        }
+        else {
+            await safeDisplayMessage({
+                elementId: 'form-msg',
+                message: 'Uknown Error. Please try again later.',
+            });
+        }
+    }
+    catch (err) {
+        // Only load error modules if an error occurs
+        const [processError, commonErrors] = await Promise.all([
+            import("../../../../core/errors/services/errorProcessor.js"),
+            import("../../../../core/errors/constants/errorMessages.js")
+        ]);
 
-		if (req.status === 'ok') {
-			// Clear the registering message
-			clearMsg({ container: fm });
-			mySuccess(formContainer, req.msg, 'w3-text-black');
-		}
-		else if (req.status === 'form-errors') {
-			myError(fm, req.msg);
-			handleFormValidationErrors(req.errors);
-		}
-		else if (req.status === 'error' || req.status === 'server-error') {
-			myError(fm, req.msg);
-		}
-		else {
-			myError(fm, unexpectedErrorMsg);
-		}
-	}
-	catch (err) {
-		myError(fm, possibleConnectionErrorMsg);
-	}
+        await processError(err, {
+            context: 'registration',
+            defaultMessage: 'Unable to complete registration. Please try again later.',
+            errorElement: 'form-msg',
+            handlers: {
+                NetworkError: () => safeDisplayMessage({
+                    elementId: 'form-msg',
+                    message: commonErrors.networkError
+                }),
+                AppError: (error) => safeDisplayMessage({
+                    elementId: 'form-msg',
+                    message: error.userMessage
+                })
+            }
+        });
+    }
 }

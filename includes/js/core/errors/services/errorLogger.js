@@ -11,8 +11,13 @@ import { getValidationToken } from "../../../tracker.js";
  */
 export async function logServerSideError(API, err, page, shouldLog = true) {
     try {
+        console.log('In logServerSideError: API: ', API);
+        console.log('In logServerSideError: err: ', err);
+        console.log('In logServerSideError: page: ', page);
+        
         const validationToken = getValidationToken();
-
+        console.log('In logServerSideError: validationToken: ', validationToken);
+        
         const params = {
             page,
             error: {

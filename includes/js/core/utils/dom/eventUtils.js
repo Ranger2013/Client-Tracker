@@ -1,3 +1,12 @@
+/**
+ * Comprehensive event handling system that adapts to user behavior and device capabilities.
+ * Provides:
+ * - Device detection and capability assessment
+ * - Typing speed monitoring and optimization
+ * - Adaptive debounce/throttle with real-time delay adjustment
+ * - Performance metric tracking
+ */
+
 export const DEVICE_TYPES = {
     MOBILE: 'mobile',
     TABLET: 'tablet',
@@ -24,7 +33,7 @@ const TYPING_SPEEDS = {
     SLOW: 30       // <30 WPM    -> Gets SLOW delay (800ms)
 };
 
-// Track typing metrics
+// Metrics tracking
 let typingMetrics = {
     lastKeyTime: 0,
     keystrokes: 0,
@@ -32,7 +41,6 @@ let typingMetrics = {
     averageWPM: 0
 };
 
-// Performance monitoring
 let performanceMetrics = {
     avgInputDelay: 0,
     sampleCount: 0
@@ -208,5 +216,32 @@ export function createThrottledHandler(fn, limit) {
             inThrottle = true;
             setTimeout(() => inThrottle = false, limit);
         }
+    };
+}
+
+/**
+ * Creates a debounced handler that adapts to user's typing speed and device
+ * @param {Function} fn - Function to debounce
+ * @param {string} [inputType='default'] - Type of input for optimization
+ */
+export function createAdaptiveHandler(fn, inputType = 'default') {
+    let timeoutId;
+    let lastDelay = DEBOUNCE_DELAYS.NORMAL;
+
+    return (...args) => {
+        clearTimeout(timeoutId);
+        
+        // Get optimal delay based on current metrics
+        const optimalDelay = getOptimalDelay(inputType);
+        if (optimalDelay !== lastDelay) {
+            lastDelay = optimalDelay;
+            console.debug('Adjusted delay to:', optimalDelay);
+        }
+
+        timeoutId = setTimeout(() => {
+            const start = performance.now();
+            fn(...args);
+            updateOptimalDelay(performance.now() - start);
+        }, lastDelay);
     };
 }

@@ -53,7 +53,7 @@ export async function disableEnableSubmitButton(button) {
 		button.disabled = errors.length > 0;
 	}
 	catch (err) {
-		const { default: errorLogs } = await import("../../../../../old-js-code/js/utils/error-messages/errorLogs.js");
+		const { errorLogs } = await import('../../errors/services/errorLogs.js');
 		await errorLogs('disableEnableSubmitButtonError', 'Disable/Enable submit button error: ', err);
 		throw err;
 	}

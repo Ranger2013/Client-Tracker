@@ -45,6 +45,7 @@ export async function myError(ele, msg, target = null) {
 
 		// Handle target if provided
 		if (target) {
+
 			handleTargetStyling(target);
 		}
 	}
@@ -176,7 +177,7 @@ export async function clearMsg({ container, hide = false, input = null }) {
  * Gets element by ID or validates HTMLElement
  * @throws {Error} If element is invalid or not found
  */
-function getValidElement(element) {
+export function getValidElement(element) {
 	if (typeof element === 'string') {
 		const ele = document.getElementById(element);
 		if (!ele) {

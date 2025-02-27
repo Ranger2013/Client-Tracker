@@ -1,3 +1,4 @@
+import { systemAPI } from "../../network/api/apiEndpoints";
 import { logServerSideError } from "./errorLogger";
 
 /**
@@ -10,7 +11,7 @@ export async function errorLogs(filename, consoleMsg, error) {
         console.error(consoleMsg, error);
         
         // Server logging
-        await logServerSideError(filename, consoleMsg, error);
+        await logServerSideError(systemAPI.errorLog, error, filename);
     }
     catch (loggingError) 
     {

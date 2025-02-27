@@ -1,75 +1,154 @@
-import { clearMsg } from "../../core/utils/dom/messages.js";
-import { disableEnableSubmitButton } from "../../core/utils/dom/elements.js";
+import { clearMsg, getValidElement, safeDisplayMessage } from '../../core/utils/dom/messages.js';
+import { disableEnableSubmitButton } from '../../core/utils/dom/elements.js';
+import deepFreeze from '../../core/utils/deepFreeze.js';
+
+const PASSWORD_VALIDATION = deepFreeze({
+	MIN_LENGTH: 8,
+	PATTERNS: {
+		STRONG: /(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[\W])(?=.{8,})/,
+		MEDIUM: /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.{8,})/
+	},
+	MESSAGES: {
+		TOO_SHORT: 'Password must be at least 8 characters',
+		NO_MATCH: 'Passwords do not match',
+		WEAK: 'Password must contain uppercase, lowercase, numbers and special characters',
+		FIELD_NOT_FOUND: 'Password field not found'
+	},
+	STYLES: {
+		STRONG: 'w3-green',
+		MEDIUM: 'w3-blue',
+		WEAK: 'w3-red error',
+		WARNING: 'w3-yellow error'
+	},
+	STRENGTH_LEVELS: [
+		{
+			test: value => value.length < PASSWORD_VALIDATION.MIN_LENGTH,
+			message: 'Password must be at least 8 characters',
+			style: 'w3-text-red error',
+			isValid: false
+		},
+		{
+			test: value => PASSWORD_VALIDATION.PATTERNS.STRONG.test(value),
+			message: 'Strong',
+			style: 'w3-green',
+			isValid: true
+		},
+		{
+			test: value => PASSWORD_VALIDATION.PATTERNS.MEDIUM.test(value),
+			message: 'Medium',
+			style: 'w3-blue',
+			isValid: true
+		},
+		{
+			test: () => true, // Default case
+			message: 'Password must contain uppercase, lowercase, numbers and special characters',
+			style: 'w3-text-red error',
+			isValid: false
+		}
+	]
+});
 
 /**
- * Compares the password and confirm password fields for equality.
- *
- * @param {Event} evt - The event object from the input field.
- * @param {string} passwordFieldId - The ID of the password field.
- * @param {HTMLElement} errorContainer - The container to display error messages.
- * @param {HTMLElement|string} submitButton - The submit button element or its ID to disable/enable based on errors.
+ * Compares password fields for equality
+ * @param {Event} evt - Input event object
+ * @param {string} passwordFieldId - Original password field ID
+ * @param {HTMLElement} errorContainer - Error message container
+ * @param {HTMLElement|string} submitButton - Form submit button
+ * @returns {Promise<boolean>} Validation result
  */
 export async function comparePasswords(evt, passwordFieldId, errorContainer, submitButton) {
-	const pass = document.getElementById(passwordFieldId).value;
-	const compPass = evt.target.value;
-	const compPassError = errorContainer;
+	try {
+		const pass = document.getElementById(passwordFieldId)?.value;
+		const compPass = evt.target.value;
 
-	if (pass !== compPass) {
-		// Show the error message
-		myError(compPassError, 'Passwords do not match');
-		// Disable the submit button
-		disableEnableSubmitButton(submitButton);
-	} else {
-		// Clear the error message
-		clearMsg({ container: compPassError, hide: true });
-		// Enable the submit button
-		disableEnableSubmitButton(submitButton);
+		if (!pass) {
+			throw new Error(PASSWORD_VALIDATION.MESSAGES.FIELD_NOT_FOUND);
+		}
+
+		if (pass !== compPass) {
+			await safeDisplayMessage({
+				elementId: errorContainer,
+				message: PASSWORD_VALIDATION.MESSAGES.NO_MATCH
+			});
+			disableEnableSubmitButton(submitButton, false);
+			return false;
+		}
+		else {
+			await clearMsg({ container: errorContainer, hide: true });
+			disableEnableSubmitButton(submitButton, true);
+			return true;
+		}
+	}
+	catch (error) {
+		const { AppError } = await import('../../core/errors/models/AppError.js');
+		const { ErrorTypes } = await import('../../core/errors/constants/errorTypes.js');
+		const { handleError } = await import('../../core/errors/services/errorHandler.js');
+
+		await handleError(new AppError('Password validation failed', {
+			originalError: error,
+			errorCode: ErrorTypes.INPUT_ERROR,
+			userMessage: 'Unable to validate password. Please try again.',
+			displayTarget: 'form-msg',
+			shouldLog: false
+		}));
+
+		return false; // Ensure we return false on error
 	}
 }
 
 /**
- * Checks the strength of a password and updates the strength badge.
- *
- * @param {Event} evt - The event object from the input field.
- * @param {HTMLElement} strengthBadge - The container to display the password strength badge.
- * @param {HTMLElement} confirmPassContainer - The container for the confirm password field.
- * @param {HTMLElement} errorContainer - The container to display error messages.
- * @param {HTMLElement|string} submitButton - The submit button element or its ID to disable/enable based on errors.
+ * Checks password strength
+ * @param {Event} evt - Input event object
+ * @param {HTMLElement} strengthBadge - Strength indicator element
+ * @param {HTMLElement} errorContainer - Error container
+ * @param {HTMLElement|string} submitButton - Form submit button
+ * @returns {Promise<boolean>} Strength validation result
  */
 export async function checkPasswordStrength(evt, strengthBadge, errorContainer, submitButton) {
-	const value = evt.target.value;
+	try {
+		const value = evt.target.value;
 
-	const strongPassword = /(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[\W])(?=.{8,})/;
-	const mediumPassword = /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.{8,})/;
+		if (!value) {
+			return false;
+		}
 
-	clearMsg({ container: errorContainer, hide: true });
-	clearMsg({ container: strengthBadge, hide: true });
+		await clearMsg({ container: errorContainer, hide: true });
 
-	if (value === '') return false;
+		const strengthLevel = PASSWORD_VALIDATION.STRENGTH_LEVELS.find(level => level.test(value));
 
-	const badgeText = (innerHTML, className) => {
-		strengthBadge.innerHTML = `<div class="${className} w3-padding-small w3-center">${innerHTML}</div>`;
-		strengthBadge.classList.remove('w3-hide');
-	};
-
-	if (value.length < 8) {
-		badgeText('Passwords must be at least 8 characters', 'w3-yellow error');
-		disableEnableSubmitButton(submitButton);
-		return false;
+		await updateStrengthIndicator(errorContainer, strengthLevel.message, strengthLevel.style);
+		disableEnableSubmitButton(submitButton, strengthLevel.isValid);
+		return strengthLevel.isValid;
 	}
+	catch (error) {
+		console.warn('Error in checkPasswordStrength:', error);
+		const { AppError } = await import('../../core/errors/models/AppError.js');
+		const { ErrorTypes } = await import('../../core/errors/constants/errorTypes.js');
+		const { handleError } = await import('../../core/errors/services/errorHandler.js');
 
-	if (strongPassword.test(value)) {
-		badgeText('Strong', 'w3-green');
-		disableEnableSubmitButton(submitButton);
-		return true;
-	} else if (mediumPassword.test(value)) {
-		badgeText('Medium', 'w3-blue');
-		disableEnableSubmitButton(submitButton);
-		return true;
-	} else {
-		badgeText('Please make a stronger password using Upper case, Lower case, numbers and special characters', 'w3-red error');
-		disableEnableSubmitButton(submitButton);
-		return false;
+		await handleError(new AppError('Password strength check failed', {
+			originalError: error,
+			errorCode: ErrorTypes.INPUT_ERROR,
+			userMessage: 'Unable to check password strength. Please ensure your password meets the requirements.',
+			displayTarget: 'form-msg',
+			shouldLog: false
+		}));
+
+		return false; // Ensure we return false on error
 	}
 }
 
+/**
+ * Updates strength indicator display
+ * @private
+ */
+async function updateStrengthIndicator(badge, text, className) {
+	try {
+		const badgeEle = getValidElement(badge);
+		badgeEle.innerHTML = `<div class="${className} w3-padding-small w3-center">${text}</div>`;
+		badgeEle.classList.remove('w3-hide');
+	}
+	catch (err) {
+		console.warn('Error in updateStrengthIndicator:', err);
+	}
+}

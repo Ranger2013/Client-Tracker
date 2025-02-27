@@ -1,5 +1,5 @@
-import { buildEle } from "../../../../includes/js/core/utils/dom/domUtils.js";
-import { addListener } from "../event-listeners/listeners.js";
+import { buildEle } from "../../utils/dom/elements";
+import { addListener } from "../../utils/dom/listeners";
 
 // DOM Elements
 const modal = document.getElementById('modal');
@@ -50,11 +50,10 @@ export default function openModal({ content, title = null, configuration = [] })
 		 if (configuration.length === 0) {
 			  configuration = [
 					'w3-padding',
-					'w3-margin-top',
 					'w3-round-large',
 					'w3-white',
-					'w3-margin-center',
-					'w3-margin',
+					// 'w3-margin',
+					'w3-margin-center'
 			  ];
 		 }
 
@@ -91,7 +90,7 @@ function buildCloseModalSection() {
 
 	div.appendChild(closeSpan);
 
-	addListener(closeSpan, 'click', closeModal);
+	addListener({element: closeSpan, event: 'click', handler: closeModal});
 
 	return div;
 }
@@ -125,6 +124,6 @@ export function closeModal() {
  * Scrolls the modal to the top.
  */
 export function topOfModal() {
-	modal.scrollTo(0,0);
+	modal.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
