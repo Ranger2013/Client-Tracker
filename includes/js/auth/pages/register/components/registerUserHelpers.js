@@ -37,7 +37,7 @@ export async function handleUserRegistration(evt) {
     const formContainer = document.getElementById('form-container');
 
     try {
-        await safeDisplayMessage({
+        safeDisplayMessage({
             elementId: 'form-msg',
             message: 'Registering...',
             color: 'w3-text-blue',
@@ -53,7 +53,7 @@ export async function handleUserRegistration(evt) {
             // Clear the registering message
             clearMsg({ container: 'form-msg' });
 
-            await safeDisplayMessage({
+            safeDisplayMessage({
                 elementId: formContainer,
                 message: req.msg,
                 color: 'w3-text-black',
@@ -65,13 +65,13 @@ export async function handleUserRegistration(evt) {
             displayFormValidationErrors(req.errors);
         }
         else if (req.status === 'error' || req.status === 'server-error') {
-            await safeDisplayMessage({
+            safeDisplayMessage({
                 elementId: 'form-msg',
                 message: req.msg,
             });
         }
         else {
-            await safeDisplayMessage({
+            safeDisplayMessage({
                 elementId: 'form-msg',
                 message: 'Uknown Error. Please try again later.',
             });

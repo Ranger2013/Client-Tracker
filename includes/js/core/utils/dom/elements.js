@@ -31,32 +31,28 @@ export function buildEle({ type, attributes, myClass, text }) {
 
 /**
  * Enables or disables a submit button based on the presence of error elements.
- * 
  * @param {HTMLElement|string} button - The button element or its ID to enable/disable.
  */
-export async function disableEnableSubmitButton(button) {
-	try {
-		if (typeof button === 'string') {
-			button = document.getElementById(button);
-
-			if (!button) {
-				throw new Error(`Submit button with ID "${button} not found.`);
-			}
-		}
-		else if (!(button instanceof HTMLElement)) {
-			throw new Error('Button is not valid.');
-		}
-
-		// Check if there are any error elements
-		const errors = document.querySelectorAll('.error');
-		
-		button.disabled = errors.length > 0;
-	}
-	catch (err) {
-		const { errorLogs } = await import('../../errors/services/errorLogs.js');
-		await errorLogs('disableEnableSubmitButtonError', 'Disable/Enable submit button error: ', err);
-		throw err;
-	}
+export function disableEnableSubmitButton(button) {
+    try {
+        const buttonElement = getValidElement(button);
+        const errors = document.querySelectorAll('.error');
+        buttonElement.disabled = errors.length > 0;
+    }
+    catch (error) {
+        // Let AppError handle all logging
+        import('../../errors/models/AppError.js')
+            .then(({ AppError }) => {
+                return new AppError('Submit button state update failed', {
+                    originalError: error,
+                    errorCode: AppError.Types.RENDER_ERROR,
+                    shouldLog: true,
+                    displayTarget: 'page-msg',
+                    userMessage: null
+                }).logError();
+            })
+            .catch(err => console.error('Error handler failed:', err));
+    }
 }
 
 /**

@@ -38,7 +38,7 @@ export default async function displayFormValidationErrors(errors, options = {}) 
 
         // Display valid errors
         for (const { input, msg } of validErrors) {
-            await safeDisplayMessage({
+            safeDisplayMessage({
                 elementId: underscoreToHyphenPlusError(input),
                 message: msg,
                 targetId: underscoreToHyphen(input)
@@ -46,7 +46,7 @@ export default async function displayFormValidationErrors(errors, options = {}) 
         }
 
         // Show general form message
-        await safeDisplayMessage({
+        safeDisplayMessage({
             elementId: 'form-msg',
             message: formMessage
         });

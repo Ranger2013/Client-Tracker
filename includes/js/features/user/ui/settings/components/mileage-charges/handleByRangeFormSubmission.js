@@ -31,7 +31,7 @@ export default async function handleByRangeFormSubmission({evt, manageUser}) {
         const manageFuelCharges = await addFuelCharges({ userData, formType: 'range', manageUser });
         
         if (manageFuelCharges) {
-            await safeDisplayMessage({
+            safeDisplayMessage({
                 elementId: 'form-msg',
                 message: 'Fuel Charges have been added',
                 isSuccess: true,

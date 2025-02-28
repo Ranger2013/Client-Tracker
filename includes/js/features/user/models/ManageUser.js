@@ -26,16 +26,14 @@ export default class ManageUser {
             this.#settings = userSettings?.length === 1 ? userSettings[0] : null;
             this.#initialized = true;
         }
-        catch (err) {
-            const { handleError } = await import("../../../../../old-js-code/js/utils/error-messages/handleError.js");
-            await handleError({
-                filename: 'initializeSettingsError',
-                consoleMsg: 'Settings initialization error: ',
-                err,
-                userMsg: 'Unable to initialize settings',
-                errorEle: 'page-msg'
+        catch (error) {
+            const { AppError } = await import('../../../core/errors/models/AppError.js');
+            throw new AppError('Settings initialization failed', {
+                originalError: error,
+                errorCode: AppError.Types.INITIALIZATION_ERROR,
+                userMessage: 'Unable to load your settings. Some features may be unavailable.',
+                shouldLog: true
             });
-            throw err;
         }
     }
 
@@ -59,17 +57,16 @@ export default class ManageUser {
                     return acc;
                 }, {});
         }
-        catch (err) {
-            console.warn('In getSettings: err: ', err);
+        catch (error) {
+            const { AppError } = await import('../../../core/errors/models/AppError.js');
+            // Log but don't show user message - handled by calling methods
+            new AppError('Failed to retrieve settings', {
+                originalError: error,
+                errorCode: AppError.Types.SETTINGS_ERROR,
+                shouldLog: true,
+                userMessage: null
+            }).logError();
             
-            const { handleError } = await import("../../../../../old-js-code/js/utils/error-messages/handleError.js");
-            await handleError({
-                filename: 'getSettingsError',
-                consoleMsg: 'Get settings error: ',
-                err,
-                userMsg: 'Unable to retrieve settings',
-                errorEle: 'page-msg'
-            });
             return null;
         }
     }
@@ -79,8 +76,22 @@ export default class ManageUser {
      * @returns {Promise<Object|null>} Date/time options or null if not available
      */
     async getDateTimeOptions() {
-        const { date_time } = await this.getSettings('date_time') ?? {};
-        return date_time ?? null;
+        try {
+            const { date_time } = await this.getSettings('date_time') ?? {};
+            return date_time ?? null;
+        }
+        catch (error) {
+            const { AppError } = await import('../../../core/errors/models/AppError.js');
+            // Log but return null - UI handles missing data gracefully
+            new AppError('Failed to get date/time options', {
+                originalError: error,
+                errorCode: AppError.Types.SETTINGS_ERROR,
+                shouldLog: true,
+                userMessage: null
+            }).logError();
+            
+            return null;
+        }
     }
 
     /**
@@ -88,27 +99,69 @@ export default class ManageUser {
      * @returns {Promise<Object|null>} Mileage charges or null if not available
      */
     async getMileageCharges() {
-        const { mileage_charges } = await this.getSettings('mileage_charges');
-        const { per_mile: perMile, range } = mileage_charges;
+        try {
+            const { mileage_charges } = await this.getSettings('mileage_charges');
+            const { per_mile: perMile, range } = mileage_charges;
 
-        // Check if per_mile has valid data
-        if (perMile.cost_per_mile != null && perMile.starting_mile != null) {
-            return perMile;
+            // Check if per_mile has valid data
+            if (perMile.cost_per_mile != null && perMile.starting_mile != null) {
+                return perMile;
+            }
+
+            // Return range array if it has entries, null otherwise
+            return range.length > 0 ? range : null;
         }
-
-        // Return range array if it has entries, null otherwise
-        return range.length > 0 ? range : null;
+        catch (error) {
+            const { AppError } = await import('../../../core/errors/models/AppError.js');
+            // Log but return null - UI handles missing data gracefully
+            new AppError('Failed to get mileage charges', {
+                originalError: error,
+                errorCode: AppError.Types.SETTINGS_ERROR,
+                shouldLog: true,
+                userMessage: null
+            }).logError();
+            
+            return null;
+        }
     }
 
     // Other getters can be similarly simplified
     async getFarrierPrices() {
-        const { farrier_prices } = await this.getSettings('farrier_prices') ?? {};
-        return farrier_prices ?? null;
+        try {
+            const { farrier_prices } = await this.getSettings('farrier_prices') ?? {};
+            return farrier_prices ?? null;
+        }
+        catch (error) {
+            const { AppError } = await import('../../../core/errors/models/AppError.js');
+            // Log but return null - UI handles missing data gracefully
+            new AppError('Failed to get farrier prices', {
+                originalError: error,
+                errorCode: AppError.Types.SETTINGS_ERROR,
+                shouldLog: true,
+                userMessage: null
+            }).logError();
+            
+            return null;
+        }
     }
 
     async getScheduleOptions() {
-        const { schedule_options } = await this.getSettings('schedule_options') ?? {};
-        return schedule_options ?? null;
+        try {
+            const { schedule_options } = await this.getSettings('schedule_options') ?? {};
+            return schedule_options ?? null;
+        }
+        catch (error) {
+            const { AppError } = await import('../../../core/errors/models/AppError.js');
+            // Log but return null - UI handles missing data gracefully
+            new AppError('Failed to get schedule options', {
+                originalError: error,
+                errorCode: AppError.Types.SETTINGS_ERROR,
+                shouldLog: true,
+                userMessage: null
+            }).logError();
+            
+            return null;
+        }
     }
 
     /**
@@ -116,8 +169,22 @@ export default class ManageUser {
      * @returns {Promise<Object|null>} Color options or null if not available
      */
     async getColorOptions() {
-        const { color_options } = await this.getSettings('color_options') ?? {};
-        return color_options ?? null;
+        try {
+            const { color_options } = await this.getSettings('color_options') ?? {};
+            return color_options ?? null;
+        }
+        catch (error) {
+            const { AppError } = await import('../../../core/errors/models/AppError.js');
+            // Log but return null - UI handles missing data gracefully
+            new AppError('Failed to get color options', {
+                originalError: error,
+                errorCode: AppError.Types.SETTINGS_ERROR,
+                shouldLog: true,
+                userMessage: null
+            }).logError();
+            
+            return null;
+        }
     }
 
     /**
@@ -125,8 +192,22 @@ export default class ManageUser {
      * @returns {Promise<Array|null>} Array of blocked dates or null if none found
      */
     async getUserBlockedDates() {
-        const { blocked_dates } = await this.getSettings('blocked_dates') ?? {};
-        return blocked_dates ?? null;
+        try {
+            const { blocked_dates } = await this.getSettings('blocked_dates') ?? {};
+            return blocked_dates ?? null;
+        }
+        catch (error) {
+            const { AppError } = await import('../../../core/errors/models/AppError.js');
+            // Log but return null - UI handles missing data gracefully
+            new AppError('Failed to get blocked dates', {
+                originalError: error,
+                errorCode: AppError.Types.SETTINGS_ERROR,
+                shouldLog: true,
+                userMessage: null
+            }).logError();
+            
+            return null;
+        }
     }
 
     /**
@@ -141,7 +222,6 @@ export default class ManageUser {
      */
     async updateLocalUserSettings({ userData, settingsProperty, backupStore = null, backupAPITag = null, backupData = null }) {
         try {
-            // #updateSettings will create all the object stores if they don't exist
             const result = await this.#updateSettings({ userData, settingsProperty, backupStore, backupAPITag, backupData });
             if (result) {
                 this.#settings = null;
@@ -149,16 +229,14 @@ export default class ManageUser {
             }
             return result;
         }
-        catch (err) {
-            const { handleError } = await import("../../../../../old-js-code/js/utils/error-messages/handleError.js");
-            await handleError({
-                filename: 'updateLocalUserSettingsError',
-                consoleMsg: 'Update local user settings error: ',
-                err,
-                userMsg: 'Unable to update local user settings',
-                errorEle: 'page-msg'
+        catch (error) {
+            const { AppError } = await import('../../../core/errors/models/AppError.js');
+            throw new AppError('Failed to update settings', {
+                originalError: error,
+                errorCode: AppError.Types.SETTINGS_ERROR,
+                userMessage: 'Unable to save your settings. Please try again.',
+                shouldLog: true
             });
-            throw err;
         }
     }
 
@@ -199,14 +277,14 @@ export default class ManageUser {
             });
             return true;
         }
-        catch (err) {
-            const { handleError } = await import("../../../../../old-js-code/js/utils/error-messages/handleError.js");
-            await handleError({
-                filename: 'updateSettingsError',
-                consoleMsg: 'Settings update error: ',
-                err,
+        catch (error) {
+            const { AppError } = await import('../../../core/errors/models/AppError.js');
+            throw new AppError('Settings update transaction failed', {
+                originalError: error,
+                errorCode: AppError.Types.DATABASE_ERROR,
+                userMessage: 'Unable to save settings due to a database error.',
+                shouldLog: true
             });
-            throw err;
         }
     }
 

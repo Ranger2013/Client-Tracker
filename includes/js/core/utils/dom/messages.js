@@ -1,23 +1,33 @@
+import { getValidElement } from './elements.js';
+
 /**
- * Fail-safe error message display for error handler
- * @param {string} targetId - Element ID for error display
- * @param {string} message - Error message to display
+ * Safely displays a message with fallback handling
+ * @param {Object} options Message display options
+ * @param {string} options.elementId Element ID to display message in
+ * @param {string} options.message Message to display
+ * @param {boolean} [options.isSuccess=false] If true, shows as success message
+ * @param {string} [options.color='w3-text-green'] CSS class for success color
+ * @returns {Promise<void>}
  */
-export function displayErrorMessage(targetId, message) {
-	try {
-		const element = document.getElementById(targetId);
-		if (element) {
-			element.textContent = message;
-			element.classList.remove('w3-hide');
-			element.classList.add('w3-text-red');
-		}
-		else {
-			console.error(`Error display element not found: ${targetId}`);
-		}
-	}
-	catch (err) {
-		console.error('Critical error in error display:', err);
-	}
+export function safeDisplayMessage({
+    elementId,
+    message,
+    isSuccess = false,
+    color = 'w3-text-green',
+    targetId = null,
+}) {
+    try {
+        if (isSuccess) {
+            mySuccess(elementId, message, color);
+        }
+        else {
+            myError(elementId, message, targetId);
+        }
+    }
+    catch (err) {
+        // Fail-safe display without throwing
+        displayErrorMessage(elementId, message);
+    }
 }
 
 /**
@@ -26,41 +36,34 @@ export function displayErrorMessage(targetId, message) {
  * @param {string} msg - Error message to display
  * @param {HTMLElement|string|null} [target=null] - Optional target for error styling
  */
-export async function myError(ele, msg, target = null) {
-	try {
-		const element = getValidElement(ele);
+export function myError(ele, msg, target = null) {
+    try {
+        const element = getValidElement(ele);
+        removeTextColorClasses(element);
+        element.classList.add('w3-text-red');
 
-		// Handle text color classes
-		removeTextColorClasses(element);
-		element.classList.add('w3-text-red');
+        if (!isMessageContainer(element)) {
+            element.classList.add('error');
+        }
 
-		// Add error class if not a message container
-		if (!isMessageContainer(element)) {
-			element.classList.add('error');
-		}
+        element.innerHTML = msg;
+        element.classList.remove('w3-hide');
 
-		// Set message and ensure visibility
-		element.innerHTML = msg;
-		element.classList.remove('w3-hide');
-
-		// Handle target if provided
-		if (target) {
-
-			handleTargetStyling(target);
-		}
-	}
-	catch (err) {
-		// Only throw when there's an actual display problem
-		const { AppError } = await import('../../errors/models/AppError.js');
-		const { ErrorTypes } = await import('../../errors/constants/errorTypes.js');
-
-		throw new AppError('Failed to display error message', {
-			errorCode: ErrorTypes.RENDER_ERROR,
-			userMessage: 'Unable to display error message',
-			originalError: err,
-			displayTarget: 'page-msg'
-		});
-	}
+        if (target) {
+            handleTargetStyling(target);
+        }
+    }
+    catch (err) {
+        import('../../errors/models/AppError.js')
+            .then(({ AppError }) => {
+                throw new AppError('Display error failed', {
+                    originalError: err,
+                    errorCode: AppError.Types.RENDER_ERROR,
+                    userMessage: AppError.Messages.system.generic,
+                    displayTarget: 'page-msg'
+                });
+            });
+    }
 }
 
 /**
@@ -69,7 +72,7 @@ export async function myError(ele, msg, target = null) {
  * @param {string} msg - Success message to display
  * @param {string} [color='w3-text-green'] - CSS class for text color
  */
-export async function mySuccess(ele, msg, color = 'w3-text-green') {
+export function mySuccess(ele, msg, color = 'w3-text-green') {
     try {
         const element = getValidElement(ele);
 
@@ -85,46 +88,38 @@ export async function mySuccess(ele, msg, color = 'w3-text-green') {
         element.classList.remove('w3-hide');
     }
     catch (err) {
-        const { AppError } = await import('../../errors/models/AppError.js');
-        const { ErrorTypes } = await import('../../errors/constants/errorTypes.js');
-        
-        throw new AppError('Failed to display status message', {
-            errorCode: ErrorTypes.RENDER_ERROR,
-            userMessage: 'Unable to display status update',
-            originalError: err,
-            displayTarget: 'page-msg',
-            shouldLog: false  // Don't log UI feedback issues
-        });
+        import('../../errors/models/AppError.js')
+            .then(({ AppError }) => {
+                throw new AppError('Success message display failed', {
+                    originalError: err,
+                    errorCode: AppError.Types.RENDER_ERROR,
+                    userMessage: AppError.Messages.system.generic,
+                    displayTarget: 'page-msg',
+                    shouldLog: false  // Don't log UI feedback issues
+                });
+            });
     }
 }
 
 /**
- * Safely displays a message with fallback handling
- * @param {Object} options Message display options
- * @param {string} options.elementId Element ID to display message in
- * @param {string} options.message Message to display
- * @param {boolean} [options.isSuccess=false] If true, shows as success message
- * @param {string} [options.color='w3-text-green'] CSS class for success color
- * @returns {Promise<void>}
+ * Fail-safe error message display for error handler
+ * @param {string} targetId - Element ID for error display
+ * @param {string} message - Error message to display
  */
-export async function safeDisplayMessage({ 
-    elementId, 
-    message, 
-    isSuccess = false, 
-    color = 'w3-text-green',
-    targetId = null,
-}) {
+export function displayErrorMessage(targetId, message) {
     try {
-        if (isSuccess) {
-            await mySuccess(elementId, message, color);
+        const element = document.getElementById(targetId);
+        if (element) {
+            element.textContent = message;
+            element.classList.remove('w3-hide');
+            element.classList.add('w3-text-red');
         }
         else {
-            await myError(elementId, message, targetId);
+            console.error(`Error display element not found: ${targetId}`);
         }
     }
-    catch (displayError) {
-        // Fail-safe display without throwing
-        displayErrorMessage(elementId, message);
+    catch (err) {
+        console.error('Critical error in error display:', err);
     }
 }
 
@@ -135,41 +130,37 @@ export async function safeDisplayMessage({
  * @param {boolean} [params.hide=false] Whether to hide container after clearing
  * @param {HTMLElement|string} [params.input=null] Input element to remove error styling
  */
-export async function clearMsg({ container, hide = false, input = null }) {
-    try 
-    {
+export function clearMsg({ container, hide = false, input = null }) {
+    try {
         const element = getValidElement(container);
-        
+
         // Remove any text color classes
         removeTextColorClasses(element);
-        
+
         // Clear content and error state
         element.classList.remove('error');
         element.innerHTML = '';
-        
-        if (hide) 
-        {
+
+        if (hide) {
             element.classList.add('w3-hide');
         }
-        
-        if (input) 
-        {
+
+        if (input) {
             const inputElement = getValidElement(input);
             inputElement.classList.remove('w3-border-error');
         }
     }
-    catch (err) 
-    {
-        const { AppError } = await import('../../errors/models/AppError.js');
-        const { ErrorTypes } = await import('../../errors/constants/errorTypes.js');
-        
-        throw new AppError('Failed to clear message display', {
-            errorCode: ErrorTypes.RENDER_ERROR,
-            userMessage: 'Unable to clear message',
-            originalError: err,
-            displayTarget: 'page-msg',
-            shouldLog: false
-        });
+    catch (err) {
+        import('../../errors/models/AppError.js')
+            .then(({ AppError }) => {
+                throw new AppError('Failed to clear message', {
+                    originalError: err,
+                    errorCode: AppError.Types.RENDER_ERROR,
+                    userMessage: AppError.Messages.system.generic,
+                    displayTarget: 'page-msg',
+                    shouldLog: true
+                });
+            });
     }
 }
 
@@ -177,19 +168,19 @@ export async function clearMsg({ container, hide = false, input = null }) {
  * Removes all text color classes from element
  */
 function removeTextColorClasses(element) {
-	for (let i = element.classList.length - 1; i >= 0; i--) {
-		const className = element.classList[i];
-		if (className.startsWith('w3-text-')) {
-			element.classList.remove(className);
-		}
-	}
+    for (let i = element.classList.length - 1; i >= 0; i--) {
+        const className = element.classList[i];
+        if (className.startsWith('w3-text-')) {
+            element.classList.remove(className);
+        }
+    }
 }
 
 /**
  * Checks if element is a message container
  */
 function isMessageContainer(element) {
-	return ['form-msg', 'page-msg', 'modal-msg'].includes(element.id);
+    return ['form-msg', 'page-msg', 'modal-msg'].includes(element.id);
 }
 
 /**
@@ -197,7 +188,7 @@ function isMessageContainer(element) {
  * @throws {Error} If target is invalid
  */
 function handleTargetStyling(target) {
-	const targetElement = getValidElement(target);
-	targetElement.classList.add('w3-border-error');
+    const targetElement = getValidElement(target);
+    targetElement.classList.add('w3-border-error');
 }
 

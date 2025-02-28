@@ -66,7 +66,7 @@ export async function comparePasswords(evt, passwordFieldId, errorContainer, sub
 		}
 
 		if (pass !== compPass) {
-			await safeDisplayMessage({
+			safeDisplayMessage({
 				elementId: errorContainer,
 				message: PASSWORD_VALIDATION.MESSAGES.NO_MATCH
 			});

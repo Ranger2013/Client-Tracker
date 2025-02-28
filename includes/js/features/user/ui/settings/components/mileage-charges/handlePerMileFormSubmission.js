@@ -22,7 +22,7 @@ export default async function handlePerMileFormSubmission({ evt, manageUser }) {
 		const manageFuelCharges = await addFuelCharges({ userData, formType: 'mile', manageUser });
 
 		if (manageFuelCharges) {
-			await safeDisplayMessage({
+			safeDisplayMessage({
 				elementId: 'form-msg',
 				message: 'Fuel Charges have been added',
 				isSuccess: true,

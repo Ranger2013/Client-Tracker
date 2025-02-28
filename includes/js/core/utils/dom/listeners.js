@@ -10,66 +10,62 @@ const listenerRegistry = new Map();
  * Adds an event listener and tracks it by component ID
  * @param {string|HTMLElement} elementOrId - Element or element ID to attach listener to
  * @param {string} eventType - Type of event to listen for
- * @param {Function} listener - Event handler function
+ * @param {Function} handler - Event handler function
  * @param {string} componentId - ID for grouping related listeners
  * @throws {AppError} If element not found or listener registration fails
  */
-export function addListener(elementOrId, eventType, listener, componentId) {
+export function addListener({elementOrId, eventType, handler, componentId}) {
     try {
         // Input validation first
-        if (!eventType || typeof listener !== 'function' || !componentId) {
-            throw new Error(`Invalid listener parameters: eventType=${eventType}, hasListener=${!!listener}, componentId=${componentId}`);
+        if (!elementOrId || !eventType || typeof handler !== 'function' || !componentId) {
+            throw new Error(`Invalid listener parameters: elementOrId=${elementOrId}, eventType=${eventType}, hasListener=${!!handler}, componentId=${componentId}`);
         }
 
         // Use our utility function instead
         const element = getValidElement(elementOrId);
+        
+        // Add listener and track
+        element.addEventListener(eventType, handler);
+        registerListener(element, eventType, handler, componentId);
 
-        // Add listener
-        element.addEventListener(eventType, listener);
-
-        // Track for cleanup
-        if (!listenerRegistry.has(componentId)) {
-            listenerRegistry.set(componentId, new Set());
-        }
-
-        listenerRegistry.get(componentId).add({
-            element,
-            type: eventType,
-            listener
-        });
+        return true;
 
     }
     catch (error) {
-        const elementDesc = typeof elementOrId === 'string'
-            ? `element with ID "${elementOrId}"`
-            : `element ${elementOrId?.id ? `with ID "${elementOrId.id}"` : '(no ID)'}`;
+        const elementDesc = typeof elementOrId === 'string' 
+            ? `element with ID "${elementOrId}"` 
+            : (elementOrId?.id ? `element with ID "${elementOrId.id}"` : 'element (no ID)');
 
+        // Keep error handling synchronous for immediate feedback
+        console.error('Listener registration failed:', {
+            element: elementDesc,
+            event: eventType,
+            component: componentId,
+            error
+        });
+
+        // Handle error asynchronously
         import('../../errors/models/AppError.js')
             .then(({ AppError }) => {
-                const appError = new AppError(`Failed to attach ${eventType} listener`, {
+                return new AppError('Event listener registration failed', {
                     originalError: error,
                     errorCode: AppError.Types.INITIALIZATION_ERROR,
-                    userMessage: AppError.Messages.system.initialization,
+                    userMessage: 'Unable to initialize component. Some features may be unavailable.',
                     shouldLog: true,
-                    // Add diagnostic info to the technical message
-                    message: `Failed to attach ${eventType} listener to ${elementDesc} for component "${componentId}"`
-                });
-                return appError.handle();
+                    message: `Failed to attach ${eventType || 'unknown'} listener to ${elementDesc} for component "${componentId}"`
+                }).handle();
             })
-            .catch(err => {
-                console.error('Listener registration failed:', {
-                    element: elementDesc,
-                    event: eventType,
-                    component: componentId,
-                    error: error,
-                    handlingError: err
-                });
-            });
+            .catch(err => console.error('Error handler failed:', err));
 
         return false;
     }
+}
 
-    return true;
+function registerListener({element, type, listener: handler, componentId}) {
+    if (!listenerRegistry.has(componentId)) {
+        listenerRegistry.set(componentId, new Set());
+    }
+    listenerRegistry.get(componentId).add({ element, type, listener: handler });
 }
 
 /**

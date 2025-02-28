@@ -112,7 +112,7 @@ async function handleValidationResponse({ response, errorEle, inputEle }) {
 
         // Invalid formatting
         if (response) {
-            await safeDisplayMessage({
+            safeDisplayMessage({
                 elementId: errorEle,
                 message: response,
                 targetId: inputEle,

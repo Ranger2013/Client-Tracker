@@ -26,14 +26,17 @@ export default async function populateDateTimeForm(manageUser, domElements) {
         document.querySelector(`input[name="time_format"][value="${timeFormatValue}"]`)
             ?.setAttribute('checked', 'checked');
 
-    } catch (err) {
-        const { handleError } = await import("../../../../../../old-js-code/js/utils/error-messages/handleError.js");
-        await handleError({
-            filename: 'populateDateTimeFormError',
-            consoleMsg: 'Populate date/time form error: ',
-            err,
-            userMsg: 'Unable to load saved settings',
-            errorEle: 'form-msg'
+    } 
+    catch (err) {
+        const { AppError } = await import("../../../../../../core/errors/models/AppError.js");
+
+        const appError = new AppError('Error while trying to get the user date/time options: ', {
+            originalError: err,
+            errorCode: AppError.Types.SETTINGS_ERROR,
+            userMessage: 'Unable to load date/time settings',
+            shouldLog: true,
         });
+
+        await appError.handle();
     }
 }

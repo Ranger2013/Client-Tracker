@@ -1,32 +1,35 @@
 import { displayErrorMessage, safeDisplayMessage } from '../../utils/dom/messages.js';
 
 /**
- * Configuration options for AppError
- * @typedef {Object} ErrorConfig
- * @property {Error} [originalError] - Original error being wrapped (optional)
- * @property {boolean} [shouldLog=true] - Whether to log the error (defaults to true)
- * @property {string} [userMessage] - User-friendly error message (optional, falls back to technical message)
- * @property {('INITIALIZATION_ERROR'|'NAVIGATION_ERROR'|'BACKUP_ERROR'|'SETTINGS_ERROR'|'DATABASE_ERROR'|'API_ERROR'|'AUTHORIZATION_ERROR'|'RENDER_ERROR'|'INPUT_ERROR'|'UNKNOWN_ERROR')} [errorCode='UNKNOWN_ERROR'] - Error classification code
- * @property {string} [displayTarget='page-msg'] - DOM element ID for error display
- * @property {boolean} [autoHandle=false] - Whether to automatically handle the error
+ * @typedef {Object} AppErrorConfig
+ * @property {Error} [originalError] Original error being wrapped
+ * @property {boolean} [shouldLog=true] Whether to log the error
+ * @property {string} [userMessage] Message to show to user (null for no display)
+ * @property {string} [errorCode='UNKNOWN_ERROR'] One of AppError.Types values
+ * @property {string} [displayTarget='page-msg'] DOM element ID for error display
+ * @property {boolean} [autoHandle=false] Whether to automatically handle error
+ * @property {string} [feature] Feature-specific error messages to load
  */
 
 /**
- * Enhanced Error class for application-wide error handling
+ * Creates a new AppError for handling application-wide errors
+ * @param {string} message - Technical error message for developers and logs
+ * @param {{
+ *   originalError?: Error,
+ *   shouldLog?: boolean,
+ *   userMessage?: string|null,
+ *   errorCode?: 'INITIALIZATION_ERROR'|'NAVIGATION_ERROR'|'BACKUP_ERROR'|'SETTINGS_ERROR'|'DATABASE_ERROR'|'API_ERROR'|'AUTHORIZATION_ERROR'|'RENDER_ERROR'|'INPUT_ERROR',
+ *   displayTarget?: string,
+ *   autoHandle?: boolean,
+ *   feature?: string
+ * }} [config] - Error configuration
  * 
  * @example
- * // Basic usage
- * throw new AppError('Failed to load data');
- * 
- * @example
- * // Full configuration
- * const error = new AppError('Database query failed', {
- *     originalError: dbError,
- *     errorCode: AppError.Types.DATABASE_ERROR,
- *     userMessage: 'Unable to load your data',
- *     displayTarget: 'db-error',
- *     shouldLog: true,
- *     autoHandle: true
+ * new AppError('Database query failed', {
+ *   originalError: dbError,
+ *   errorCode: AppError.Types.DATABASE_ERROR,
+ *   userMessage: 'Unable to save your data',
+ *   displayTarget: 'form-msg'
  * });
  */
 export class AppError extends Error {
@@ -82,14 +85,19 @@ export class AppError extends Error {
     /**
      * Creates a new AppError instance
      * @param {string} [message='An unexpected error occurred'] - Technical error message
-     * @param {ErrorConfig} [config={}] - Error configuration options
+     * @param {AppErrorConfig} [config={}] - Error configuration options
      */
     constructor(message = 'An unexpected error occurred', config = {}) {
-        super(message);
-        this.name = 'AppError';
+        super(message); // Calls Error constructor, sets this.message
+        this.name = 'AppError'; // Override the name property, usually Error.
         this.originalError = config.originalError || null;
         this.shouldLog = config.shouldLog ?? true;
-        this.userMessage = config.userMessage || message; // Use technical message if no user message
+
+        // Explicitly handle null case
+        this.userMessage = config.userMessage === null
+            ? null
+            : (config.userMessage || message);
+
         this.errorCode = config.errorCode || 'UNKNOWN_ERROR';
         this.logged = false;
         this.displayTarget = config.displayTarget || 'page-msg';
@@ -146,14 +154,21 @@ export class AppError extends Error {
                 await this.logError();
             }
 
-            await this.displayError();
+            // Only display if we have a user message
+            if (this.userMessage !== null) {
+                await this.displayError();
+            }
 
             if (shouldRethrow) {
                 throw this;
             }
         }
         catch (handlingError) {
-            console.error('Error handling failed:', handlingError);
+            // Only log handling errors, not the original error again
+            console.error('Error handling failed:', {
+                handling: handlingError.message,
+                originalError: this.message
+            });
             this.displayFallbackError();
             if (shouldRethrow) throw handlingError;
         }
@@ -212,11 +227,19 @@ export class AppError extends Error {
      * Main error logging method
      */
     async logError() {
+        // Single source of console logging
+        if (!this.logged) {
+            console.warn(`${this.name}:`, {
+                message: this.message,
+                code: this.errorCode,
+                originalError: this.originalError
+            });
+        }
+
         try {
             await this.logServerSideError();
         } catch (loggingError) {
             console.error('Error logging failed:', loggingError);
-            // Still attempt to queue even if server logging failed
             await this.queueForSync();
         }
     }
@@ -226,7 +249,7 @@ export class AppError extends Error {
      */
     async displayError() {
         try {
-            await safeDisplayMessage({
+            safeDisplayMessage({
                 elementId: this.displayTarget,
                 message: this.userMessage,
                 isSuccess: false

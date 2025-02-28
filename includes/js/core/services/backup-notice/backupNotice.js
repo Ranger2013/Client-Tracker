@@ -19,8 +19,8 @@ export default async function setupBackupNotice({ errorEleID }) {
 
         await updateBackupNotice();
         addListener({
-            element: `${errorEleID}-close`,
-            event: 'click', 
+            elementOrId: `${errorEleID}-close`,
+            eventType: 'click', 
             handler: closeBackupNotice,
             componentId: BACKUP_NOTICE_ID});
     }

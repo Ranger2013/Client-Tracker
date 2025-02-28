@@ -27,7 +27,7 @@ async function handleFormSubmission(evt) {
     evt.preventDefault();
 
     try {
-        await safeDisplayMessage({
+        safeDisplayMessage({
             elementId: 'form-msg',
             message: 'Processing...',
             color: 'w3-text-blue',
@@ -47,13 +47,13 @@ async function handleFormSubmission(evt) {
         });
 
         if (updateSuccess) {
-            await safeDisplayMessage({
+            safeDisplayMessage({
                 elementId: 'form-msg',
                 message: 'Your pricing has been set.',
                 isSuccess: true,
             });
         } else {
-            await safeDisplayMessage({
+            safeDisplayMessage({
                 elementId: 'form-msg',
                 message: 'We were unable to save your pricing.',
             });
