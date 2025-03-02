@@ -59,7 +59,7 @@ export default function seperateFarrierPricesFromAccessories(userData) {
 			rockers: {
 				cost: {
 					key: 'rockers',
-					action: (index, value) => {
+					action: (_, value) => {
 						accessories.rockers = [{ cost: value }];
 					}
 				}
@@ -67,7 +67,7 @@ export default function seperateFarrierPricesFromAccessories(userData) {
 			clips: {
 				cost: {
 					key: 'clips',
-					action: (index, value) => {
+					action: (_, value) => {
 						accessories.clips = [{ cost: value }];
 					}
 				}
@@ -75,7 +75,7 @@ export default function seperateFarrierPricesFromAccessories(userData) {
 			casting: {
 				cost: {
 					key: 'casting',
-					action: (index, value) => {
+					action: (_, value) => {
 						accessories.casting = [{ cost: value }];
 					}
 				}
@@ -83,7 +83,7 @@ export default function seperateFarrierPricesFromAccessories(userData) {
 			sedation: {
 				cost: {
 					key: 'sedation',
-					action: (index, value) => {
+					action: (_, value) => {
 						accessories.sedation = [{ cost: value }];
 					}
 				}

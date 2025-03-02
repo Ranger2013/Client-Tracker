@@ -17,7 +17,7 @@ export default async function populateScheduleOptionsForm({ form, manageUser }) 
         const scheduleOptions = await manageUser.getScheduleOptions();
         if (!scheduleOptions) return;
 
-        const elements = await getAllFormIdElements(form);
+        const elements = getAllFormIdElements(form);
         
         // Populate form fields with existing values
         Object.entries(elements).forEach(([fieldId, element]) => {

@@ -1,16 +1,15 @@
-import getAllFormIdElements from "../../../../utils/dom/getAllFormIDElements.js";
-import { underscoreToHyphen } from "../../../../utils/string/stringUtils";
+import { getValidElement } from "../../../../../../core/utils/dom/elements.js";
+import getAllFormIdElements from "../../../../../../core/utils/dom/forms/getAllFormIDElements.js";
+import { underscoreToHyphen } from "../../../../../../core/utils/string/stringUtils.js";
 
 export default async function populateByMileForm({ form, manageUser }) {
 	try {
-		if (typeof form === 'string') {
-			form = document.getElementById(form);
-		}
+		form = getValidElement(form);
 
 		const mileageCharges = await manageUser.getMileageCharges();
 
 		if (mileageCharges?.cost_per_mile != null && mileageCharges?.starting_mile != null) {
-			const elements = await getAllFormIdElements(form);
+			const elements = getAllFormIdElements(form);
 
 			// Direct property mapping - no transformation needed
 			Object.entries(mileageCharges).forEach(([key, value]) => {
@@ -23,11 +22,13 @@ export default async function populateByMileForm({ form, manageUser }) {
 		}
 	}
 	catch (err) {
-		const { handleError } = await import("../../../../../../../../old-js-code/js/utils/error-messages/handleError.js");
-		await handleError({
-			filename: 'populateByMileFormError',
-			consoleMsg: 'Populate by mile form error: ',
-			err
-		});
+		// Fail silently
+		const { AppError } = await import("../../../../../../core/errors/models/AppError.js");
+		new AppError('Failed to populate the per-mile form.', {
+			originalError: err,
+			shouldLog: true,
+			userMessage: null,
+			errorCode: 'RENDER_ERROR',
+		}).logError();
 	}
 }

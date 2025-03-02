@@ -1,3 +1,4 @@
+import { getValidElement } from '../../utils/dom/elements.js';
 import { addListener } from '../../utils/dom/listeners.js';
 
 /** 
@@ -7,27 +8,60 @@ const TWO_HOURS = 60 * 60 * 2 * 1000; // 2 Hours in milliseconds
 const REMINDER_PATTERNS = ['add', 'edit', 'delete', 'dateTime', 'farrierPrices', 'schedulingOptions', 'mileageCharges', 'colorOptions'];
 const BACKUP_NOTICE_ID = 'backup-notice-component';  // Add consistent component ID
 
+// Backup data notice id passed to setupBackupNotice: 'backup-data-notice'
 /**
  * Sets up the backup notice by updating it and adding an event listener to close it.
  */
 export default async function setupBackupNotice({ errorEleID }) {
     try {
-        const noticeDiv = document.getElementById(errorEleID);
-        if (!noticeDiv) {
-            throw new Error('Backup notice element not found.');
-        }
-
-        await updateBackupNotice();
+        // noticeDiv is the 'backup-data-notice' element
+        const noticeDiv = getValidElement(errorEleID);
+        
+        await initializeBackupNotice({reminders: REMINDER_PATTERNS, displayElement: noticeDiv});
+        
         addListener({
             elementOrId: `${errorEleID}-close`,
             eventType: 'click', 
-            handler: closeBackupNotice,
+            handler: () => closeBackupNotice(TWO_HOURS),
             componentId: BACKUP_NOTICE_ID});
+    }
+    catch (error) {
+        new AppError('Backup notice system unavailable', {
+            originalError: error,
+            errorCode: AppError.Types.BACKUP_ERROR,
+            userMessage: 'Unable to check for pending backups',
+            displayTarget: errorEleID,
+            shouldLog: true
+        }).handle();  // Will display in its own element
+    }
+}
+
+/**
+ * Populates the backup notice based on user settings and data in IndexedDB.
+ */
+async function initializeBackupNotice({reminders, displayElement}) {
+    try {
+        const { default: IndexedDBOperations } = await import("../../database/IndexedDBOperations.js");
+        const indexed = new IndexedDBOperations();
+
+        const db = await indexed.openDBPromise();
+        const userSettings = await indexed.getAllStorePromise(db, indexed.stores.USERSETTINGS);
+
+        if (shouldShowReminder(userSettings)) {
+            const stores = filterStores(indexed.stores, reminders);
+            const hasDataToBackup = await checkStoresForData(db, stores, indexed);
+
+            if (hasDataToBackup) {
+                updateNoticeContent(displayElement, 'You currently have data that needs to be backed up to the server.');
+            } else {
+                hideBackupNotice(displayElement);
+            }
+        }
     }
     catch (err) {
         const { errorLogs } = await import("../../errors/services/errorLogs.js");
-        await errorLogs('backupNotice', 'Failed to setup backup notice', err);
-        updateNoticeContent(noticeDiv, 'Unable to check backup status', true);
+        await errorLogs('backupNotice', 'Failed to check backup status', err);
+        updateNoticeContent(displayElement, 'Unable to check for pending backups', true);
     }
 }
 
@@ -48,37 +82,6 @@ function updateNoticeContent(noticeDiv, message, isError = false) {
     if (isError) messageEl.classList.add('w3-text-red');
     noticeDiv.insertBefore(messageEl, closeButton);
     noticeDiv.classList.remove('w3-hide');
-}
-
-/**
- * Updates the backup notice based on user settings and data in IndexedDB.
- */
-async function updateBackupNotice() {
-    const noticeDiv = document.getElementById('backup-data-notice');
-
-    try {
-        const { default: IndexedDBOperations } = await import("../../database/IndexedDBOperations.js");
-        const indexed = new IndexedDBOperations();
-
-        const db = await indexed.openDBPromise();
-        const userSettings = await indexed.getAllStorePromise(db, indexed.stores.USERSETTINGS);
-
-        if (shouldShowReminder(userSettings)) {
-            const stores = filterStores(indexed.stores, REMINDER_PATTERNS);
-            const hasDataToBackup = await checkStoresForData(db, stores, indexed);
-
-            if (hasDataToBackup) {
-                updateNoticeContent(noticeDiv, 'You currently have data that needs to be backed up to the server.');
-            } else {
-                hideBackupNotice(noticeDiv);
-            }
-        }
-    }
-    catch (err) {
-        const { errorLogs } = await import("../../errors/services/errorLogs.js");
-        await errorLogs('backupNotice', 'Failed to check backup status', err);
-        updateNoticeContent(noticeDiv, 'Unable to check for pending backups', true);
-    }
 }
 
 /**
@@ -161,7 +164,7 @@ function hideBackupNotice(noticeDiv) {
 /**
  * Closes the backup notice and updates the user settings in IndexedDB.
  */
-async function closeBackupNotice() {
+async function closeBackupNotice(TWO_HOURS) {
     const noticeDiv = document.getElementById('backup-data-notice');
 
     try {

@@ -1,3 +1,4 @@
+import { AppError } from "../../../../../../core/errors/models/AppError.js";
 import buildFuelRangeSection from "./buildFuelRangeSection.js";
 
 /**
@@ -8,7 +9,7 @@ import buildFuelRangeSection from "./buildFuelRangeSection.js";
  * @param {string} componentId - Component ID for event listener tracking
  * @returns {Promise<void>}
  */
-export default async function buildMileageRangeInputs({evt, rangeContainer, fuelRangeContainer, values = null, componentId}) {
+export default function buildMileageRangeInputs({ evt, rangeContainer, fuelRangeContainer, values = null, componentId }) {
     try {
         const rangeInput = parseInt(evt.target.value, 10);
         const currentChildren = fuelRangeContainer.children.length;
@@ -22,7 +23,7 @@ export default async function buildMileageRangeInputs({evt, rangeContainer, fuel
             // Add new range sections
             for (let i = currentChildren; i < rangeInput; i++) {
                 const valueData = values ? values[i] : {};
-                const rangeSection = await buildFuelRangeSection(i + 1, valueData, componentId);
+                const rangeSection = buildFuelRangeSection(i + 1, valueData, componentId);
                 if (rangeSection) {
                     fuelRangeContainer.append(rangeSection);
                 }
@@ -36,13 +37,16 @@ export default async function buildMileageRangeInputs({evt, rangeContainer, fuel
         }
     }
     catch (err) {
-        const { handleError } = await import("../../../../../../../../old-js-code/js/utils/error-messages/handleError.js");
-        await handleError({
-            filename: 'buildMileageRangeInputsError',
-            consoleMsg: 'Build mileage range inputs error: ',
-            err,
-            userMsg: 'Unable to create mileage range inputs',
-            errorEle: 'form-msg'
-        });
+        import("../../../../../../core/errors/models/AppError.js")
+            .then(({ AppError }) => {
+                new AppError('Error building mileage range inputs: ', {
+                    originalError: err,
+                    shouldLog: true,
+                    userMessage: 'Could not build mileage range inputs.',
+                    errorCode: 'RENDER_ERROR',
+                    displayTarget: rangeContainer,
+                }).handle();
+            })
+            .catch(err => console.warn('Failed handling error in buildMileageRangeInputs: ', err));
     }
 }

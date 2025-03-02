@@ -59,15 +59,12 @@ export default class ManageUser {
         }
         catch (error) {
             const { AppError } = await import('../../../core/errors/models/AppError.js');
-            // Log but don't show user message - handled by calling methods
-            new AppError('Failed to retrieve settings', {
+            throw new AppError('Failed to retrieve settings', {
                 originalError: error,
                 errorCode: AppError.Types.SETTINGS_ERROR,
-                shouldLog: true,
-                userMessage: null
-            }).logError();
-            
-            return null;
+                userMessage: null, // Let boss handle user messages
+                shouldLog: true
+            });
         }
     }
 
@@ -82,15 +79,12 @@ export default class ManageUser {
         }
         catch (error) {
             const { AppError } = await import('../../../core/errors/models/AppError.js');
-            // Log but return null - UI handles missing data gracefully
-            new AppError('Failed to get date/time options', {
+            throw new AppError('Failed to get date/time options', {
                 originalError: error,
                 errorCode: AppError.Types.SETTINGS_ERROR,
-                shouldLog: true,
-                userMessage: null
-            }).logError();
-            
-            return null;
+                userMessage: null, // Let boss handle user messages
+                shouldLog: true
+            });
         }
     }
 
@@ -113,15 +107,12 @@ export default class ManageUser {
         }
         catch (error) {
             const { AppError } = await import('../../../core/errors/models/AppError.js');
-            // Log but return null - UI handles missing data gracefully
-            new AppError('Failed to get mileage charges', {
+            throw new AppError('Failed to get mileage charges', {
                 originalError: error,
                 errorCode: AppError.Types.SETTINGS_ERROR,
-                shouldLog: true,
-                userMessage: null
-            }).logError();
-            
-            return null;
+                userMessage: null, // Let boss handle user messages
+                shouldLog: true
+            });
         }
     }
 
@@ -133,15 +124,12 @@ export default class ManageUser {
         }
         catch (error) {
             const { AppError } = await import('../../../core/errors/models/AppError.js');
-            // Log but return null - UI handles missing data gracefully
-            new AppError('Failed to get farrier prices', {
+            throw new AppError('Failed to get farrier prices', {
                 originalError: error,
                 errorCode: AppError.Types.SETTINGS_ERROR,
-                shouldLog: true,
-                userMessage: null
-            }).logError();
-            
-            return null;
+                userMessage: null, // Let boss handle user messages
+                shouldLog: true
+            });
         }
     }
 
@@ -152,15 +140,12 @@ export default class ManageUser {
         }
         catch (error) {
             const { AppError } = await import('../../../core/errors/models/AppError.js');
-            // Log but return null - UI handles missing data gracefully
-            new AppError('Failed to get schedule options', {
+            throw new AppError('Failed to get schedule options', {
                 originalError: error,
                 errorCode: AppError.Types.SETTINGS_ERROR,
-                shouldLog: true,
-                userMessage: null
-            }).logError();
-            
-            return null;
+                userMessage: null, // Let boss handle user messages
+                shouldLog: true
+            });
         }
     }
 
@@ -175,15 +160,12 @@ export default class ManageUser {
         }
         catch (error) {
             const { AppError } = await import('../../../core/errors/models/AppError.js');
-            // Log but return null - UI handles missing data gracefully
-            new AppError('Failed to get color options', {
+            throw new AppError('Failed to get color options', {
                 originalError: error,
                 errorCode: AppError.Types.SETTINGS_ERROR,
-                shouldLog: true,
-                userMessage: null
-            }).logError();
-            
-            return null;
+                userMessage: null, // Let boss handle user messages
+                shouldLog: true
+            });
         }
     }
 
@@ -198,15 +180,12 @@ export default class ManageUser {
         }
         catch (error) {
             const { AppError } = await import('../../../core/errors/models/AppError.js');
-            // Log but return null - UI handles missing data gracefully
-            new AppError('Failed to get blocked dates', {
+            throw new AppError('Failed to get blocked dates', {
                 originalError: error,
                 errorCode: AppError.Types.SETTINGS_ERROR,
-                shouldLog: true,
-                userMessage: null
-            }).logError();
-            
-            return null;
+                userMessage: null, // Let boss handle user messages
+                shouldLog: true
+            });
         }
     }
 
@@ -234,7 +213,7 @@ export default class ManageUser {
             throw new AppError('Failed to update settings', {
                 originalError: error,
                 errorCode: AppError.Types.SETTINGS_ERROR,
-                userMessage: 'Unable to save your settings. Please try again.',
+                userMessage: null, // Let boss handle user messages
                 shouldLog: true
             });
         }

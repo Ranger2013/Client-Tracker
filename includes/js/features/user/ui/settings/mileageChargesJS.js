@@ -14,20 +14,26 @@ const byRangeContainer = document.getElementById('by-range-container');
 const byMileContainer = document.getElementById('by-mile-container');
 
 // Initialize radio handling
-handleRadioButtonSelect(
-    byRangeRadioButton,
-    byRangeContainer,
-    byPerMileRadioButton,
-    byMileContainer,
-    manageUser
+handleRadioButtonSelect({
+    rangeButton: byRangeRadioButton,
+    mileButton: byPerMileRadioButton,
+    rangeContainer: byRangeContainer,
+    mileContainer: byMileContainer,
+    manageUser,
+    componentId: COMPONENT_ID}
 );
 
 // Add form submission listeners
-addListener('per-mile-form', 'submit', 
-    evt => handlePerMileFormSubmission({evt, manageUser}), 
-    COMPONENT_ID
-);
-addListener('by-range-form', 'submit', 
-    evt => handleByRangeFormSubmission({evt, manageUser}), 
-    COMPONENT_ID
-);
+addListener({
+    elementOrId: 'per-mile-form',
+    eventType: 'submit',
+    handler: evt => handlePerMileFormSubmission({evt, manageUser}),
+    componentId: COMPONENT_ID
+})
+
+addListener({
+    elementOrId: 'by-range-form',
+    eventType: 'submit',
+    handler: evt => handleByRangeFormSubmission({evt, manageUser}),
+    componentId: COMPONENT_ID
+});

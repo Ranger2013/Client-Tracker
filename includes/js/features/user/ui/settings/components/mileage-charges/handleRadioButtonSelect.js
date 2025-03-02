@@ -1,46 +1,51 @@
 import { addListener } from "../../../../../../core/utils/dom/listeners.js";
-// import { clearMsg } from "../../../../../../core/utils/dom/messages.js";
-// import listenForFuelRangeInput from "./listenForFuelRangeInput.js";
+import { clearMsg } from "../../../../../../core/utils/dom/messages.js";
+import listenForFuelRangeInput from "./listenForFuelRangeInput.js";
+import populateByMileForm from "./populateByMileForm.js";
 
 const COMPONENT_ID = 'fuel-charges-radio';
 const RANGE_INPUT_ID = 'fuel-range-input';
 
-export default function handleRadioButtonSelect(range, rangeContainer, mile, mileContainer, manageUser) {
-    const sections = {
-        byRange: {
-            radio: range,
-            container: rangeContainer,
-            show: async () => {
-                clearMsg({ container: 'form-msg' });
-                mileContainer.classList.add('w3-hide');
-                rangeContainer.classList.remove('w3-hide');
-                
-                // This triggers listenForFuelRangeInput which then triggers buildMileageRangeInputs
-                await listenForFuelRangeInput({userClass: manageUser, rangeContainer, rangeInputId: RANGE_INPUT_ID});
-            }
-        },
-        byMile: {
-            radio: mile,
-            radio: mile,
-            container: mileContainer,
-            show: async () => {
-                clearMsg({ container: 'form-msg' });
-                rangeContainer.classList.add('w3-hide');
-                mileContainer.classList.remove('w3-hide');
+export default function handleRadioButtonSelect({ rangeButton, mileButton, rangeContainer, mileContainer, manageUser, componentId }) {
+    try {
+        const sections = {
+            byRange: {
+                radio: rangeButton,
+                container: rangeContainer,
+                show: async () => {
+                    clearMsg({ container: 'form-msg' });
+                    mileContainer.classList.add('w3-hide');
+                    rangeContainer.classList.remove('w3-hide');
 
-                const { default: populateByMileForm } = await import("./populateMileageChargesValues.js");
-                await populateByMileForm({form: 'per-mile-form', manageUser});
-            }
-        }
-    };
+                    // This triggers listenForFuelRangeInput which then triggers buildMileageRangeInputs
+                    await listenForFuelRangeInput({ userClass: manageUser, rangeContainer, rangeInputId: RANGE_INPUT_ID });
+                }
+            },
+            byMile: {
+                radio: mileButton,
+                container: mileContainer,
+                show: async () => {
+                    clearMsg({ container: 'form-msg' });
+                    rangeContainer.classList.add('w3-hide');
+                    mileContainer.classList.remove('w3-hide');
 
-    // Add radio button listeners
-    Object.values(sections).forEach(section => {
-        addListener(
-            section.radio,
-            'click',
-            section.show,
-            COMPONENT_ID
-        );
-    });
+                    // Populate the per-mile form. It is currently hidden, but we need to populate it in case the user switches to it.
+                    await populateByMileForm({form: 'per-mile-form', manageUser});
+                }
+            }
+        };
+
+        // Add radio button listeners
+        Object.values(sections).forEach(section => {
+            addListener({
+                elementOrId: section.radio,
+                eventType: 'click',
+                handler: section.show,
+                componentId: COMPONENT_ID
+            })
+        });
+    }
+    catch (err) {
+        console.log('Error in handleRadioButtonSelect: ', err);        
+    }
 }

@@ -22,47 +22,14 @@ import selectPage from './core/navigation/services/selectPage.js';
 import mainTrackerNavigation from './core/navigation/services/trackerAppMainNavigation.js';
 import setupBackupNotice from './core/services/backup-notice/backupNotice.js';
 import { setValidationToken, getValidationToken } from './core/auth/services/tokenUtils.js';
+import ManageUser from './features/user/models/ManageUser.js';
+import ManageClient from './features/client/models/ManageClient.js';
 
 /** 
  * @typedef {string} ValidationToken - User's authentication token
  * @type {ValidationToken|null}
  */
 let validationToken = null;
-
-/**
- * Initializes the tracker application components
- * Sets up main navigation and backup notice functionality
- * @async
- * @throws {AppError} When initialization of components fails
- * @returns {Promise<void>}
- */
-async function initializeTracker() {
-    try {
-        await mainTrackerNavigation();
-
-        try {
-            await setupBackupNotice({errorEleID: 'backup-data-notice'});
-        }
-        catch (backupError) {
-            throw new AppError('Backup notice initialization failed', {
-                originalError: backupError,
-                errorCode: ErrorTypes.BACKUP_ERROR,
-                userMessage: 'Unable to check for pending backups',
-                displayTarget: 'backup-data-notice'
-            });
-        }
-    } 
-    catch (error) {
-        if (error instanceof AppError) {
-            throw error; // Re-throw AppErrors to be handled by initializeApp
-        }
-        throw new AppError('Tracker initialization failed', {
-            originalError: error,
-            errorCode: ErrorTypes.INITIALIZATION_ERROR,
-            userMessage: 'Failed to initialize application'
-        });
-    }
-}
 
 /**
  * Initializes the application, handling auth and navigation
@@ -74,28 +41,58 @@ async function initializeTracker() {
 const initializeApp = async () => {
     try {
         const path = window.location.pathname;
+        const manageUser = new ManageUser();
+        const manageClient = new ManageClient();
+        
         validationToken = await userAuthorization(path);
         setValidationToken(validationToken);
 
-        if (validationToken) {
-            await initializeTracker();
-            window.addEventListener('popstate', handlePageNavigation);
-            setupErrorBoundaries();
-        }
+        await initializeTracker({ manageUser, manageClient });
+
+        // Handle page navigation events
+        window.addEventListener('popstate', handlePageNavigation);
+
+        // Setup global error boundaries
+        setupErrorBoundaries();
     }
     catch (err) {
-        const { processError } = await import('./core/errors/services/errorProcessor.js');
-        
-        await processError(err, {
-            context: 'initialization',
-            defaultMessage: 'Failed to initialize application',
-            handlers: {
-                AuthorizationError: (error) => redirectToLogin(error.userMessage)
-            },
-            errorElement: 'page-msg'
+        const { AppError } = await import("./core/errors/models/AppError.js");
+        await AppError.handleError(err, {
+            errorCode: AppError.Types.INITIALIZATION_ERROR,
+            userMessage: 'Failed to initialize application',
+            displayTarget: 'page-msg'  // This is indeed the default, could be omitted
         });
     }
 };
+
+/**
+ * Initializes the tracker application components
+ * Sets up main navigation and backup notice functionality
+ * @async
+ * @throws {AppError} When initialization of components fails
+ * @returns {Promise<void>}
+ */
+async function initializeTracker({ manageUser, manageClient }) {
+    try {
+        // Main navigation is critical - must work
+        await mainTrackerNavigation({ manageUser, manageClient });
+
+        // Backup notice is self-contained, handles its own errors
+        // If it fails, it will display in its own element ('backup-data-notice')
+        await setupBackupNotice({ errorEleID: 'backup-data-notice' });
+    } 
+    catch (error) {
+        // Only catch critical errors (from mainTrackerNavigation)
+        if (error instanceof AppError) {
+            throw error; // Re-throw AppErrors to be handled by initializeApp
+        }
+        throw new AppError('Tracker initialization failed', {
+            originalError: error,
+            errorCode: ErrorTypes.INITIALIZATION_ERROR,
+            userMessage: 'Failed to initialize application'
+        });
+    }
+}
 
 /**
  * Sets up global error boundaries for the application
@@ -119,22 +116,19 @@ async function handlePageNavigation(evt) {
         await selectPage({ evt, page });
     }
     catch (err) {
+        const { AppError } = await import("./core/errors/models/AppError.js");
+
+        // If it's already an AppError, just handle it (includes logging and display)
         if (err instanceof AppError) {
-            await handleError({
-                filename: 'navigationError',
-                consoleMsg: 'Navigation error:',
-                err: err,
-                userMsg: err.userMessage,
-                errorEle: 'page-msg',
-            });
+            await err.handle();
             return;
         }
-        await handleError({
-            filename: 'navigationError',
-            consoleMsg: 'Unexpected navigation error:',
-            err: err,
-            userMsg: 'Failed to navigate to page',
-            errorEle: 'page-msg',
+
+        // If not an AppError, create and handle a new one
+        await AppError.handleError(err, {
+            errorCode: AppError.Types.NAVIGATION_ERROR,
+            userMessage: 'Failed to navigate to page',
+            displayTarget: 'page-msg'
         });
     }
 }
@@ -146,45 +140,61 @@ async function handlePageNavigation(evt) {
  * @returns {Promise<void>}
  */
 async function handleGlobalError(error) {
-    console.error('Global error:', error);
-    const errorToHandle = error instanceof AppError ? error : 
+    // Prevent recursive error handling
+    if (error.isBeingHandled) return;
+
+    try {
+        const { AppError } = await import("./core/errors/models/AppError.js");
+
+        // If it's already an AppError, just log it
+        if (error instanceof AppError) {
+            await error.logError();
+            return;
+        }
+
+        // Create new AppError but don't trigger handlers
         new AppError('Unhandled global error', {
             originalError: error,
-            errorCode: ErrorTypes.INITIALIZATION_ERROR,
-            userMessage: 'An unexpected error occurred'
-        });
-    
-    await handleError({
-        filename: 'globalError',
-        consoleMsg: 'Global error:',
-        err: errorToHandle,
-        userMsg: errorToHandle.userMessage,
-        errorEle: 'page-msg',
-    });
+            errorCode: 'INITIALIZATION_ERROR',
+            userMessage: 'An unexpected error occurred',
+            shouldLog: true
+        }).logError();
+    } catch (handlingError) {
+        // Last resort - avoid infinite loops
+        console.error('Failed to handle global error:', error);
+    }
 }
 
 /**
  * Handler for unhandled promise rejections
  * @async
- * @param {PromiseRejectionEvent} error - The unhandled promise rejection
+ * @param {PromiseRejectionEvent} event - The unhandled promise rejection
  * @returns {Promise<void>}
  */
 async function handleGlobalPromiseError(event) {
-    console.error('Unhandled promise rejection:', event.reason);
-    const error = event.reason instanceof AppError ? event.reason :
+    // Prevent recursive error handling
+    if (event.reason?.isBeingHandled) return;
+
+    try {
+        const { AppError } = await import("./core/errors/models/AppError.js");
+
+        // If it's already an AppError, just log it
+        if (event.reason instanceof AppError) {
+            await event.reason.logError();
+            return;
+        }
+
+        // Create new AppError but don't trigger handlers
         new AppError('Unhandled promise rejection', {
             originalError: event.reason,
-            errorCode: ErrorTypes.INITIALIZATION_ERROR,
-            userMessage: 'An unexpected error occurred'
-        });
-    
-    await handleError({
-        filename: 'promiseError',
-        consoleMsg: 'Unhandled promise rejection:',
-        err: error,
-        userMsg: error.userMessage,
-        errorEle: 'page-msg',
-    });
+            errorCode: 'INITIALIZATION_ERROR',
+            userMessage: 'An unexpected error occurred',
+            shouldLog: true
+        }).logError();
+    } catch (handlingError) {
+        // Last resort - avoid infinite loops
+        console.error('Failed to handle promise rejection:', event.reason);
+    }
 }
 
 /**

@@ -1,5 +1,6 @@
-import { buildEle, clearMsg } from "../../../../../../../../old-js-code/js/utils/dom/domUtils.js";
-import { addListener } from "../../../../utils/event-listeners/listeners.js";
+import { buildEle } from "../../../../../../core/utils/dom/elements.js";
+import { addListener } from "../../../../../../core/utils/dom/listeners.js";
+import { clearMsg } from "../../../../../../core/utils/dom/messages.js";
 
 /**
  * Builds a fuel range section with inputs for mileage range and cost
@@ -7,10 +8,10 @@ import { addListener } from "../../../../utils/event-listeners/listeners.js";
  * @param {Object} values - Existing values to populate inputs
  * @param {string} values.range - Mileage range value
  * @param {string} values.cost - Cost value
- * @param {string} componentID - Component ID for event listener tracking
- * @returns {Promise<HTMLElement|null>} The constructed range section or null if error
+ * @param {string} componentId - Component ID for event listener tracking
+ * @returns {<HTMLElement|null>} The constructed range section or null if error
  */
-export default async function buildFuelRangeSection(iteration, values = {}, componentID) {
+export default function buildFuelRangeSection(iteration, values = {}, componentId) {
     try {
         const structure = {
             row: {
@@ -28,15 +29,17 @@ export default async function buildFuelRangeSection(iteration, values = {}, comp
                 myClass: ['w3-col', 'm6']
             },
             mileageRange: {
-                build: () => buildMileageRangeInput(iteration, values.range, componentID)
+                build: () => buildMileageRangeInput(iteration, values.range, componentId)
             },
             costInput: {
-                build: () => buildCostInput(iteration, values.cost, componentID)
+                build: () => buildCostInput(iteration, values.cost, componentId)
             }
         };
 
         // Build elements
-        const elements = await buildElements(structure);
+        const elements = buildElements(structure);
+        console.log('In buildFuelRangeSection: elements: ', elements);
+        
         if (!elements) return null;
 
         // Assemble structure
@@ -46,14 +49,18 @@ export default async function buildFuelRangeSection(iteration, values = {}, comp
         return elements.row;
     }
     catch (err) {
-        const { handleError } = await import("../../../../../../../../old-js-code/js/utils/error-messages/handleError.js");
-        await handleError({
-            filename: 'buildFuelRangeSectionError',
-            consoleMsg: 'Build fuel range section error: ',
-            err,
-            userMsg: 'Unable to create range section',
-            errorEle: 'form-msg'
-        });
+        import("../../../../../../core/errors/models/AppError.js")
+            .then(({ AppError }) => {
+                return new AppError('Error building fuel range section: ', {
+                    originalError: err,
+                    shouldLog: true,
+                    userMessage: 'Unable to create range section',
+                    errorCode: 'RENDER_ERROR',
+                    displayTarget: 'fuel-range-container',
+                    autoHandle: true
+                });
+            })
+            .catch(err => console.error('Error handling failed for building fuel range section: ', err));
     }
 }
 
@@ -61,24 +68,22 @@ export default async function buildFuelRangeSection(iteration, values = {}, comp
  * Builds elements from configuration structure
  * @private
  * @param {Object} structure - Element configuration
- * @returns {Promise<Object>} Built elements
+ * @returns {Object} Built elements
  */
-async function buildElements(structure) {
+function buildElements(structure) {
     const elements = {};
-    
+
     try {
-        await Promise.all(
-            Object.entries(structure).map(async ([key, config]) => {
-                elements[key] = config.build 
-                    ? await config.build()
-                    : buildEle(config);
-                    
-                if (!elements[key]) throw new Error(`Failed to build ${key}`);
-            })
-        );
+        Object.entries(structure).map(([key, config]) => {
+            elements[key] = config.build
+                ? config.build()
+                : buildEle(config);
+
+            if (!elements[key]) throw new Error(`Failed to build ${key}`);
+        })
         return elements;
     } catch (err) {
-        return null;
+       throw new Error(`Error building elements: ${err}`);
     }
 }
 
@@ -86,10 +91,11 @@ async function buildElements(structure) {
  * Builds a mileage range input section with label, input, and error container
  * @param {number} iteration - The iteration number for the range input
  * @param {string} value - Existing value to populate the input
- * @param {string} componentID - Component ID for event listener tracking
- * @returns {Promise<HTMLElement|null>} The constructed paragraph element containing the range input or null if error
+ * @param {string} componentId - Component ID for event listener tracking
+ * @returns {<HTMLElement|null>} The constructed paragraph element containing the range input or null if error
  */
-async function buildMileageRangeInput(iteration, value, componentID) {
+function buildMileageRangeInput(iteration, value, componentId) {
+    console.log('In buildMileageRangeInput: componentId: ', componentId);
     try {
         const p1 = buildEle({
             type: 'p',
@@ -132,36 +138,27 @@ async function buildMileageRangeInput(iteration, value, componentID) {
         p1.appendChild(rangeInputError);
 
         // Add an event listener to clear any error messages
-        addListener(
-            rangeInput, 
-            'focus', 
-            async () => {
-                try {
-                    clearMsg({ container: rangeInputError, input: rangeInput });
-                }
-					 catch (err) {
-                    const { handleError } = await import("../../../../../../../../old-js-code/js/utils/error-messages/handleError.js");
-                    await handleError({
-                        filename: 'clearMileageRangeError',
-                        consoleMsg: `Clear mileage range ${iteration} error: `,
-                        err,
-                        errorEle: rangeInputError
-                    });
-                }
-            },
-            componentID
-        );
+        addListener({
+            elementOrId: rangeInput,
+            eventType: 'focus',
+            handler: async () => clearMsg({ container: rangeInputError, input: rangeInput }),
+            componentId
+        });
 
         return p1;
     }
-	 catch (err) {
-        const { handleError } = await import("../../../../../../../../old-js-code/js/utils/error-messages/handleError.js");
-        await handleError({
-            filename: 'buildMileageRangeInputError',
-            consoleMsg: `Build mileage range ${iteration} error: `,
-            err
-        });
-        throw err;
+    catch (err) {
+        import("../../../../../../core/errors/models/AppError.js")
+            .then(({ AppError }) => {
+                throw new AppError('Error building mileage range inputs: ', {
+                    originalError: err,
+                    shouldLog: true,
+                    userMessage: null,
+                    errorCode: 'RENDER_ERROR',
+                    displayTarget: 'fuel-range-container',
+                }).handle();
+            })
+            .catch(err => console.error('Error handling failed for building mileage range inputs: ', err));
     }
 }
 
@@ -169,10 +166,10 @@ async function buildMileageRangeInput(iteration, value, componentID) {
  * Builds a cost input section with label, input, and error container
  * @param {number} iteration - The iteration number for the cost input
  * @param {string} value - Existing value to populate the input
- * @param {string} componentID - Component ID for event listener tracking
- * @returns {Promise<HTMLElement|null>} The constructed paragraph element containing the cost input or null if error
+ * @param {string} componentId - Component ID for event listener tracking
+ * @returns {<HTMLElement|null>} The constructed paragraph element containing the cost input or null if error
  */
-async function buildCostInput(iteration, value, componentID) {
+function buildCostInput(iteration, value, componentId) {
     try {
         const p1 = buildEle({
             type: 'p',
@@ -208,35 +205,26 @@ async function buildCostInput(iteration, value, componentID) {
         p1.appendChild(rangeInputError);
 
         // Add an event listener to clear any error messages
-        addListener(
-            rangeInput, 
-            'focus', 
-            async () => {
-                try {
-                    clearMsg({ container: rangeInputError, input: rangeInput });
-                }
-					 catch (err) {
-                    const { handleError } = await import("../../../../../../../../old-js-code/js/utils/error-messages/handleError.js");
-                    await handleError({
-                        filename: 'clearCostInputError',
-                        consoleMsg: `Clear cost input ${iteration} error: `,
-                        err,
-                        errorEle: rangeInputError
-                    });
-                }
-            },
-            componentID
-        );
+        addListener({
+            elementOrId: rangeInput,
+            eventType: 'focus',
+            handler: () => clearMsg({ container: rangeInputError, input: rangeInput }),
+            componentId
+        });
 
         return p1;
     }
-	 catch (err) {
-        const { handleError } = await import("../../../../../../../../old-js-code/js/utils/error-messages/handleError.js");
-        await handleError({
-            filename: 'buildCostInputError',
-            consoleMsg: `Build cost input ${iteration} error: `,
-            err
-        });
-        throw err;
+    catch (err) {
+        import("../../../../../../core/errors/models/AppError.js")
+            .then(({ AppError }) => {
+                throw new AppError('Error building cost inputs: ', {
+                    originalError: err,
+                    shouldLog: true,
+                    userMessage: null,
+                    errorCode: 'RENDER_ERROR',
+                    displayTarget: 'fuel-range-container',
+                }).handle();
+            })
+            .catch(err => console.error('Error handling failed for building cost inputs: ', err));
     }
 }

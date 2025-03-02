@@ -12,7 +12,7 @@
  * @requires mySuccess
  */
 
-import { addListener } from "../../../../core/utils/dom/listeners.js";
+import { addListener, removeListeners } from "../../../../core/utils/dom/listeners.js";
 import { clearMsg, safeDisplayMessage } from "../../../../core/utils/dom/messages.js";
 import { disableEnableSubmitButton } from "../../../../core/utils/dom/elements.js";
 import ManageUser from "../../models/ManageUser.js";
@@ -24,6 +24,7 @@ import populateDateTimeForm from "./components/date-time/populateDateTimeForm.js
  * @constant {string}
  */
 const COMPONENT_ID = 'date-time';
+const COMPONENT_ERROR = 'date-time-error';
 const manageUser = new ManageUser();
 
 // Set DOM Elements
@@ -51,9 +52,17 @@ async function handleFormSubmission(evt) {
 			color: 'w3-text-blue',
 		});
 
+		const validate = validateForm(evt.target);  // Removed await
+
 		// Validate the form
-		if (!validateForm(evt.target)) return
-		
+		if (!validate) {
+			safeDisplayMessage({
+				elementId: 'form-msg',
+				message: 'Please correct the following errors.',
+			});
+			return;
+		}
+
 		// Get the userData
 		const userData = Object.fromEntries(new FormData(evt.target));
 		const stores = manageUser.getStoreNames();
@@ -81,13 +90,11 @@ async function handleFormSubmission(evt) {
 		}
 	}
 	catch (err) {
-		const { handleError } = await import("../../../../../../old-js-code/js/utils/error-messages/handleError.js");
-		await handleError({
-			filename: 'dateTimeFormError',
-			consoleMsg: 'Date/Time form submission error: ',
-			err,
-			userMsg: 'Unable to save date/time options',
-			errorEle: 'form-msg'
+		const { AppError } = await import("../../../../core/errors/models/AppError.js");
+		await AppError.handleError(err, {
+			errorCode: AppError.Types.FORM_SUBMISSION_ERROR,
+			userMessage: 'Unable to save Date/Time Options.',
+			displayTarget: 'form-msg',
 		});
 	}
 }
@@ -97,20 +104,35 @@ async function handleFormSubmission(evt) {
  * @param {HTMLFormElement} form - The form element to validate
  * @returns {boolean} True if all validations pass
  */
-function validateForm(form) {
-	const dateFormatValid = validateDateFormat({
-		 value: form.date_format.value,
-		 errorContainer: 'date-format-error',
-		 inputContainer: 'date-format'
-	});
+function validateForm(form) {  // Removed async
+	try {
+		const dateFormatValid = validateDateFormat({
+			value: form.date_format.value,
+			errorContainer: 'date-format-error',
+			inputContainer: 'date-format'
+		});
 
-	const timeZoneValid = validateTimeZone({
-		 value: form.time_zone.value,
-		 errorContainer: 'time-zone-error',
-		 inputContainer: 'time-zone'
-	});
+		const timeZoneValid = validateTimeZone({
+			value: form.time_zone.value,
+			errorContainer: 'time-zone-error',
+			inputContainer: 'time-zone'
+		});
 
-	return dateFormatValid && timeZoneValid;
+		disableEnableSubmitButton('submit-button');
+		return dateFormatValid && timeZoneValid;
+	}
+	catch (err) {
+		return import("../../../../core/errors/models/AppError.js")
+			.then(({ AppError }) => {
+				const error = new AppError('Error validating the Date/Time form', {
+					originalError: err,
+					errorCode: AppError.Types.FORM_VALIDATION_ERROR,
+					userMessage: 'Unable to validate the form.',
+					displayTarget: 'form-msg',
+					});
+				throw error;  // This will be properly caught by handleFormSubmission
+			});
+	}
 }
 
 /**
@@ -121,35 +143,62 @@ function validateForm(form) {
  * @param {HTMLElement|string} params.inputContainer Input element for error styling
  * @returns {boolean} True if validation passes
  */
-function validateDateFormat({value, errorContainer, inputContainer}) {
-	// Set the date formats
-	const dateFormats = [
-		'Y-m-d',
-		'm-d-Y',
-		'd-m-Y'
-	];
+function validateDateFormat({ value, errorContainer, inputContainer }) {
+	try {
+		throw new Error("Test error thrown from validateDateFormat function.");
+		// Set the date formats
+		const dateFormats = [
+			'Y-m-d',
+			'm-d-Y',
+			'd-m-Y'
+		];
 
-	for (const format of dateFormats) {
-		// We have a match from the form, return true
-		if (format === value) {
-			// Clear any error messages
-			clearMsg({ container: errorContainer, input: inputContainer });
+		for (const format of dateFormats) {
+			// We have a match from the form, return true
+			if (format === value) {
+				// Clear any error messages
+				clearMsg({ container: errorContainer, input: inputContainer });
 
-			// Disable the submit button
-			disableEnableSubmitButton('submit-button');
-			return true;
+				// Disable the submit button
+				disableEnableSubmitButton('submit-button');
+
+				// Remove the focuss event listener
+				removeListeners(COMPONENT_ERROR);
+				return true;
+			}
 		}
+
+		// No match from the form, show error message;
+		safeDisplayMessage({
+			elementId: errorContainer,
+			message: 'Please select a valid date format.',
+			targetId: inputContainer,
+		})
+
+		addListener({
+			elementOrId: inputContainer,
+			eventType: 'focus',
+			handler: () => {
+				clearMsg({ container: errorContainer, input: inputContainer });
+				disableEnableSubmitButton('submit-button');
+			},
+			componentId: COMPONENT_ERROR
+		});
+
+		return false;
+	}
+	catch (err) {
+		return import("../../../../core/errors/models/AppError.js")
+			.then(({ AppError }) => {
+				const error = new AppError('Error validating the Date Format', {
+					originalError: err,
+					errorCode: AppError.Types.FORM_VALIDATION_ERROR,
+					userMessage: null
+				});
+				throw error;  // This will be caught by validateForm's catch
+			});
 	}
 
-	// No match from the form, show error message;
-	safeDisplayMessage({
-		elementId: errorContainer,
-		message: 'Please select a valid date format.',
-	})
-
-	// Disable the submit button
-	disableEnableSubmitButton('submit-button');
-	return false;
 }
 
 
@@ -160,7 +209,7 @@ function validateDateFormat({value, errorContainer, inputContainer}) {
  * @param {HTMLElement|string} params.errorContainer Element or ID for error messages
  * @returns {boolean} True if validation passes
  */
-function validateTimeZone({value, errorContainer, inputContainer}) {
+function validateTimeZone({ value, errorContainer, inputContainer }) {
 	// Set all the time zones for the continental U.S.
 	const timeZones = {
 		'America/New_York': 'Eastern Time Zone',
@@ -187,6 +236,7 @@ function validateTimeZone({value, errorContainer, inputContainer}) {
 	if (isMatch) {
 		clearMsg({ container: errorContainer, input: inputContainer });
 		disableEnableSubmitButton('submit-button');
+		removeListeners(COMPONENT_ERROR);
 		return true;
 	}
 	// No match was found, show the error message and disable the submit button
@@ -197,7 +247,16 @@ function validateTimeZone({value, errorContainer, inputContainer}) {
 			targetId: inputContainer,
 		});
 
-		disableEnableSubmitButton('submit-button');
+		addListener({
+			elementOrId: inputContainer,
+			eventType: 'focus',
+			handler: () => {
+				clearMsg({ container: errorContainer, input: inputContainer });
+				disableEnableSubmitButton('submit-button');
+			},
+			componentId: COMPONENT_ERROR
+		});
+
 		return false;
 	}
 }

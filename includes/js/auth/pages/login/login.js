@@ -3,15 +3,6 @@ import { fetchData } from "../../../core/network/services/network.js";
 import { safeDisplayMessage } from "../../../core/utils/dom/messages.js";
 import ManageUser from "../../../features/user/models/ManageUser.js";
 
-// Extract form validation to separate function
-function validateForm(userData) {
-    if (!userData.username || !userData.password) {
-        safeDisplayMessage({ elementId: 'form-msg', message: 'Usr Name and Password are required.'});
-        return false;
-    }
-    return true;
-}
-
 async function handleLogIn(evt) {
     evt.preventDefault();
 
@@ -67,6 +58,15 @@ async function handleLogIn(evt) {
         });
         safeDisplayMessage({elementId: 'form-msg', message: 'Login failed. Please contact administrator.'});
     }
+}
+
+// Extract form validation to separate function
+function validateForm(userData) {
+    if (!userData.username || !userData.password) {
+        safeDisplayMessage({ elementId: 'form-msg', message: 'Usr Name and Password are required.'});
+        return false;
+    }
+    return true;
 }
 
 // Only cache the form element since we need it for the event listener

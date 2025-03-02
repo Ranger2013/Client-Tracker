@@ -1,6 +1,6 @@
 import { buildEle } from "../../../../../../core/utils/dom/elements.js";
 
-export default async function buildInputBlocks(numBlocks, inputName, form, display, value = null) {
+export default function buildInputBlocks(numBlocks, inputName, form, display, value = null) {
     try {
         // Resolve display element
         const displayEle = typeof display === 'string' 
@@ -31,15 +31,17 @@ export default async function buildInputBlocks(numBlocks, inputName, form, displ
         }
     }
     catch (err) {
-        const { handleError } = await import("../../../../../../../../old-js-code/js/utils/error-messages/handleError.js");
-        await handleError({
-            filename: 'buildInputBlocksError',
-            consoleMsg: 'Build input blocks error: ',
-            err,
-            userMsg: 'Unable to create accessory input blocks',
-            errorEle: display
-        });
-        throw err; // Propagate error for caller handling
+        import("../../../../../../core/errors/models/AppError.js")
+        .then(({AppError}) => {
+            throw new AppError('Error building accessory inputs: ', {
+                originalError: err,
+                shouldLog: true,
+                userMessage: 'Unable to create accessory inputs',
+                errorCode: 'RENDER_ERROR',
+                displayTarget: display,
+            }).handle();
+        })
+        .catch(err => console.error('Error handler failed:', err));
     }
 }
 

@@ -22,7 +22,7 @@ const FORM_FIELDS = [
  */
 export default async function addEditClient(cID, primaryKey, clientInfo = null) {
     try {
-        const elements = await getAllFormIdElements('client-form');
+        const elements = getAllFormIdElements('client-form');
         
         // Simplified anchor listener since selectPage handles its own errors
         const clientNav = document.querySelector('[data-component="client-navigation"]');
@@ -103,7 +103,7 @@ function setupFormValidation(cID, primaryKey, clientInfo) {
     // Handle form submission
     addListener(form, 'submit', async (evt) => {
         evt.preventDefault();
-        const elements = await getAllFormIdElements('client-form');
+        const elements = getAllFormIdElements('client-form');
         
         if (elements['trim-cycle'].value === 'null') {
             myError('trim-cycle-error', 'Please select a trim cycle.', 'trim-cycle');

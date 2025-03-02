@@ -1,7 +1,6 @@
 import { addListener } from "../../../../../../core/utils/dom/listeners.js";
 import buildInputBlocks from "./buildInputBlocks.js";
-
-const COMPONENT_ID = 'multiple-inputs';
+import makeInputsGreen from "./makeInputsGreen.js";
 
 // Configuration for accessory inputs that can have multiple values
 const ACCESSORY_INPUTS = {
@@ -19,27 +18,30 @@ const ACCESSORY_INPUTS = {
     }
 };
 
-export default function displayMultipleInputs(form) {
+export default function displayMultipleInputs(form, componentId) {
     Object.entries(ACCESSORY_INPUTS).forEach(([accessory, config]) => {
-        addListener(
-            config.eleId, 
-            'input', 
-            async evt => {
+        addListener({
+            elementOrId: config.eleId,
+            eventType: 'input',
+            handler: async (evt) => {
                 try {
-                    await buildInputBlocks(evt.target.value, accessory, form, config.displayEle);
+                    buildInputBlocks(evt.target.value, accessory, form, config.displayEle);
+                    makeInputsGreen(form, componentId);
                 }
-					 catch (err) {
-                    const { handleError } = await import("../../../../../../../../old-js-code/js/utils/error-messages/handleError.js");
-                    await handleError({
-                        filename: `buildInputBlocksError_${accessory}`,
-                        consoleMsg: `Build input blocks error for ${accessory}: `,
-                        err,
-                        userMsg: 'Unable to create accessory inputs',
-                        errorEle: config.displayEle
-                    });
+                catch (err) {
+                    const { AppError } = await import("../../../../../../core/errors/models/AppError.js");
+
+                    new AppError('Error building accessory input blocks: ', {
+                        originalError: err,
+                        shouldLog: true,
+                        userMessage: 'Unable to create accessory inputs.',
+                        errorCode: 'RENDER_ERROR',
+                        displayTarget: config.displayEle,
+                        autoHandle: true,
+                    })
                 }
             },
-            COMPONENT_ID
-        );
+            componentId
+        });
     });
 }

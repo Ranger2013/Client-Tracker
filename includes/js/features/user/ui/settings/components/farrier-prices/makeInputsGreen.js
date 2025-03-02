@@ -2,21 +2,31 @@ import getAllFormIdElements from "../../../../../../core/utils/dom/forms/getAllF
 import { addListener } from "../../../../../../core/utils/dom/listeners.js";
 
 const GREEN_CLASS = 'w3-light-green';
-const COMPONENT_ID = 'farrier-inputs';
 
 /**
  * Adds green highlighting to form inputs when they contain values
  * @param {HTMLFormElement} form - The form containing inputs to monitor
  */
-export default async function makeInputsGreen(form) {
+export default function makeInputsGreen(form, componentId) {
     try {
-        const elements = await getAllFormIdElements(form);
+        const elements = getAllFormIdElements(form);
         
         Object.entries(elements).forEach(([_, input]) => {
             if (input instanceof HTMLInputElement) {
                 // Add listeners with component tracking
-                addListener(input, 'blur', handleInputBlur, COMPONENT_ID);
-                addListener(input, 'focus', handleInputFocus, COMPONENT_ID);
+                addListener({
+                    elementOrId: input,
+                    eventType: 'blur',
+                    handler: handleInputBlur,
+                    componentId
+                });
+
+                addListener({
+                    elementOrId: input,
+                    eventType: 'focus',
+                    handler: handleInputFocus,
+                    componentId
+                });
 
                 // Set initial state
                 if (input.value) {
@@ -26,12 +36,15 @@ export default async function makeInputsGreen(form) {
         });
     }
     catch (err) {
-        const { handleError } = await import("../../../../../../../../old-js-code/js/utils/error-messages/handleError.js");
-        await handleError({
-            filename: 'makeInputsGreenError',
-            consoleMsg: 'Make inputs green error: ',
-            err
-        });
+        import("../../../../../../core/errors/models/AppError.js")
+        .then(({AppError}) => {
+            return new AppError('Error making inputs green: ', {
+                originalError: err,
+                shouldLog: true,
+                userMessage: null,
+                errorCode: 'RENDER_ERROR',
+            }).logError();
+        })
     }
 }
 

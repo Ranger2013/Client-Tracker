@@ -29,14 +29,12 @@ export default async function populateDateTimeForm(manageUser, domElements) {
     } 
     catch (err) {
         const { AppError } = await import("../../../../../../core/errors/models/AppError.js");
-
-        const appError = new AppError('Error while trying to get the user date/time options: ', {
+        
+        new AppError('Error while trying to get the user date/time options: ', {
             originalError: err,
             errorCode: AppError.Types.SETTINGS_ERROR,
-            userMessage: 'Unable to load date/time settings',
-            shouldLog: true,
-        });
-
-        await appError.handle();
+            userMessage: null,  // Don't show any message to user
+            shouldLog: true     // But still log for debugging
+        }).logError();  // Just log, don't handle/display
     }
 }

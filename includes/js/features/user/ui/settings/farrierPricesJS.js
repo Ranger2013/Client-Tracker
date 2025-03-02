@@ -14,9 +14,9 @@ const manageUser = new ManageUser();
 const farrierPricesForm = document.getElementById('farrier-prices-form');
 
 // Initialize form
-await populateFarrierPricesForm({formEle: farrierPricesForm, manageUser});
-makeInputsGreen(farrierPricesForm);
-displayMultipleInputs(farrierPricesForm);
+await populateFarrierPricesForm({ formEle: farrierPricesForm, manageUser });
+displayMultipleInputs(farrierPricesForm, COMPONENT_ID);
+makeInputsGreen(farrierPricesForm, COMPONENT_ID);
 
 /**
  * Handles farrier prices form submission
@@ -52,24 +52,25 @@ async function handleFormSubmission(evt) {
                 message: 'Your pricing has been set.',
                 isSuccess: true,
             });
-        } else {
-            safeDisplayMessage({
-                elementId: 'form-msg',
-                message: 'We were unable to save your pricing.',
-            });
         }
     }
     catch (err) {
-        const { handleError } = await import("../../../../../../old-js-code/js/utils/error-messages/handleError.js");
-        await handleError({
-            filename: 'farrierPricesFormError',
-            consoleMsg: 'Farrier prices form submission error: ',
-            err,
-            userMsg: 'Unable to save pricing',
-            errorEle: 'form-msg'
+        const { AppError } = await import("../../../../core/errors/models/AppError.js");
+        new AppError('Error submitting the farrier prices form: ', {
+            originalError: err,
+            shouldLog: true,
+            userMessage: 'Unable to save pricing.',
+            errorCode: 'SUBMISSION_ERROR',
+            displayTarget: 'form-msg',
+            autoHandle: true,
         });
     }
 }
 
 // Initialize form submission handler
-addListener(farrierPricesForm, 'submit', handleFormSubmission, COMPONENT_ID);
+addListener({
+    elementOrId: farrierPricesForm,
+    eventType: 'submit',
+    handler: handleFormSubmission,
+    componentId: COMPONENT_ID
+});

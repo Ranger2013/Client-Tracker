@@ -4,7 +4,7 @@
  * @returns {Promise<Object>} An object containing references to all form elements with non-empty ids.
  * @throws {Error} Throws an error if the form is invalid or not found.
  */
-export default async function getAllFormIdElements(form) {
+export default function getAllFormIdElements(form) {
     try {
         const formElement = typeof form === 'string' 
             ? document.getElementById(form)
@@ -25,13 +25,17 @@ export default async function getAllFormIdElements(form) {
                 element => [element.id, element]
             )
         );
-    } catch (err) {
-        const { handleError } = await import("../../../../../../old-js-code/js/utils/error-messages/handleError.js");
-        await handleError({
-            filename: 'getAllFormIdElementsError',
-            consoleMsg: 'Get all form ID elements error: ',
-            err
-        });
-        throw err;
+    }
+    catch (err) {
+        import("../../../errors/models/AppError.js")
+        .then(({AppError}) => {
+            throw new AppError('Get all form ID elements error: ', {
+                originalError: err,
+                shouldLog: true,
+                userMessage: null,
+                errorCode: 'RENDER_ERROR',
+            }).logError();
+        })
+        .catch(err => console.error('Error handler failed:', err));
     }
 }

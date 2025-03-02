@@ -141,8 +141,28 @@ export class AppError extends Error {
             API_ERROR: 'API_ERROR',
             AUTHORIZATION_ERROR: 'AUTHORIZATION_ERROR',
             RENDER_ERROR: 'RENDER_ERROR',
-            INPUT_ERROR: 'INPUT_ERROR'
+            INPUT_ERROR: 'INPUT_ERROR',
+            FORM_VALIDATION_ERROR: 'FORM_VALIDATION_ERROR',
+            FORM_SUBMISSION_ERROR: 'FORM_SUBMISSION_ERROR',
         };
+    }
+
+    /**
+     * Static helper to handle any error type
+     * @param {Error} err - Error to handle
+     * @param {Object} [config] - Config to use if creating new AppError
+     * @returns {Promise<void>}
+     */
+    static async handleError(err, config = {}) {
+        if (err instanceof AppError) {
+            await err.handle();
+        } else {
+            const error = new AppError(err.message, {
+                originalError: err,
+                ...config
+            });
+            await error.handle();
+        }
     }
 
     /**
@@ -226,7 +246,7 @@ export class AppError extends Error {
     /**
      * Main error logging method
      */
-    async logError() {
+    async logError(shouldRethrow = false) {
         // Single source of console logging
         if (!this.logged) {
             console.warn(`${this.name}:`, {
@@ -238,9 +258,18 @@ export class AppError extends Error {
 
         try {
             await this.logServerSideError();
-        } catch (loggingError) {
+
+            if(shouldRethrow){
+                throw this;
+            }
+        }
+        catch (loggingError) {
             console.error('Error logging failed:', loggingError);
             await this.queueForSync();
+
+            if(shouldRethrow){
+                throw loggingError;
+            }
         }
     }
 

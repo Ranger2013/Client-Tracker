@@ -8,9 +8,9 @@ import { underscoreToHyphen, underscoreToHyphenPlusError } from "../../string/st
  * @param {Object} [options] - Display options
  * @param {string} [options.formMessage='Please fix the following errors'] - General form message
  * @param {boolean} [options.scrollToTop=true] - Whether to scroll to top after showing errors
- * @returns {Promise<void>}
+ * @returns {void}
  */
-export default async function displayFormValidationErrors(errors, options = {}) {
+export default function displayFormValidationErrors(errors, options = {}) {
     const {
         formMessage = 'Please fix the following errors',
         scrollToTop = true
@@ -55,11 +55,21 @@ export default async function displayFormValidationErrors(errors, options = {}) 
         if (scrollToTop) top();
     }
     catch (err) {
-        const { processError } = await import('../../../errors/services/errorProcessor.js');
-        await processError(err, {
-            context: 'validation',
-            defaultMessage: 'Unable to display validation errors',
-            errorElement: 'form-msg'
-        });
+        // const { processError } = await import('../../../errors/services/errorProcessor.js');
+        // await processError(err, {
+        //     context: 'validation',
+        //     defaultMessage: 'Unable to display validation errors',
+        //     errorElement: 'form-msg'
+        // });
+        import("../../../errors/models/AppError.js")
+        .then(({AppError}) => {
+            return new AppError('Unable to display validation errors.', {
+                originalError: err,
+                shouldLog: true,
+                errorCode: 'FORM_VALIDATION_ERROR',
+                userMessage: null,
+            });
+        })
+        .catch(err => console.error("Error handling the error: ", err));
     }
 }
