@@ -28,12 +28,12 @@ export default class ManageUser {
         }
         catch (error) {
             const { AppError } = await import('../../../core/errors/models/AppError.js');
-            throw new AppError('Settings initialization failed', {
-                originalError: error,
+            // Process because this is a worker, let parent handle display
+            await AppError.process(error, {
                 errorCode: AppError.Types.INITIALIZATION_ERROR,
-                userMessage: 'Unable to load your settings. Some features may be unavailable.',
+                userMessage: AppError.BaseMessages.system.settingsError,
                 shouldLog: true
-            });
+            }, true);
         }
     }
 
@@ -52,19 +52,17 @@ export default class ManageUser {
             
             return keys.length === 0
                 ? this.#settings
-                : keys.reduce((acc, key) => {
-                    acc[key] = this.#settings[key];
-                    return acc;
-                }, {});
+                : keys.filter(key => this.#settings[key] != null)
+                     .reduce((acc, key) => ({ ...acc, [key]: this.#settings[key] }), {});
         }
         catch (error) {
             const { AppError } = await import('../../../core/errors/models/AppError.js');
-            throw new AppError('Failed to retrieve settings', {
-                originalError: error,
+            // Process - let caller handle display
+            await AppError.process(error, {
                 errorCode: AppError.Types.SETTINGS_ERROR,
-                userMessage: null, // Let boss handle user messages
+                userMessage: AppError.BaseMessages.settings.loadFailed,
                 shouldLog: true
-            });
+            }, true);
         }
     }
 
@@ -78,13 +76,8 @@ export default class ManageUser {
             return date_time ?? null;
         }
         catch (error) {
-            const { AppError } = await import('../../../core/errors/models/AppError.js');
-            throw new AppError('Failed to get date/time options', {
-                originalError: error,
-                errorCode: AppError.Types.SETTINGS_ERROR,
-                userMessage: null, // Let boss handle user messages
-                shouldLog: true
-            });
+            // Just throw - parent getSettings already processed the error
+            throw error;
         }
     }
 
@@ -94,25 +87,20 @@ export default class ManageUser {
      */
     async getMileageCharges() {
         try {
-            const { mileage_charges } = await this.getSettings('mileage_charges');
-            const { per_mile: perMile, range } = mileage_charges;
+            const { mileage_charges } = await this.getSettings('mileage_charges') ?? {};
+            const { per_mile: perMile, range } = mileage_charges ?? {};
 
             // Check if per_mile has valid data
-            if (perMile.cost_per_mile != null && perMile.starting_mile != null) {
+            if (perMile?.cost_per_mile != null && perMile?.starting_mile != null) {
                 return perMile;
             }
 
             // Return range array if it has entries, null otherwise
-            return range.length > 0 ? range : null;
+            return range?.length > 0 ? range : null;
         }
         catch (error) {
-            const { AppError } = await import('../../../core/errors/models/AppError.js');
-            throw new AppError('Failed to get mileage charges', {
-                originalError: error,
-                errorCode: AppError.Types.SETTINGS_ERROR,
-                userMessage: null, // Let boss handle user messages
-                shouldLog: true
-            });
+            // Just throw - parent getSettings already processed the error
+            throw error;
         }
     }
 
@@ -123,13 +111,8 @@ export default class ManageUser {
             return farrier_prices ?? null;
         }
         catch (error) {
-            const { AppError } = await import('../../../core/errors/models/AppError.js');
-            throw new AppError('Failed to get farrier prices', {
-                originalError: error,
-                errorCode: AppError.Types.SETTINGS_ERROR,
-                userMessage: null, // Let boss handle user messages
-                shouldLog: true
-            });
+            // Just throw - parent getSettings already processed the error
+            throw error;
         }
     }
 
@@ -139,13 +122,8 @@ export default class ManageUser {
             return schedule_options ?? null;
         }
         catch (error) {
-            const { AppError } = await import('../../../core/errors/models/AppError.js');
-            throw new AppError('Failed to get schedule options', {
-                originalError: error,
-                errorCode: AppError.Types.SETTINGS_ERROR,
-                userMessage: null, // Let boss handle user messages
-                shouldLog: true
-            });
+            // Just throw - parent getSettings already processed the error
+            throw error;
         }
     }
 
@@ -159,13 +137,8 @@ export default class ManageUser {
             return color_options ?? null;
         }
         catch (error) {
-            const { AppError } = await import('../../../core/errors/models/AppError.js');
-            throw new AppError('Failed to get color options', {
-                originalError: error,
-                errorCode: AppError.Types.SETTINGS_ERROR,
-                userMessage: null, // Let boss handle user messages
-                shouldLog: true
-            });
+            // Just throw - parent getSettings already processed the error
+            throw error;
         }
     }
 
@@ -179,13 +152,8 @@ export default class ManageUser {
             return blocked_dates ?? null;
         }
         catch (error) {
-            const { AppError } = await import('../../../core/errors/models/AppError.js');
-            throw new AppError('Failed to get blocked dates', {
-                originalError: error,
-                errorCode: AppError.Types.SETTINGS_ERROR,
-                userMessage: null, // Let boss handle user messages
-                shouldLog: true
-            });
+            // Just throw - parent getSettings already processed the error
+            throw error;
         }
     }
 
@@ -209,13 +177,8 @@ export default class ManageUser {
             return result;
         }
         catch (error) {
-            const { AppError } = await import('../../../core/errors/models/AppError.js');
-            throw new AppError('Failed to update settings', {
-                originalError: error,
-                errorCode: AppError.Types.SETTINGS_ERROR,
-                userMessage: null, // Let boss handle user messages
-                shouldLog: true
-            });
+            // Just throw - let the boss (dateTimeJS) handle it
+            throw error;
         }
     }
 
@@ -231,7 +194,7 @@ export default class ManageUser {
             // If there are no user settings, then we to build the structure
             if (!userSettings) {
                 // Dynamically import the userSettingsDataStructure.js file and then set the userSettings to that structure
-                const { default: userSettingsDataStructure } = await import("../../../../../old-js-code/js/utils/configurations/user-settings-structure/userSettingsDataStructure.js");
+                const { default: userSettingsDataStructure } = await import("../components/userSettingsDataStructure.js");
                 const setUserSettings = userSettingsDataStructure();
                 
                 const db = await this.#indexed.openDBPromise();
@@ -243,7 +206,7 @@ export default class ManageUser {
                 this.#settings = null;
                 this.#initialized = false;
             }
-            
+
             userSettings[settingsProperty] = userData;
             
             // This operation needs error handling
@@ -258,12 +221,12 @@ export default class ManageUser {
         }
         catch (error) {
             const { AppError } = await import('../../../core/errors/models/AppError.js');
-            throw new AppError('Settings update transaction failed', {
-                originalError: error,
+            // Process because private method, let public method handle
+            await AppError.process(error, {
                 errorCode: AppError.Types.DATABASE_ERROR,
-                userMessage: 'Unable to save settings due to a database error.',
+                userMessage: AppError.BaseMessages.system.server,
                 shouldLog: true
-            });
+            }, true);
         }
     }
 
@@ -293,12 +256,7 @@ export default class ManageUser {
             return true;
         }
         catch (err) {
-            const { handleError } = await import("../../../../../old-js-code/js/utils/error-messages/handleError.js");
-            await handleError({
-                filename: 'manageIDBTransactionsError',
-                consoleMsg: 'Manage IDB transactions error: ',
-                err,
-            });
+            // Just throw - parent will handle
             throw err;
         }
     }
@@ -314,16 +272,14 @@ export default class ManageUser {
             const data = backupData ?? { ...userData, [backupAPITag]: true };
             await this.#indexed.putStorePromise(db, data, backupStore, true);
         }
-        catch (err) {
-            const { handleError } = await import("../../../../../old-js-code/js/utils/error-messages/handleError.js");
-            await handleError({
-                filename: 'backupDataError',
-                consoleMsg: 'Backup data error: ',
-                err,
-                userMsg: 'Unable to backup data',
-                errorEle: 'page-msg'
-            });
-            throw err;
+        catch (error) {
+            const { AppError } = await import('../../../core/errors/models/AppError.js');
+            // Process because it's a worker
+            await AppError.process(error, {
+                errorCode: AppError.Types.BACKUP_ERROR,
+                userMessage: AppError.BaseMessages.system.backupError,
+                shouldLog: true
+            }, true);
         }
     }
 
@@ -333,5 +289,28 @@ export default class ManageUser {
      */
     getStoreNames() {
         return this.#indexed.stores;
+    }
+
+    async checkStoresForData(stores) {
+        try {
+            const db = await this.#indexed.openDBPromise();
+            for (let store in stores) {
+                const objectStore = await this.#indexed.getAllStorePromise(db, stores[store]);
+                if (objectStore && objectStore.length > 0) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        catch (error) {
+            const { AppError } = await import('../../../core/errors/models/AppError.js');
+            // handleError because this is a terminal operation
+            await AppError.handleError(error, {
+                errorCode: AppError.Types.DATABASE_ERROR,
+                userMessage: AppError.BaseMessages.system.databaseError,
+                shouldLog: true
+            });
+            return false;
+        }
     }
 }

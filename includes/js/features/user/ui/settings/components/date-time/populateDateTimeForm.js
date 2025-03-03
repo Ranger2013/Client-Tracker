@@ -6,7 +6,6 @@ import { cleanUserOutput } from "../../../../../../core/utils/string/stringUtils
  */
 export default async function populateDateTimeForm(manageUser, domElements) {
     const { timeZone, dateFormat } = domElements;
-
     try {
         // Get local date time options
         const dateTime = await manageUser.getDateTimeOptions();
@@ -29,12 +28,10 @@ export default async function populateDateTimeForm(manageUser, domElements) {
     } 
     catch (err) {
         const { AppError } = await import("../../../../../../core/errors/models/AppError.js");
-        
-        new AppError('Error while trying to get the user date/time options: ', {
-            originalError: err,
+        await AppError.handleError(err, {
             errorCode: AppError.Types.SETTINGS_ERROR,
-            userMessage: null,  // Don't show any message to user
-            shouldLog: true     // But still log for debugging
-        }).logError();  // Just log, don't handle/display
+            userMessage: 'Failed to get the local date/time options.',
+            displayTarget: 'form-msg'
+        });
     }
 }

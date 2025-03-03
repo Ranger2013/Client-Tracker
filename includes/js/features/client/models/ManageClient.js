@@ -1,4 +1,4 @@
-import IndexedDBOperations from "./IndexedDBOperations.js";
+import IndexedDBOperations from '../../../core/database/IndexedDBOperations.js';
 
 export default class ManageClient {
     #indexed;
@@ -124,12 +124,16 @@ export default class ManageClient {
                 this.#indexed.putStorePromise(db, { primaryKey }, this.#indexed.stores.MAXCLIENTPRIMARYKEY, true, tx)
             ]);
 
-            return { status: true, msg: `${userData.client_name} has been added successfully.`, type: 'add-client' };
+            return true;  // Just return success status
         }
-        catch (err) {
-            const { handleError } = await import("../../../../../old-js-code/js/utils/error-messages/handleError.js");
-            await handleError('addNewClientError', 'Add new client error: ', err);
-            return { status: false, msg: `Unable to add new client at this time.<br>${helpDeskTicket}` };
+        catch (error) {
+            const { AppError } = await import('../../core/errors/models/AppError.js');
+            throw new AppError('Failed to add new client', {
+                originalError: error,
+                errorCode: AppError.Types.DATABASE_ERROR,
+                userMessage: null,  // Let boss handle messages
+                shouldLog: true
+            });
         }
     }
 
@@ -187,13 +191,17 @@ export default class ManageClient {
                 }, this.#indexed.stores.EDITCLIENT, false, tx)
             ]);
 
-            return { status: true, msg: `${userData.client_name} has been updated successfully.`, type: 'edit-client' };
+            return true;  // Just return success status
 
         }
-        catch (err) {
-            const { handleError } = await import("../../../../../old-js-code/js/utils/error-messages/handleError.js");
-            await handleError('editClientError', 'Edit client error: ', err);
-            return { status: false, msg: `Unable to edit client at this time.<br>${helpDeskTicket}` };
+        catch (error) {
+            const { AppError } = await import('../../core/errors/models/AppError.js');
+            throw new AppError('Failed to edit client', {
+                originalError: error,
+                errorCode: AppError.Types.DATABASE_ERROR,
+                userMessage: null,
+                shouldLog: true
+            });
         }
     }
 

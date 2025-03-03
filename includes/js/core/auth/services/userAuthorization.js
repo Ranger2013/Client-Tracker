@@ -37,7 +37,7 @@ const SECURITY_MESSAGES = {
  * }
  * // If no token, user has already been redirected to login
  */
-export async function userAuthorization(urlPath) {
+export async function userAuthorization() {
     try {
         const manageUser = new ManageUser();
         const userSettings = await manageUser.getSettings('user_status');
@@ -65,12 +65,10 @@ export async function userAuthorization(urlPath) {
     }
     catch (error) {
         const { AppError } = await import('../../errors/models/AppError.js');
-        new AppError('Authorization failed', {
-            originalError: error,
+        AppError.handleError(error, {
             errorCode: AppError.Types.AUTHORIZATION_ERROR,
             userMessage: null,
-            shouldLog: true
-        }).logError();
+        });
 
         redirectToLogin(SECURITY_MESSAGES.systemError);
         return null;

@@ -23,13 +23,11 @@ export default async function populateFarrierPricesForm({formEle, manageUser}) {
         }
     }
     catch (err) {
+        // Terminal - fails silently
         const { AppError } = await import("../../../../../../core/errors/models/AppError.js");
-        new AppError('Error populating farrier prices form: ', {
-            originalError: err,
-            shouldLog: true,
-            userMessage: 'Could not load saved pricing.',
-            errorCode: 'INITIALIZATION_ERROR',
-            autoHandle: true,
+        AppError.handleError(err, {
+            errorCode: AppError.Types.FORM_POPULATION_ERROR,
+            userMessage: null,
         });
     }
 }

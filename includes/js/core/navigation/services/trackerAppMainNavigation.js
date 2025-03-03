@@ -1,4 +1,4 @@
-import  dropDownMenu  from './dropDownMenu.js';
+import dropDownMenu from './dropDownMenu.js';
 import selectPage from './selectPage.js';
 import sideBarNavigation from './sideBarNavigation.js';
 
@@ -106,35 +106,21 @@ const PAGE_MSG = 'page-msg';
 
 export default async function mainTrackerNavigation() {
     try {
-        await setupNavigationControls();
+        setupNavigationControls();
         await setupRouteListeners();
     }
     catch (error) {
-        try {
-            const { AppError } = await import('../../errors/models/AppError.js');
-            
-            const appError = new AppError('Navigation initialization failed', {
-                originalError: error,
-                errorCode: AppError.Types.NAVIGATION_ERROR,
-                userMessage: 'Failed to initialize navigation. Please refresh the page.',
-                displayTarget: PAGE_MSG,
-                shouldLog: true
-            });
-            
-            await appError.handle();
-            
-        } catch (handlingError) {
-            console.error('Error handling failed:', handlingError);
-            const msg = document.getElementById(PAGE_MSG);
-            if (msg) {
-                msg.textContent = 'Navigation failed. Please refresh the page.';
-                msg.classList.remove('w3-hide');
-            }
-        }
+        const { AppError } = await import('../../errors/models/AppError.js');
+        await AppError.process(error, {
+            errorCode: AppError.Types.NAVIGATION_ERROR,
+            userMessage: 'Failed to initialize navigation. Please contact support.',
+            displayTarget: PAGE_MSG,
+        },
+            true);
     }
 }
 
-async function setupNavigationControls() {
+function setupNavigationControls() {
     try {
         const dropMenus = document.querySelectorAll(ROUTES.controls.mainMenu.selector);
         if (!dropMenus.length) {
@@ -175,15 +161,10 @@ async function setupRouteListeners() {
     }
     catch (error) {
         const { AppError } = await import('../../errors/models/AppError.js');
-
-        const appError = new AppError('Route listeners setup failed', {
-            originalError: error,
+        await AppError.process(error, {
             errorCode: AppError.Types.INITIALIZATION_ERROR,
             userMessage: 'Failed to setup page navigation. Please refresh the page.',
             displayTarget: PAGE_MSG,
-            shouldLog: true
         });
-
-        await appError.handle();
     }
 }

@@ -12,44 +12,44 @@ const BACKUP_NOTICE_ID = 'backup-notice-component';  // Add consistent component
 /**
  * Sets up the backup notice by updating it and adding an event listener to close it.
  */
-export default async function setupBackupNotice({ errorEleID }) {
+export default async function setupBackupNotice({ errorEleID, manageUser }) {
+    // noticeDiv is the 'backup-data-notice' element
+    const noticeDiv = getValidElement(errorEleID);
+
     try {
-        // noticeDiv is the 'backup-data-notice' element
-        const noticeDiv = getValidElement(errorEleID);
-        
-        await initializeBackupNotice({reminders: REMINDER_PATTERNS, displayElement: noticeDiv});
-        
+        await initializeBackupNotice({ reminders: REMINDER_PATTERNS, displayElement: noticeDiv, manageUser });
+
+        // Add event listener to close the notice
         addListener({
             elementOrId: `${errorEleID}-close`,
-            eventType: 'click', 
-            handler: () => closeBackupNotice(TWO_HOURS),
-            componentId: BACKUP_NOTICE_ID});
+            eventType: 'click',
+            handler: () => closeBackupNotice({noticeEle: noticeDiv, manageUser}),
+            componentId: BACKUP_NOTICE_ID
+        });
     }
     catch (error) {
-        new AppError('Backup notice system unavailable', {
+        const { AppError } = await import("../../errors/models/AppError.js");
+        AppError.handleError(error, {
             originalError: error,
             errorCode: AppError.Types.BACKUP_ERROR,
-            userMessage: 'Unable to check for pending backups',
-            displayTarget: errorEleID,
-            shouldLog: true
-        }).handle();  // Will display in its own element
+            userMessage: 'Error: Reminder system failed.',
+            displayTarget: noticeDiv,
+        });
     }
 }
 
 /**
  * Populates the backup notice based on user settings and data in IndexedDB.
  */
-async function initializeBackupNotice({reminders, displayElement}) {
+async function initializeBackupNotice({ reminders, displayElement, manageUser }) {
     try {
-        const { default: IndexedDBOperations } = await import("../../database/IndexedDBOperations.js");
-        const indexed = new IndexedDBOperations();
+        const userSettings = await manageUser.getSettings();
+        const idbStores = await manageUser.getStoreNames();
 
-        const db = await indexed.openDBPromise();
-        const userSettings = await indexed.getAllStorePromise(db, indexed.stores.USERSETTINGS);
-
+        // Check if we should show the reminder yet.
         if (shouldShowReminder(userSettings)) {
-            const stores = filterStores(indexed.stores, reminders);
-            const hasDataToBackup = await checkStoresForData(db, stores, indexed);
+            const stores = filterStores(idbStores, reminders);
+            const hasDataToBackup = await manageUser.checkStoresForData(stores);
 
             if (hasDataToBackup) {
                 updateNoticeContent(displayElement, 'You currently have data that needs to be backed up to the server.');
@@ -59,10 +59,29 @@ async function initializeBackupNotice({reminders, displayElement}) {
         }
     }
     catch (err) {
-        const { errorLogs } = await import("../../errors/services/errorLogs.js");
-        await errorLogs('backupNotice', 'Failed to check backup status', err);
-        updateNoticeContent(displayElement, 'Unable to check for pending backups', true);
+        const { AppError } = await import("../../errors/models/AppError.js");
+        throw new AppError('Failed to initialize backup notice: ', {
+            originalError: err,
+            errorCode: AppError.Types.BACKUP_ERROR,
+            userMessage: 'Unable to check for pending backups',
+            displayTarget: displayElement,
+        });
     }
+}
+
+/**
+ * Determines if the reminder should be shown based on user settings.
+ * @param {Object} userSettings - The user settings from IndexedDB.
+ * @returns {boolean} - True if the reminder should be shown, false otherwise.
+ */
+function shouldShowReminder(userSettings) {
+    const reminderStatus = userSettings.reminders.status;
+    const reminderTimestamp = userSettings.reminders.timestamp;
+
+    const now = new Date().getTime();
+
+    return (reminderStatus === 'default' || reminderStatus === 'yes') &&
+        (reminderTimestamp === 0 || now - reminderTimestamp >= TWO_HOURS);
 }
 
 /**
@@ -79,36 +98,10 @@ function updateNoticeContent(noticeDiv, message, isError = false) {
 
     const messageEl = document.createElement('span');
     messageEl.textContent = message;
+    
     if (isError) messageEl.classList.add('w3-text-red');
     noticeDiv.insertBefore(messageEl, closeButton);
     noticeDiv.classList.remove('w3-hide');
-}
-
-/**
- * Clears any previous message from the notice div.
- * @param {HTMLElement} noticeDiv - The notice div element.
- */
-function clearPreviousMessage(noticeDiv) {
-    if (noticeDiv.lastChild && noticeDiv.lastChild.nodeType === Node.TEXT_NODE) {
-        noticeDiv.removeChild(noticeDiv.lastChild);
-    }
-}
-
-/**
- * Determines if the reminder should be shown based on user settings.
- * @param {Object} userSettings - The user settings from IndexedDB.
- * @returns {boolean} - True if the reminder should be shown, false otherwise.
- */
-function shouldShowReminder(userSettings) {
-    if (userSettings && Object.keys(userSettings).length > 0) {
-        const backupReminder = userSettings[0].reminders.status;
-        const timeSinceLastReminderClose = userSettings[0].reminders.timestamp;
-        const now = new Date().getTime();
-
-        return (backupReminder === 'default' || backupReminder === 'yes') &&
-            (timeSinceLastReminderClose === 0 || now - timeSinceLastReminderClose >= TWO_HOURS);
-    }
-    return false;
 }
 
 /**
@@ -127,33 +120,6 @@ function filterStores(stores, patterns) {
 }
 
 /**
- * Checks if there is any data to backup in the given stores.
- * @param {IDBDatabase} db - The IndexedDB database.
- * @param {Object} stores - The filtered stores.
- * @param {IndexedDBOperations} indexed - The IndexedDB operations instance.
- * @returns {Promise<boolean>} - True if there is data to backup, false otherwise.
- */
-async function checkStoresForData(db, stores, indexed) {
-    for (let store in stores) {
-        const objectStore = await indexed.getAllStorePromise(db, stores[store]);
-        if (objectStore && objectStore.length > 0) {
-            return true;
-        }
-    }
-    return false;
-}
-
-/**
- * Shows the backup notice.
- * @param {HTMLElement} noticeDiv - The notice div element.
- */
-function showBackupNotice(noticeDiv) {
-    const newText = document.createTextNode('You currently have data that needs to be backed up to the server.');
-    noticeDiv.append(newText);
-    noticeDiv.classList.remove('w3-hide');
-}
-
-/**
  * Hides the backup notice.
  * @param {HTMLElement} noticeDiv - The notice div element.
  */
@@ -164,30 +130,32 @@ function hideBackupNotice(noticeDiv) {
 /**
  * Closes the backup notice and updates the user settings in IndexedDB.
  */
-async function closeBackupNotice(TWO_HOURS) {
-    const noticeDiv = document.getElementById('backup-data-notice');
-
+async function closeBackupNotice({noticeEle, manageUser}) {
     try {
-        const { default: IndexedDBOperations } = await import("../../database/IndexedDBOperations.js");
-        const { removeListeners } = await import("../../utils/dom/listeners.js");
-        const indexed = new IndexedDBOperations();
+        // // const { default: IndexedDBOperations } = await import("../../database/IndexedDBOperations.js");
+        // // const { removeListeners } = await import("../../utils/dom/listeners.js");
+        // // const indexed = new IndexedDBOperations();
 
-        const db = await indexed.openDBPromise();
-        const userSettings = await indexed.getAllStorePromise(db, indexed.stores.USERSETTINGS);
+        // const db = await indexed.openDBPromise();
+        // const userSettings = await indexed.getAllStorePromise(db, indexed.stores.USERSETTINGS);
 
-        if (!userSettings?.[0]) {
-            throw new Error('No user settings found');
-        }
+        // if (!userSettings?.[0]) {
+        //     throw new Error('No user settings found');
+        // }
 
-        userSettings[0].reminders.timestamp = Date.now();
-        await indexed.clearStorePromise(db, indexed.stores.USERSETTINGS);
-        await indexed.putStorePromise(db, userSettings[0], indexed.stores.USERSETTINGS);
+        const userSettings = await manageUser.getSettings();
+        console.log('userSettings:', userSettings); // Need to make sure we get the reminders property
+        
 
-        hideBackupNotice(noticeDiv);
-        removeListeners(BACKUP_NOTICE_ID);
+        // userSettings[0].reminders.timestamp = Date.now();
+        // await indexed.clearStorePromise(db, indexed.stores.USERSETTINGS);
+        // await indexed.putStorePromise(db, userSettings[0], indexed.stores.USERSETTINGS);
+
+        // hideBackupNotice(noticeEle);
+        // removeListeners(BACKUP_NOTICE_ID);
     }
     catch (err) {
         await errorLogs('backupNotice', 'Failed to close backup notice', err);
-        updateNoticeContent(noticeDiv, 'Unable to update notification settings', true);
+        updateNoticeContent(noticeEle, 'Unable to update notification settings', true);
     }
 }

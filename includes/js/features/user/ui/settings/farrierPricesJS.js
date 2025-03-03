@@ -27,14 +27,6 @@ async function handleFormSubmission(evt) {
     evt.preventDefault();
 
     try {
-        safeDisplayMessage({
-            elementId: 'form-msg',
-            message: 'Processing...',
-            color: 'w3-text-blue',
-            isSuccess: true
-        });
-        top();
-
         const stores = manageUser.getStoreNames();
         const userData = Object.fromEntries(new FormData(evt.target));
         const farrierPricesStructure = seperateFarrierPricesFromAccessories(userData);
@@ -47,6 +39,7 @@ async function handleFormSubmission(evt) {
         });
 
         if (updateSuccess) {
+            top();
             safeDisplayMessage({
                 elementId: 'form-msg',
                 message: 'Your pricing has been set.',
@@ -56,13 +49,10 @@ async function handleFormSubmission(evt) {
     }
     catch (err) {
         const { AppError } = await import("../../../../core/errors/models/AppError.js");
-        new AppError('Error submitting the farrier prices form: ', {
-            originalError: err,
-            shouldLog: true,
+        AppError.handleError(err, {
+            errorCode: AppError.Types.FORM_SUBMISSION_ERROR,
             userMessage: 'Unable to save pricing.',
-            errorCode: 'SUBMISSION_ERROR',
             displayTarget: 'form-msg',
-            autoHandle: true,
         });
     }
 }

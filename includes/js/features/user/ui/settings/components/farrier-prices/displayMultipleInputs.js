@@ -30,15 +30,14 @@ export default function displayMultipleInputs(form, componentId) {
                 }
                 catch (err) {
                     const { AppError } = await import("../../../../../../core/errors/models/AppError.js");
-
-                    new AppError('Error building accessory input blocks: ', {
-                        originalError: err,
-                        shouldLog: true,
-                        userMessage: 'Unable to create accessory inputs.',
-                        errorCode: 'RENDER_ERROR',
+                    // Handle error terminally here because:
+                    // 1. It's isolated to this input section
+                    // 2. Rest of form can still work
+                    await AppError.handleError(err, {
+                        errorCode: AppError.Types.RENDER_ERROR,
+                        userMessage: `Unable to create ${accessory} inputs. ${AppError.BaseMessages.system.helpDesk}`,
                         displayTarget: config.displayEle,
-                        autoHandle: true,
-                    })
+                    });
                 }
             },
             componentId

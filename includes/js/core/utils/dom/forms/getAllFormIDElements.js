@@ -27,15 +27,6 @@ export default function getAllFormIdElements(form) {
         );
     }
     catch (err) {
-        import("../../../errors/models/AppError.js")
-        .then(({AppError}) => {
-            throw new AppError('Get all form ID elements error: ', {
-                originalError: err,
-                shouldLog: true,
-                userMessage: null,
-                errorCode: 'RENDER_ERROR',
-            }).logError();
-        })
-        .catch(err => console.error('Error handler failed:', err));
+        throw err;
     }
 }

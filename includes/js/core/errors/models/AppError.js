@@ -59,7 +59,14 @@ export class AppError extends Error {
                 backup: 'The backup system is not responding. Your work will still be saved.',
                 calendar: 'Calendar features are currently unavailable.',
                 search: 'Search functionality is currently unavailable.'
-            }
+            },
+
+            // Form validation messages
+            forms: {
+                validationFailed: 'Form validation failed.',
+                submissionFailed: 'Form submission failed.',
+                noData: 'No local data found for this form.',
+            },
         };
     }
 
@@ -122,7 +129,8 @@ export class AppError extends Error {
             'INITIALIZATION_ERROR',
             'NAVIGATION_ERROR',
             'DATABASE_ERROR',
-            'API_ERROR'
+            'API_ERROR',
+            'FORM_VALIDATION_ERROR',
         ];
 
         if (criticalErrors.includes(this.errorCode)) {
@@ -144,6 +152,7 @@ export class AppError extends Error {
             INPUT_ERROR: 'INPUT_ERROR',
             FORM_VALIDATION_ERROR: 'FORM_VALIDATION_ERROR',
             FORM_SUBMISSION_ERROR: 'FORM_SUBMISSION_ERROR',
+            FORM_POPULATION_ERROR: 'FORM_POPULATION_ERROR',
         };
     }
 
@@ -157,6 +166,7 @@ export class AppError extends Error {
         if (err instanceof AppError) {
             await err.handle();
         } else {
+
             const error = new AppError(err.message, {
                 originalError: err,
                 ...config
@@ -166,31 +176,56 @@ export class AppError extends Error {
     }
 
     /**
+     * Process any error, creating AppError instance only if needed
+     * @param {Error} error - The error to process
+     * @param {Object} config - Configuration for new AppError if needed
+     * @param {boolean} [shouldThrow=true] - Whether to throw the error after processing
+     * @returns {Promise<AppError>}
+     */
+    static async process(error, config = {}, shouldThrow = true) {
+        let appError;
+        if (error instanceof AppError) {
+            appError = error;
+        } else {
+            appError = new AppError(error.message, {
+                originalError: error,
+                ...config
+            });
+        }
+
+        await appError.handle(shouldThrow);
+        return appError;
+    }
+
+    /**
      * Handles error with logging and display
      */
-    async handle(shouldRethrow = false) {
+    async handle(shouldThrow = false) {
         try {
             if (this.shouldLog && !this.logged) {
                 await this.logError();
             }
-
-            // Only display if we have a user message
             if (this.userMessage !== null) {
                 await this.displayError();
             }
-
-            if (shouldRethrow) {
+            if (shouldThrow) {
                 throw this;
             }
+            return this;
         }
         catch (handlingError) {
-            // Only log handling errors, not the original error again
+            // If we're supposed to throw, do it immediately
+            if (shouldThrow) {
+                throw handlingError;
+            }
+
+            // Otherwise, try to handle the failure gracefully
             console.error('Error handling failed:', {
                 handling: handlingError.message,
                 originalError: this.message
             });
             this.displayFallbackError();
-            if (shouldRethrow) throw handlingError;
+            return this;
         }
     }
 
@@ -259,7 +294,7 @@ export class AppError extends Error {
         try {
             await this.logServerSideError();
 
-            if(shouldRethrow){
+            if (shouldRethrow) {
                 throw this;
             }
         }
@@ -267,7 +302,7 @@ export class AppError extends Error {
             console.error('Error logging failed:', loggingError);
             await this.queueForSync();
 
-            if(shouldRethrow){
+            if (shouldRethrow) {
                 throw loggingError;
             }
         }
@@ -278,6 +313,10 @@ export class AppError extends Error {
      */
     async displayError() {
         try {
+            // Clear any processing messages first
+            const processingMsgs = document.querySelectorAll('[data-msg-type="processing"]');
+            processingMsgs.forEach(msg => msg.textContent = '');
+
             safeDisplayMessage({
                 elementId: this.displayTarget,
                 message: this.userMessage,
@@ -285,8 +324,7 @@ export class AppError extends Error {
             });
         }
         catch (displayError) {
-            console.error('Display error:', displayError);
-            this.displayFallbackError();
+            // ...existing error handling...
         }
     }
 

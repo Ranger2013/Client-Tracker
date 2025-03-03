@@ -38,12 +38,10 @@ export default function makeInputsGreen(form, componentId) {
     catch (err) {
         import("../../../../../../core/errors/models/AppError.js")
         .then(({AppError}) => {
-            return new AppError('Error making inputs green: ', {
-                originalError: err,
-                shouldLog: true,
-                userMessage: null,
-                errorCode: 'RENDER_ERROR',
-            }).logError();
+           AppError.handleError(err, {
+               errorCode: AppError.Types.RENDER_ERROR,
+               userMessage: null,
+           });
         })
     }
 }

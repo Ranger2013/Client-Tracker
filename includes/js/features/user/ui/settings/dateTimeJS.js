@@ -34,17 +34,10 @@ const dateFormat = document.getElementById('date-format');
 // Populate the dateTime form
 populateDateTimeForm(manageUser, { timeZone, dateFormat });
 
-/**
- * Handles form submission, saves to IndexedDB and queues for server sync
- * @param {SubmitEvent} evt - Form submission event
- * @returns {Promise<void>}
- * @throws {Error} If settings update fails
- */
 async function handleFormSubmission(evt) {
-	// Prevent the form from submitting
 	evt.preventDefault();
 	try {
-		// Add a processing message
+		// Show processing message
 		safeDisplayMessage({
 			elementId: 'form-msg',
 			message: 'Processing...',
@@ -52,17 +45,17 @@ async function handleFormSubmission(evt) {
 			color: 'w3-text-blue',
 		});
 
-		const validate = validateForm(evt.target);  // Removed await
-
-		// Validate the form
-		if (!validate) {
+		// Validate form
+		const isValid = await validateFormFields(evt.target);
+		if (!isValid) {
 			safeDisplayMessage({
 				elementId: 'form-msg',
-				message: 'Please correct the following errors.',
+				message: 'Please correct the form errors.',
 			});
 			return;
 		}
 
+		// Process valid form
 		// Get the userData
 		const userData = Object.fromEntries(new FormData(evt.target));
 		const stores = manageUser.getStoreNames();
@@ -88,24 +81,28 @@ async function handleFormSubmission(evt) {
 				message: 'We were unable to save your Date/Time Options.',
 			});
 		}
-	}
-	catch (err) {
+	} catch (err) {
 		const { AppError } = await import("../../../../core/errors/models/AppError.js");
 		await AppError.handleError(err, {
 			errorCode: AppError.Types.FORM_SUBMISSION_ERROR,
-			userMessage: 'Unable to save Date/Time Options.',
+			userMessage: AppError.BaseMessages.forms.submissionFailed,
 			displayTarget: 'form-msg',
 		});
+
+		// Disable the submit button
+		document.getElementById('submit-button').disabled = true;
 	}
 }
 
 /**
- * Validates the entire form
- * @param {HTMLFormElement} form - The form element to validate
- * @returns {boolean} True if all validations pass
+ * Centralized form validation handler
+ * @param {HTMLFormElement} form
+ * @returns {Promise<boolean>}
+ * @throws {AppError} If validation fails
  */
-function validateForm(form) {  // Removed async
+async function validateFormFields(form) {
 	try {
+		// Run all validations synchronously
 		const dateFormatValid = validateDateFormat({
 			value: form.date_format.value,
 			errorContainer: 'date-format-error',
@@ -118,20 +115,16 @@ function validateForm(form) {  // Removed async
 			inputContainer: 'time-zone'
 		});
 
-		disableEnableSubmitButton('submit-button');
+		// Return true only if all validations pass
 		return dateFormatValid && timeZoneValid;
 	}
 	catch (err) {
-		return import("../../../../core/errors/models/AppError.js")
-			.then(({ AppError }) => {
-				const error = new AppError('Error validating the Date/Time form', {
-					originalError: err,
-					errorCode: AppError.Types.FORM_VALIDATION_ERROR,
-					userMessage: 'Unable to validate the form.',
-					displayTarget: 'form-msg',
-					});
-				throw error;  // This will be properly caught by handleFormSubmission
-			});
+		const { AppError } = await import("../../../../core/errors/models/AppError.js");
+		await AppError.process(err, {
+			errorCode: AppError.Types.FORM_VALIDATION_ERROR,
+			userMessage: AppError.BaseMessages.forms.validationFailed,
+			displayTarget: 'form-msg',
+		}, true);
 	}
 }
 
@@ -144,63 +137,21 @@ function validateForm(form) {  // Removed async
  * @returns {boolean} True if validation passes
  */
 function validateDateFormat({ value, errorContainer, inputContainer }) {
-	try {
-		throw new Error("Test error thrown from validateDateFormat function.");
-		// Set the date formats
-		const dateFormats = [
-			'Y-m-d',
-			'm-d-Y',
-			'd-m-Y'
-		];
+	const dateFormats = ['Y-m-d', 'm-d-Y', 'd-m-Y'];
+	const isValid = dateFormats.includes(value);
 
-		for (const format of dateFormats) {
-			// We have a match from the form, return true
-			if (format === value) {
-				// Clear any error messages
-				clearMsg({ container: errorContainer, input: inputContainer });
-
-				// Disable the submit button
-				disableEnableSubmitButton('submit-button');
-
-				// Remove the focuss event listener
-				removeListeners(COMPONENT_ERROR);
-				return true;
-			}
-		}
-
-		// No match from the form, show error message;
-		safeDisplayMessage({
-			elementId: errorContainer,
-			message: 'Please select a valid date format.',
-			targetId: inputContainer,
-		})
-
-		addListener({
-			elementOrId: inputContainer,
-			eventType: 'focus',
-			handler: () => {
-				clearMsg({ container: errorContainer, input: inputContainer });
-				disableEnableSubmitButton('submit-button');
-			},
-			componentId: COMPONENT_ERROR
-		});
-
-		return false;
-	}
-	catch (err) {
-		return import("../../../../core/errors/models/AppError.js")
-			.then(({ AppError }) => {
-				const error = new AppError('Error validating the Date Format', {
-					originalError: err,
-					errorCode: AppError.Types.FORM_VALIDATION_ERROR,
-					userMessage: null
-				});
-				throw error;  // This will be caught by validateForm's catch
-			});
+	if (isValid) {
+		clearMsg({ container: errorContainer, input: inputContainer });
+		return true;
 	}
 
+	safeDisplayMessage({
+		elementId: errorContainer,
+		message: 'Please select a valid date format.',
+		targetId: inputContainer,
+	});
+	return false;
 }
-
 
 /**
  * Validates timezone selection against US continental timezones

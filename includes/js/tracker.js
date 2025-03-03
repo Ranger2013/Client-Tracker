@@ -40,11 +40,10 @@ let validationToken = null;
  */
 const initializeApp = async () => {
     try {
-        const path = window.location.pathname;
         const manageUser = new ManageUser();
         const manageClient = new ManageClient();
         
-        validationToken = await userAuthorization(path);
+        validationToken = await userAuthorization();
         setValidationToken(validationToken);
 
         await initializeTracker({ manageUser, manageClient });
@@ -57,6 +56,7 @@ const initializeApp = async () => {
     }
     catch (err) {
         const { AppError } = await import("./core/errors/models/AppError.js");
+        // Here we finally handle the error, regardless of type
         await AppError.handleError(err, {
             errorCode: AppError.Types.INITIALIZATION_ERROR,
             userMessage: 'Failed to initialize application',
@@ -79,29 +79,15 @@ async function initializeTracker({ manageUser, manageClient }) {
 
         // Backup notice is self-contained, handles its own errors
         // If it fails, it will display in its own element ('backup-data-notice')
-        await setupBackupNotice({ errorEleID: 'backup-data-notice' });
+        await setupBackupNotice({ errorEleID: 'backup-data-notice', manageUser });
     } 
     catch (error) {
-        // Only catch critical errors (from mainTrackerNavigation)
-        if (error instanceof AppError) {
-            throw error; // Re-throw AppErrors to be handled by initializeApp
-        }
-        throw new AppError('Tracker initialization failed', {
-            originalError: error,
-            errorCode: ErrorTypes.INITIALIZATION_ERROR,
-            userMessage: 'Failed to initialize application'
-        });
+        const { AppError } = await import("./core/errors/models/AppError.js");
+        await AppError.process(error, {
+            errorCode: AppError.Types.INITIALIZATION_ERROR,
+            userMessage: 'Failed to initialize the application.'
+        }, true);
     }
-}
-
-/**
- * Sets up global error boundaries for the application
- * Captures unhandled errors and promise rejections
- * @returns {void}
- */
-function setupErrorBoundaries() {
-    window.addEventListener('error', handleGlobalError);
-    window.addEventListener('unhandledrejection', handleGlobalPromiseError);
 }
 
 /**
@@ -118,19 +104,23 @@ async function handlePageNavigation(evt) {
     catch (err) {
         const { AppError } = await import("./core/errors/models/AppError.js");
 
-        // If it's already an AppError, just handle it (includes logging and display)
-        if (err instanceof AppError) {
-            await err.handle();
-            return;
-        }
-
-        // If not an AppError, create and handle a new one
+        // This function shouldn't throw any errors. selectPage handles its own errors.
         await AppError.handleError(err, {
             errorCode: AppError.Types.NAVIGATION_ERROR,
-            userMessage: 'Failed to navigate to page',
+            userMessage: 'Navigation system failed.',
             displayTarget: 'page-msg'
         });
     }
+}
+
+/**
+ * Sets up global error boundaries for the application
+ * Captures unhandled errors and promise rejections
+ * @returns {void}
+ */
+function setupErrorBoundaries() {
+    window.addEventListener('error', handleGlobalError);
+    window.addEventListener('unhandledrejection', handleGlobalPromiseError);
 }
 
 /**
@@ -145,20 +135,11 @@ async function handleGlobalError(error) {
 
     try {
         const { AppError } = await import("./core/errors/models/AppError.js");
-
-        // If it's already an AppError, just log it
-        if (error instanceof AppError) {
-            await error.logError();
-            return;
-        }
-
-        // Create new AppError but don't trigger handlers
-        new AppError('Unhandled global error', {
-            originalError: error,
-            errorCode: 'INITIALIZATION_ERROR',
+        await AppError.handleError(error, {
+            errorCode: AppError.Types.INITIALIZATION_ERROR,
             userMessage: 'An unexpected error occurred',
             shouldLog: true
-        }).logError();
+        });
     } catch (handlingError) {
         // Last resort - avoid infinite loops
         console.error('Failed to handle global error:', error);
@@ -177,20 +158,11 @@ async function handleGlobalPromiseError(event) {
 
     try {
         const { AppError } = await import("./core/errors/models/AppError.js");
-
-        // If it's already an AppError, just log it
-        if (event.reason instanceof AppError) {
-            await event.reason.logError();
-            return;
-        }
-
-        // Create new AppError but don't trigger handlers
-        new AppError('Unhandled promise rejection', {
-            originalError: event.reason,
-            errorCode: 'INITIALIZATION_ERROR',
+        await AppError.handleError(event.reason, {
+            errorCode: AppError.Types.INITIALIZATION_ERROR,
             userMessage: 'An unexpected error occurred',
             shouldLog: true
-        }).logError();
+        });
     } catch (handlingError) {
         // Last resort - avoid infinite loops
         console.error('Failed to handle promise rejection:', event.reason);
