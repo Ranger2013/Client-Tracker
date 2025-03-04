@@ -1,9 +1,18 @@
-import { addListener } from "../../../utils/event-listeners/listeners.js";
-import { clearMsg, myError, mySuccess, top } from "../../../utils/dom/domUtils.js";
-import ManageUser from "../../../classes/ManageUser.js";
-import displayFormValidationErrors from "../../../utils/dom/displayFormValidationErrors.js";
+import displayFormValidationErrors from '../../../../core/utils/dom/forms/displayFormValidationErrors.js';
+import { addListener } from '../../../../core/utils/dom/listeners.js';
+import { clearMsg, safeDisplayMessage } from '../../../../core/utils/dom/messages.js';
+import ManageUser from '../../models/ManageUser.js';
+import populateColorOptionsForm from './components/color-options/populateColorOptions.js';
 
 const COMPONENT_ID = 'color-options';
+
+const manageUser = new ManageUser();
+
+/**
+ * Populate the form fields with the user's current color options
+ * @returns {void}
+ */
+populateColorOptionsForm({ form: 'color-options-form', manageUser});
 
 /**
  * Validates color input values against hex color format
@@ -29,7 +38,7 @@ function validateColor(userData) {
 /**
  * Handles the submission of the color options form
  * Validates colors and updates user settings
- * @param {Event} evt - Form submission event
+ * @param {SubmitEvent} evt - Form submission event
  * @returns {Promise<void>}
  * @throws {Error} If settings update fails
  */
@@ -38,6 +47,8 @@ async function handleColorOptionFormSubmission(evt) {
     
     try {
         clearMsg({ container: 'form-msg' });
+
+        // @ts-ignore
         const userData = Object.fromEntries(new FormData(evt.target));
         
         const validate = validateColor(userData);
@@ -46,7 +57,6 @@ async function handleColorOptionFormSubmission(evt) {
             return;
         }
 
-        const manageUser = new ManageUser();
         const stores = manageUser.getStoreNames();
 
         if (await manageUser.updateLocalUserSettings({
@@ -55,24 +65,33 @@ async function handleColorOptionFormSubmission(evt) {
             backupStore: stores.COLOROPTIONS,
             backupAPITag: 'add_colorOptions'
         })) {
-            mySuccess('form-msg', 'Color Options have been saved');
-            top();
+            safeDisplayMessage({
+                elementId: 'form-msg',
+                message: 'Color Options have been saved',
+                isSuccess: true,
+            });
             return;
         }
 
-        myError('form-msg', 'Unable to save color options at this time.');
+        safeDisplayMessage({
+            elementId: 'form-msg',
+            message: 'Unable to save color options at this time.',
+        });
     }
     catch (err) {
-        const { handleError } = await import("../../../utils/error-messages/handleError.js");
-        await handleError({
-            filename: 'colorOptionsFormError',
-            consoleMsg: 'Color options form submission error: ',
-            err,
-            userMsg: 'Unable to save color options',
-            errorEle: 'form-msg'
+        const { AppError } = await import("../../../../core/errors/models/AppError.js");
+        AppError.handleError(err, {
+            errorCode: AppError.Types.FORM_SUBMISSION_ERROR,
+            userMessage: AppError.BaseMessages.forms.submissionFailed,
+            displayTarget: 'form-msg',
         });
     }
 }
 
 // Initialize listener - that's all we need
-addListener('color-options-form', 'submit', handleColorOptionFormSubmission, COMPONENT_ID);
+addListener({
+    elementOrId: 'color-options-form',
+    eventType: 'submit',
+    handler: handleColorOptionFormSubmission,
+    componentId: COMPONENT_ID
+});

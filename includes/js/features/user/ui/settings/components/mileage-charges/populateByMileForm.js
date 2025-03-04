@@ -6,7 +6,19 @@ export default async function populateByMileForm({ form, manageUser }) {
 	try {
 		form = getValidElement(form);
 
-		const mileageCharges = await manageUser.getMileageCharges();
+		let mileageCharges = null;
+		try{
+			mileageCharges = await manageUser.getMileageCharges();
+		}
+		catch(err){
+			// Fail silently
+			const { AppError } = await import("../../../../../../core/errors/models/AppError.js");
+			AppError.handleError(err, {
+				errorCode: AppError.Types.RENDER_ERROR,
+				userMessage: null,
+			});
+		}
+
 
 		if (mileageCharges?.cost_per_mile != null && mileageCharges?.starting_mile != null) {
 			const elements = getAllFormIdElements(form);
@@ -24,11 +36,9 @@ export default async function populateByMileForm({ form, manageUser }) {
 	catch (err) {
 		// Fail silently
 		const { AppError } = await import("../../../../../../core/errors/models/AppError.js");
-		new AppError('Failed to populate the per-mile form.', {
-			originalError: err,
-			shouldLog: true,
+		AppError.handleError(err, {
+			errorCode: AppError.Types.FORM_POPULATION_ERROR,
 			userMessage: null,
-			errorCode: 'RENDER_ERROR',
-		}).logError();
+		});
 	}
 }

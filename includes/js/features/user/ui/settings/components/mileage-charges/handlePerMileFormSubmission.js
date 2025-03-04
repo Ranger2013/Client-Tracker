@@ -10,11 +10,24 @@ export default async function handlePerMileFormSubmission({ evt, manageUser }) {
 		const userData = Object.fromEntries(new FormData(evt.target));
 
 		// Validate form inputs
-		const errors = validateForm(userData);
+		try {
+			const errors = validateForm(userData);
 
-		if (errors.length > 0) {
-			const { default: displayFormValidationErrors } = await import("../../../../../../core/utils/dom/forms/displayFormValidationErrors.js");
-			await displayFormValidationErrors(errors);
+			if (errors.length > 0) {
+				const { default: displayFormValidationErrors } = await import("../../../../../../core/utils/dom/forms/displayFormValidationErrors.js");
+				await displayFormValidationErrors(errors);
+				return;
+			}
+		}
+		catch (err) {
+			const { AppError } = await import("../../../../../../core/errors/models/AppError.js");
+			AppError.handleError(err, {
+				errorCode: AppError.Types.FORM_VALIDATION_ERROR,
+				userMessage: AppError.BaseMessages.forms.validationFailed,
+				displayTarget: 'form-msg',
+			});
+			
+			document.getElementById('submit-button').disabled = true;
 			return;
 		}
 
@@ -37,6 +50,12 @@ export default async function handlePerMileFormSubmission({ evt, manageUser }) {
 	}
 	catch (err) {
 		console.warn('Handle per mile form submission error: ', err);
+		const { AppError } = await import("../../../../../../core/errors/models/AppError.js");
+		AppError.handleError(err, {
+			errorCode: AppError.Types.FORM_SUBMISSION_ERROR,
+			userMessage: AppError.BaseMessages.forms.submissionFailed,
+			displayTarget: 'form-msg',
+		});
 	}
 }
 
@@ -75,6 +94,5 @@ function validateForm(userData) {
 			msg: 'Base cost must be numeric if provided'
 		});
 	}
-
 	return errors;
 }

@@ -1,4 +1,4 @@
-import { safeDisplayMessage } from "../../../../../../core/utils/dom/messages.js";
+import { clearMsg, safeDisplayMessage } from "../../../../../../core/utils/dom/messages.js";
 import { isNumeric } from "../../../../../../core/utils/validation/validators.js";
 import { top } from "../../../../../../core/utils/window/scroll.js";
 
@@ -47,13 +47,11 @@ export default async function handleByRangeFormSubmission({evt, manageUser}) {
     }
     catch (err) {
         top();
-        const { handleError } = await import("../../../../../../../../old-js-code/js/utils/error-messages/handleError.js");
-        await handleError({
-            filename: 'handleByRangeFormSubmissionError',
-            consoleMsg: 'Handle by range form submission error: ',
-            err,
-            userMsg: 'Unable to add mileage charges at this time',
-            errorEle: 'form-msg'
+        const { AppError } = await import("../../../../../../core/errors/models/AppError.js");
+        AppError.handleError(err, {
+            errorCode: AppError.Types.FORM_SUBMISSION_ERROR,
+            userMessage: 'Unable to add mileage charges at this time',
+            displayTarget: 'form-msg',
         });
     }
 }

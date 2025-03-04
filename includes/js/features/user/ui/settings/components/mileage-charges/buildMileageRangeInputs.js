@@ -1,4 +1,3 @@
-import { AppError } from "../../../../../../core/errors/models/AppError.js";
 import buildFuelRangeSection from "./buildFuelRangeSection.js";
 
 /**
@@ -39,14 +38,11 @@ export default function buildMileageRangeInputs({ evt, rangeContainer, fuelRange
     catch (err) {
         import("../../../../../../core/errors/models/AppError.js")
             .then(({ AppError }) => {
-                new AppError('Error building mileage range inputs: ', {
-                    originalError: err,
-                    shouldLog: true,
-                    userMessage: 'Could not build mileage range inputs.',
-                    errorCode: 'RENDER_ERROR',
-                    displayTarget: rangeContainer,
-                }).handle();
-            })
-            .catch(err => console.warn('Failed handling error in buildMileageRangeInputs: ', err));
+                AppError.handleError(err, {
+                    errorCode: AppError.Types.RENDER_ERROR,
+                    userMessage:  `Could not build mileage range inputs. ${AppError.BaseMessages.system.helpDesk}`,
+                    displayTarget: fuelRangeContainer,
+                })
+            });
     }
 }

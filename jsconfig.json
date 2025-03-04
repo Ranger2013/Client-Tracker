@@ -1,0 +1,22 @@
+{
+	"compilerOptions": {
+		 "module": "es2022",
+		 "target": "es2022",
+		 "baseUrl": ".",
+		 // Moderate type checking options
+		 "checkJs": false,
+		 "lib": [
+			  "es2022",
+			  "DOM",
+			  "DOM.Iterable"
+		 ]
+	},
+	"include": [
+		 "includes/js/**/*"
+	],
+	"exclude": [
+		 "old-js-code/**/*",
+		 "node_modules",
+		 "**/node_modules/*"
+	]
+}

@@ -38,7 +38,6 @@ export default function buildFuelRangeSection(iteration, values = {}, componentI
 
         // Build elements
         const elements = buildElements(structure);
-        console.log('In buildFuelRangeSection: elements: ', elements);
         
         if (!elements) return null;
 
@@ -49,18 +48,7 @@ export default function buildFuelRangeSection(iteration, values = {}, componentI
         return elements.row;
     }
     catch (err) {
-        import("../../../../../../core/errors/models/AppError.js")
-            .then(({ AppError }) => {
-                return new AppError('Error building fuel range section: ', {
-                    originalError: err,
-                    shouldLog: true,
-                    userMessage: 'Unable to create range section',
-                    errorCode: 'RENDER_ERROR',
-                    displayTarget: 'fuel-range-container',
-                    autoHandle: true
-                });
-            })
-            .catch(err => console.error('Error handling failed for building fuel range section: ', err));
+        throw err;
     }
 }
 
