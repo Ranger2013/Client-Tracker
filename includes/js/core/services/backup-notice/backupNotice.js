@@ -1,10 +1,11 @@
 import { getValidElement } from '../../utils/dom/elements.js';
-import { addListener } from '../../utils/dom/listeners.js';
+import { addListener, removeListeners } from '../../utils/dom/listeners.js';
 
 /** 
  * Constants 
  */
 const TWO_HOURS = 60 * 60 * 2 * 1000; // 2 Hours in milliseconds
+// const TWO_HOURS = 60 * 1000; // 1 minute in milliseconds for testing.
 const REMINDER_PATTERNS = ['add', 'edit', 'delete', 'dateTime', 'farrierPrices', 'schedulingOptions', 'mileageCharges', 'colorOptions'];
 const BACKUP_NOTICE_ID = 'backup-notice-component';  // Add consistent component ID
 
@@ -132,30 +133,28 @@ function hideBackupNotice(noticeDiv) {
  */
 async function closeBackupNotice({noticeEle, manageUser}) {
     try {
-        // // const { default: IndexedDBOperations } = await import("../../database/IndexedDBOperations.js");
-        // // const { removeListeners } = await import("../../utils/dom/listeners.js");
-        // // const indexed = new IndexedDBOperations();
-
-        // const db = await indexed.openDBPromise();
-        // const userSettings = await indexed.getAllStorePromise(db, indexed.stores.USERSETTINGS);
-
-        // if (!userSettings?.[0]) {
-        //     throw new Error('No user settings found');
-        // }
-
         const userSettings = await manageUser.getSettings();
-        console.log('userSettings:', userSettings); // Need to make sure we get the reminders property
-        
+        const { status, timestamp } = userSettings.reminders;
 
-        // userSettings[0].reminders.timestamp = Date.now();
-        // await indexed.clearStorePromise(db, indexed.stores.USERSETTINGS);
-        // await indexed.putStorePromise(db, userSettings[0], indexed.stores.USERSETTINGS);
+        const newSettings = {
+           status,
+           timestamp: Date.now(),
+        };
 
-        // hideBackupNotice(noticeEle);
-        // removeListeners(BACKUP_NOTICE_ID);
+        await manageUser.updateLocalUserSettings({
+            userData: newSettings,
+            settingsProperty: 'reminders',
+        });
+
+        hideBackupNotice(noticeEle);
+        removeListeners(BACKUP_NOTICE_ID);
     }
     catch (err) {
-        await errorLogs('backupNotice', 'Failed to close backup notice', err);
-        updateNoticeContent(noticeEle, 'Unable to update notification settings', true);
+        const { AppError } = await import("../../errors/models/AppError.js");
+        AppError.handleError(err, {
+            errorCode: AppError.Types.DATABASE_ERROR,
+            userMessage: AppError.BaseMessages.system.server,
+            displayTarget: noticeEle,
+        });
     }
 }

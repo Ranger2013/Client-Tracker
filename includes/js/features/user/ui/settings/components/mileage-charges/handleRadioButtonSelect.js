@@ -6,7 +6,7 @@ import populateByMileForm from "./populateByMileForm.js";
 const COMPONENT_ID = 'fuel-charges-radio';
 const RANGE_INPUT_ID = 'fuel-range-input';
 
-export default function handleRadioButtonSelect({ rangeButton, mileButton, rangeContainer, mileContainer, manageUser, componentId }) {
+export default async function handleRadioButtonSelect({ rangeButton, mileButton, rangeContainer, mileContainer, manageUser, componentId }) {
     try {
         const sections = {
             byRange: {
@@ -30,7 +30,7 @@ export default function handleRadioButtonSelect({ rangeButton, mileButton, range
                     mileContainer.classList.remove('w3-hide');
 
                     // Populate the per-mile form. It is currently hidden, but we need to populate it in case the user switches to it.
-                    await populateByMileForm({form: 'per-mile-form', manageUser});
+                    await populateByMileForm({ form: 'per-mile-form', manageUser });
                 }
             }
         };
@@ -44,8 +44,26 @@ export default function handleRadioButtonSelect({ rangeButton, mileButton, range
                 componentId: COMPONENT_ID
             })
         });
+
+        const mileageCharges = await manageUser.getMileageCharges();
+
+        if (Array.isArray(mileageCharges) && mileageCharges.length > 0) {
+            console.log('We should have mileage ranges.');
+            await listenForFuelRangeInput({ userClass: manageUser, rangeContainer, rangeInputId: RANGE_INPUT_ID });
+            mileContainer.classList.add('w3-hide');
+            rangeContainer.classList.remove('w3-hide');
+            rangeButton.checked = true;
+        }
+        else {
+            console.log('We should have per-mile charges.');
+            await populateByMileForm({ form: 'per-mile-form', manageUser });
+            rangeContainer.classList.add('w3-hide');
+            mileContainer.classList.remove('w3-hide');
+            mileButton.checked = true;
+        }
+
     }
     catch (err) {
-        console.log('Error in handleRadioButtonSelect: ', err);        
+        console.log('Error in handleRadioButtonSelect: ', err);
     }
 }

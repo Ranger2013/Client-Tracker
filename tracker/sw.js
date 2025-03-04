@@ -1,5 +1,4 @@
-import { cacheFirst, dynamicCacheName, networkFirst, staticCacheName } from "../includes/js/utils/network/swFunctions.js";
-
+import { cacheFirst, dynamicCacheName, networkFirst, staticCacheName } from "../includes/js/core/network/services/swFunctions.js";
 // Our app shell assets to cache
 const assets = [
 	// '/includes/css/w3-css.css',
@@ -205,7 +204,7 @@ const assets = [
 	// '/includes/js/utils/validation/validateAddPersonalNotesForm.js',
 	// '/includes/js/utils/validation/validateTrimmingForm.js',
 	// '/includes/js/utils/validation/validationUtils.js',
-	// '/tracker/manifest.webmanifest',
+	'/tracker/manifest.webmanifest',
 	// '/tracker/public/src/libs/trackerFallBackPage.php',
 	// '/public/siteImages/icon-192x192.png',
 	// '/public/siteImages/caret-down-white.svg',
@@ -218,7 +217,7 @@ const assets = [
 	// '/public/siteImages/nav-bars.svg',
 	// '/public/siteImages/nav_logo.png',
 	// '/public/siteImages/infoIcon.svg',
-];
+]; 
 
 self.addEventListener('install', async (evt) => {
 	try {

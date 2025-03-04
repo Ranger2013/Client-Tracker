@@ -14,7 +14,7 @@ const byRangeContainer = document.getElementById('by-range-container');
 const byMileContainer = document.getElementById('by-mile-container');
 
 // Initialize radio handling
-handleRadioButtonSelect({
+await handleRadioButtonSelect({
     rangeButton: byRangeRadioButton,
     mileButton: byPerMileRadioButton,
     rangeContainer: byRangeContainer,
