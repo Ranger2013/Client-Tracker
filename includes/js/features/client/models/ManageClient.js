@@ -19,13 +19,11 @@ export default class ManageClient {
             this.#initialized = true;
         }
         catch (error) {
-            const { AppError } = await import('../../core/errors/models/AppError.js');
-            throw new AppError('Client data initialization failed', {
-                originalError: error,
+            const { AppError } = await import("../../../core/errors/models/AppError.js");
+            AppError.process(error, {
                 errorCode: AppError.Types.INITIALIZATION_ERROR,
-                userMessage: null,
-                shouldLog: true
-            });
+                userMessage: 'Client data initialization failed',
+            }, true);
         }
     }
 
@@ -56,13 +54,11 @@ export default class ManageClient {
             return this.#findDuplicates(clientInfo);
         }
         catch (err) {
-            const { handleError } = await import("../../../../../old-js-code/js/utils/error-messages/handleError.js");
-            await handleError({
-                filename: 'getAllDuplicateClientsError',
-                consoleMsg: 'Get duplicate clients error: ',
-                err,
-                userMsg: 'Unable to retrieve duplicate clients'
-            });
+            const { AppError } = await import("../../../core/errors/models/AppError.js");
+            AppError.process(err, {
+                errorCode: AppError.Types.DATABASE_ERROR,
+                userMessage: 'Unable to retrieve duplicate clients',
+            }, true);
             return [];
         }
     }
@@ -127,13 +123,11 @@ export default class ManageClient {
             return true;  // Just return success status
         }
         catch (error) {
-            const { AppError } = await import('../../core/errors/models/AppError.js');
-            throw new AppError('Failed to add new client', {
-                originalError: error,
+            const { AppError } = await import('../../../core/errors/models/AppError.js');
+            AppError.process(error, {
                 errorCode: AppError.Types.DATABASE_ERROR,
-                userMessage: null,  // Let boss handle messages
-                shouldLog: true
-            });
+                userMessage: null,
+            }, true);
         }
     }
 
@@ -195,13 +189,11 @@ export default class ManageClient {
 
         }
         catch (error) {
-            const { AppError } = await import('../../core/errors/models/AppError.js');
-            throw new AppError('Failed to edit client', {
-                originalError: error,
+            const { AppError } = await import('../../../core/errors/models/AppError.js');
+            AppError.process(error, {
                 errorCode: AppError.Types.DATABASE_ERROR,
                 userMessage: null,
-                shouldLog: true
-            });
+            }, true);
         }
     }
 
@@ -239,9 +231,11 @@ export default class ManageClient {
             return { status: true, msg: 'Client has been removed.', type: 'delete-client' };
         }
         catch (err) {
-            const { handleError } = await import("../../../../../old-js-code/js/utils/error-messages/handleError.js");
-            await handleError('deleteClientError', 'Delete client error: ', err);
-            return { status: false, msg: `Unable to delete client at this time.<br>${helpDeskTicket}` };
+            const { AppError } = await import('../../../core/errors/models/AppError.js');
+            AppError.process(err, {
+                errorCode: AppError.Types.DATABASE_ERROR,
+                userMessage: null,
+            }, true);
         }
     }
 
@@ -292,9 +286,11 @@ export default class ManageClient {
             return { status: 'success', msg: `${clientInfo.client_name} has been duplicated successfully.` };
         }
         catch (err) {
-            const { handleError } = await import("../../../../../old-js-code/js/utils/error-messages/handleError.js");
-            await handleError('addDuplicateClientError', 'Add duplicate client error: ', err);
-            return { status: false, msg: `Unable to add duplicate client at this time.<br>${helpDeskTicket}` };
+            const { AppError } = await import('../../../core/errors/models/AppError.js');
+            AppError.process(err, {
+                errorCode: AppError.Types.DATABASE_ERROR,
+                userMessage: null,
+            }, true);
         }
     }
 
@@ -324,9 +320,11 @@ export default class ManageClient {
             return { status: true, msg: 'Duplicate client has been removed.' };
         }
         catch (err) {
-            const { handleError } = await import("../../../../../old-js-code/js/utils/error-messages/handleError.js");
-            await handleError('deleteDuplicateClientError', 'Delete duplicate client error: ', err);
-            return { status: false, msg: `Unable to delete duplicate client at this time.<br>${helpDeskTicket}` };
+            const { AppError } = await import('../../../core/errors/models/AppError.js');
+            AppError.process(err, {
+                errorCode: AppError.Types.DATABASE_ERROR,
+                userMessage: null,
+            }, true);
         }
     }
 
@@ -392,9 +390,11 @@ export default class ManageClient {
             return { status: true, msg: `${horseName} has been added.` };
         }
         catch (err) {
-            const { handleError } = await import("../../../../../old-js-code/js/utils/error-messages/handleError.js");
-            await handleError('addNewHorseError', 'Add new horse error: ', err);
-            return { status: false, msg: `Unable to add ${horseName} at this time.<br>${helpDeskTicket}` };
+            const { AppError } = await import('../../../core/errors/models/AppError.js');
+            AppError.process(err, {
+                errorCode: AppError.Types.DATABASE_ERROR,
+                userMessage: null,
+            }, true);
         }
     }
 
@@ -453,9 +453,11 @@ export default class ManageClient {
             return { status: true, msg: `${horseName} has been updated.` };
         }
         catch (err) {
-            const { handleError } = await import("../../../../../old-js-code/js/utils/error-messages/handleError.js");
-            await handleError('editClientHorseError', 'Edit client horse error: ', err);
-            return { status: false, msg: `Unable to edit ${horseName} at this time.<br>${helpDeskTicket}` };
+            const { AppError } = await import('../../../core/errors/models/AppError.js');
+            AppError.process(err, {
+                errorCode: AppError.Types.DATABASE_ERROR,
+                userMessage: null,
+            }, true);
         }
     }
 
@@ -523,9 +525,11 @@ export default class ManageClient {
             return { status: true, msg: `Horse has been deleted.` };
         }
         catch (err) {
-            const { handleError } = await import("../../../../../old-js-code/js/utils/error-messages/handleError.js");
-            await handleError('deleteClientHorseError', 'Delete client horse error: ', err);
-            return { status: false, msg: `Unable to delete horse at this time.<br>${helpDeskTicket}` };
+            const { AppError } = await import('../../../core/errors/models/AppError.js');
+            AppError.process(err, {
+                errorCode: AppError.Types.DATABASE_ERROR,
+                userMessage: null,
+            }, true);
         }
     }
 
@@ -541,9 +545,11 @@ export default class ManageClient {
             return clientList || [];
         }
         catch (err) {
-            const { handleError } = await import("../../../../../old-js-code/js/utils/error-messages/handleError.js");
-            await handleError('getClientScheduleListError', 'Get client schedule list error: ', err);
-            throw err;
+            const { AppError } = await import('../../../core/errors/models/AppError.js');
+            AppError.process(err, {
+                errorCode: AppError.Types.DATABASE_ERROR,
+                userMessage: null,
+            }, true);
         }
     }
 
@@ -559,9 +565,11 @@ export default class ManageClient {
             return clientTrimmingInfo?.trimmings || [];
         }
         catch (err) {
-            const { handleError } = await import("../../../../../old-js-code/js/utils/error-messages/handleError.js");
-            await handleError('getAllClientsTrimmingInfoError', 'Get all clients trimming info error: ', err);
-            throw err;
+            const { AppError } = await import('../../../core/errors/models/AppError.js');
+            AppError.process(err, {
+                errorCode: AppError.Types.DATABASE_ERROR,
+                userMessage: null,
+            }, true);
         }
     }
 
@@ -579,8 +587,11 @@ export default class ManageClient {
             return trimmingInfo?.trimmings || [];
         }
         catch (err) {
-            const { handleError } = await import("../../../../../old-js-code/js/utils/error-messages/handleError.js");
-            await handleError('getClientTrimmingInfoError', 'Get client trimming info error: ', err);
+            const { AppError } = await import('../../../core/errors/models/AppError.js');
+            AppError.process(err, {
+                errorCode: AppError.Types.DATABASE_ERROR,
+                userMessage: null,
+            }, true);
             return [];
         }
     }
@@ -621,9 +632,11 @@ export default class ManageClient {
             return { status: true, msg: 'Client schedule updated successfully.' };
         }
         catch (err) {
-            const { handleError } = await import("../../../../../old-js-code/js/utils/error-messages/handleError.js");
-            await handleError('updateClientScheduleError', 'Update client schedule error: ', err);
-            return { status: false, msg: `Unable to update the client schedule.<br>${helpDeskTicket}` };
+            const { AppError } = await import('../../../core/errors/models/AppError.js');
+            AppError.process(err, {
+                errorCode: AppError.Types.DATABASE_ERROR,
+                userMessage: null,
+            }, true);
         }
     }
 

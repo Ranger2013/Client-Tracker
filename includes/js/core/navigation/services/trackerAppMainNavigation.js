@@ -104,10 +104,10 @@ const ROUTES = {
 // Define the error handling dom element
 const PAGE_MSG = 'page-msg';
 
-export default async function mainTrackerNavigation() {
+export default async function mainTrackerNavigation({ manageUser, manageClient }) {
     try {
         setupNavigationControls();
-        await setupRouteListeners();
+        await setupRouteListeners({ manageUser, manageClient });
     }
     catch (error) {
         const { AppError } = await import('../../errors/models/AppError.js');
@@ -140,7 +140,7 @@ function setupNavigationControls() {
     }
 }
 
-async function setupRouteListeners() {
+async function setupRouteListeners({ manageUser, manageClient }) {
     try {
         // Setup route handlers
         Object.values(ROUTES.dynamic).forEach(section => {
@@ -151,7 +151,7 @@ async function setupRouteListeners() {
                         if (element) {
                             element.addEventListener('click', async (evt) => {
                                 evt.preventDefault();
-                                await selectPage({ evt, page: route.page });
+                                await selectPage({ evt, page: route.page, manageUser, manageClient });
                             });
                         }
                     });

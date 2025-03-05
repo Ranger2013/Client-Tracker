@@ -31,7 +31,7 @@ export default class ManageUser {
             // Process because this is a worker, let parent handle display
             await AppError.process(error, {
                 errorCode: AppError.Types.INITIALIZATION_ERROR,
-                userMessage: AppError.BaseMessages.system.settingsError,
+                userMessage: AppError.BaseMessages.system.generic,
                 shouldLog: true
             }, true);
         }
@@ -60,7 +60,7 @@ export default class ManageUser {
             // Process - let caller handle display
             await AppError.process(error, {
                 errorCode: AppError.Types.SETTINGS_ERROR,
-                userMessage: AppError.BaseMessages.settings.loadFailed,
+                userMessage: AppError.BaseMessages.system.server,
                 shouldLog: true
             }, true);
         }
@@ -154,6 +154,21 @@ export default class ManageUser {
         catch (error) {
             // Just throw - parent getSettings already processed the error
             throw error;
+        }
+    }
+
+    /**
+     * Gets the user's Personal Notes from the personal_notes object store
+     * @returns {Promise<Array|null>} Array of personal notes or null if none found
+     */
+    async getUserPersonalNotes() {
+        try{
+            const db = await this.#indexed.openDBPromise();
+            const personalNotes = await this.#indexed.getAllStorePromise(db, this.#indexed.stores.PERSONALNOTES);
+            return personalNotes ?? null;
+        }
+        catch(err){
+            throw err;
         }
     }
 

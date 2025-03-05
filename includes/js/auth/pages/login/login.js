@@ -50,11 +50,10 @@ async function handleLogIn(evt) {
 
     }
     catch (err) {
-        const { handleError } = await import("../../../../../old-js-code/js/utils/error-messages/handleError.js");
-        await handleError({
-            fileName: 'handleLogInError',
-            consoleMsg: 'Error in the handle login function.',
-            error: err
+        const { AppError } = await import("../../../core/errors/models/AppError.js");
+        AppError.handleError(err, {
+            errorCode: AppError.Types.AUTHORIZATION_ERROR,
+            userMessage: AppError.BaseMessages.system.authorization,
         });
         safeDisplayMessage({elementId: 'form-msg', message: 'Login failed. Please contact administrator.'});
     }

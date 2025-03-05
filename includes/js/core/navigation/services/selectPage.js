@@ -23,24 +23,20 @@ const main = document.getElementById('main');
  * @param {boolean|null} [params.closeMenu] - Whether to skip full menu close
  * @param {string|null} [params.primaryKey] - Record identifier
  */
-export default async function selectPage({ evt, page, cID = null, closeMenu = null, primaryKey }) {
+export default async function selectPage({ evt, page, cID = null, closeMenu = null, primaryKey, manageUser, manageClient }) {
     evt.preventDefault();
-    try {
-        // Clean up any server-rendered page listeners before SPA navigation
-        cleanupServerRenderedListeners();
-
         // Page configuration map
         const PAGE_CONFIG = {
             clients: {
                 active: {
-                    module: "../page-builders/pages/clients/schedule-list/buildScheduleListPage.js",
+                    module: "../../layout/client/pages/schedule-list/buildAppointmentListPage.js",
                     getState: () => "/tracker/clients/appointments/?active=yes",
-                    getArgs: () => [{ active: 'yes', mainContainer: main }]
+                    getArgs: () => [{ active: 'yes', mainContainer: main, manageClient, manageUser }]
                 },
                 inactive: {
-                    module: "../page-builders/pages/clients/schedule-list/buildScheduleListPage.js",
+                    module: "../../layout/client/pages/schedule-list/buildAppointmentListPage.js",
                     getState: () => "/tracker/clients/appointments/?active=no",
-                    getArgs: () => [{ active: 'no', mainContainer: main }]
+                    getArgs: () => [{ active: 'no', mainContainer: main, manageClient, manageUser }]
                 },
                 add: {
                     module: "../page-builders/pages/clients/add-edit-client/buildAddEditClientPage.js",
@@ -97,19 +93,24 @@ export default async function selectPage({ evt, page, cID = null, closeMenu = nu
         };
 
         const PAGE_MAPPINGS = {
-            'activeClients': PAGE_CONFIG.clients.active,
-            'inactiveClients': PAGE_CONFIG.clients.inactive,
-            'addClient': PAGE_CONFIG.clients.add,
-            'duplicateClient': PAGE_CONFIG.clients.duplicate,
-            'deleteDuplicateClient': PAGE_CONFIG.clients.deleteDuplicate,
-            'addMileage': PAGE_CONFIG.management.mileage,
-            'addExpenses': PAGE_CONFIG.management.expenses.add,
-            'editExpenses': PAGE_CONFIG.management.expenses.edit,
-            'addPersonalNotes': PAGE_CONFIG.notes.add,
-            'editPersonalNotes': PAGE_CONFIG.notes.edit,
-            'viewPersonalNotes': PAGE_CONFIG.notes.view
+            'activeClients': { config: PAGE_CONFIG.clients.active, displayName: 'Active Clients' },
+            'inactiveClients': { config: PAGE_CONFIG.clients.inactive, displayName: 'Inactive Clients' },
+            'addClient': { config: PAGE_CONFIG.clients.add, displayName: 'Add Client' },
+            'duplicateClient': { config: PAGE_CONFIG.clients.duplicate, displayName: 'Duplicate Client' },
+            'deleteDuplicateClient': { config: PAGE_CONFIG.clients.deleteDuplicate, displayName: 'Delete Duplicate Client' },
+            'addMileage': { config: PAGE_CONFIG.management.mileage, displayName: 'Add Mileage' },
+            'addExpenses': { config: PAGE_CONFIG.management.expenses.add, displayName: 'Add Expenses' },
+            'editExpenses': { config: PAGE_CONFIG.management.expenses.edit, displayName: 'Edit Expenses' },
+            'addPersonalNotes': { config: PAGE_CONFIG.notes.add, displayName: 'Add Personal Notes' },
+            'editPersonalNotes': { config: PAGE_CONFIG.notes.edit, displayName: 'Edit Personal Notes' },
+            'viewPersonalNotes': { config: PAGE_CONFIG.notes.view, displayName: 'View Personal Notes' }
         };
 
+    try {
+        // Clean up any server-rendered page listeners before SPA navigation
+        cleanupServerRenderedListeners();
+
+        // Clean up any previous SPA pages before loading new page
         await cleanupPreviousPage();
 
         // Conditional full navigation reset
@@ -121,23 +122,30 @@ export default async function selectPage({ evt, page, cID = null, closeMenu = nu
         dropdowns.forEach(dropdown => dropdown.classList.remove('w3-show'));
         arrows.forEach(arrow => arrow.classList.remove('up'));
 
-        const pageConfig = PAGE_MAPPINGS[page];
+        const pageMapping = PAGE_MAPPINGS[page];
 
-        if (!pageConfig) throw new Error(`Unknown page: ${page}`);
+        if (!pageMapping) throw new Error(`Unknown page: ${page}`);
+
+        const { config: pageConfig, displayName } = pageMapping;
 
         await loadNewPage(pageConfig, page, cID, primaryKey); // Pass page here
 
-    } catch (err) {
+    }
+    catch (err) {
+        console.log('In catch block for the display navigation error');
+
         const { displayNavigationError } = await import('../components/backupErrorPage.js');
-        
-        // Log the error but handle display separately
-        const { errorLogs } = await import('../../errors/services/errorLogs.js');
-        await errorLogs('selectPageError', `Navigation failed for page: ${page}`, err);
 
         // Display backup page with context
         displayNavigationError({
-            requestedPage: page,
+            requestedPage: PAGE_MAPPINGS[page].displayName || page,
             errorType: err.name === 'ImportError' ? 'load' : 'build'
+        });
+
+        const { AppError } = await import("../../errors/models/AppError.js");
+        AppError.handleError(err, {
+            errorCode: AppError.Types.RENDER_ERROR,
+            userMessage: null,
         });
     }
 }
@@ -189,14 +197,6 @@ async function importModule(modulePath) {
             throw importErr;
         }
     }
-}
-
-async function handlePageError(err) {
-    const { default: backupErrorPage } = await import("../../../../../old-js-code/js/utils/error-messages/backupErrorPage.js");
-    const { default: errorLogs } = await import('../../../../../old-js-code/js/utils/error-messages/errorLogs.js');
-
-    backupErrorPage();
-    await errorLogs('selectPageError', 'Select Page Error: ', err);
 }
 
 function cleanupServerRenderedListeners() {

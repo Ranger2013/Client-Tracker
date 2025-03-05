@@ -17,10 +17,11 @@ export async function getTerms(type) {
         }
     }
     catch (err) {
-        const { errorLogs } = await import("../../../../core/errors/services/errorLogs.js");
-        await errorLogs('getTermsError', `Error loading ${type}`, err);
-        
-        const { default: openModal } = await import("../../../../core/services/modal/openModal.js");
+        const [{default: openModal}, { AppError }] = await Promise.all([
+            import("../../../../core/services/modal/openModal.js"),
+            import("../../../../core/errors/models/AppError.js")
+        ]);
+
         openModal({ 
             content: `
                 <div class="w3-container w3-center">
@@ -28,6 +29,11 @@ export async function getTerms(type) {
                     <p>Unable to load content. Please try again later.</p>
                 </div>
             `
+        });
+
+        AppError.handleError(err, {
+            errorCode: AppError.Types.RENDER_ERROR,
+            userMessage: AppError.BaseMessages.system.render,
         });
     }
 }

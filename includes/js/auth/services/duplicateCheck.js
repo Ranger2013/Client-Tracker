@@ -1,5 +1,5 @@
-import { authAPI } from "../../core/network/api/apiEndpoints";
-import { fetchData } from "../../core/network/services/network";
+import { authAPI } from "../../core/network/api/apiEndpoints.js";
+import { fetchData } from "../../core/network/services/network.js";
 
 /**
  * Checks if a value already exists in the database

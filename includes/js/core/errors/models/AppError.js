@@ -12,25 +12,9 @@ import { displayErrorMessage, safeDisplayMessage } from '../../utils/dom/message
  */
 
 /**
- * Creates a new AppError for handling application-wide errors
- * @param {string} message - Technical error message for developers and logs
- * @param {{
- *   originalError?: Error,
- *   shouldLog?: boolean,
- *   userMessage?: string|null,
- *   errorCode?: 'INITIALIZATION_ERROR'|'NAVIGATION_ERROR'|'BACKUP_ERROR'|'SETTINGS_ERROR'|'DATABASE_ERROR'|'API_ERROR'|'AUTHORIZATION_ERROR'|'RENDER_ERROR'|'INPUT_ERROR',
- *   displayTarget?: string,
- *   autoHandle?: boolean,
- *   feature?: string
- * }} [config] - Error configuration
- * 
- * @example
- * new AppError('Database query failed', {
- *   originalError: dbError,
- *   errorCode: AppError.Types.DATABASE_ERROR,
- *   userMessage: 'Unable to save your data',
- *   displayTarget: 'form-msg'
- * });
+ * Creates a new AppError for handling application-wide errors.
+ * @class
+ * @extends Error
  */
 export class AppError extends Error {
     static #messageCache = new Map();
@@ -38,10 +22,11 @@ export class AppError extends Error {
     static get BaseMessages() {
         return {
             system: {
-                generic: 'A system error occurred. Please refresh the page.',
+                generic: 'A system error occurred.',
                 network: 'Network connection error. Please check your connection.',
                 server: 'Server error occurred. Please try again later.',
                 initialization: 'System initialization failed. Please refresh the page.',
+                render: 'An error occurred while trying to render the page.',
                 helpDesk: 'If this problem persists, please submit a new Help Desk Ticket for this issue. Thank You'
             },
 
@@ -90,9 +75,9 @@ export class AppError extends Error {
     }
 
     /**
-     * Creates a new AppError instance
-     * @param {string} [message='An unexpected error occurred'] - Technical error message
-     * @param {AppErrorConfig} [config={}] - Error configuration options
+     * Creates a new AppError instance.
+     * @param {string} [message='An unexpected error occurred'] - Technical error message.
+     * @param {AppErrorConfig} [config={}] - Error configuration options.
      */
     constructor(message = 'An unexpected error occurred', config = {}) {
         super(message); // Calls Error constructor, sets this.message
@@ -157,9 +142,9 @@ export class AppError extends Error {
     }
 
     /**
-     * Static helper to handle any error type
-     * @param {Error} err - Error to handle
-     * @param {Object} [config] - Config to use if creating new AppError
+     * Static helper to handle any error type.
+     * @param {Error} err - Error to handle.
+     * @param {Object} [config] - Config to use if creating new AppError.
      * @returns {Promise<void>}
      */
     static async handleError(err, config = {}) {
@@ -176,10 +161,10 @@ export class AppError extends Error {
     }
 
     /**
-     * Process any error, creating AppError instance only if needed
-     * @param {Error} error - The error to process
-     * @param {Object} config - Configuration for new AppError if needed
-     * @param {boolean} [shouldThrow=true] - Whether to throw the error after processing
+     * Process any error, creating AppError instance only if needed.
+     * @param {Error} error - The error to process.
+     * @param {Object} config - Configuration for new AppError if needed.
+     * @param {boolean} [shouldThrow=true] - Whether to throw the error after processing.
      * @returns {Promise<AppError>}
      */
     static async process(error, config = {}, shouldThrow = true) {
@@ -198,7 +183,9 @@ export class AppError extends Error {
     }
 
     /**
-     * Handles error with logging and display
+     * Handles error with logging and display.
+     * @param {boolean} [shouldThrow=false] - Whether to throw the error after handling.
+     * @returns {Promise<AppError>}
      */
     async handle(shouldThrow = false) {
         try {
@@ -230,14 +217,17 @@ export class AppError extends Error {
     }
 
     /**
-     * Logs error to server with dynamic imports
+     * Logs error to server with dynamic imports.
      * @private
+     * @returns {Promise<void>}
      */
     async logServerSideError() {
         try {
             // Import dependencies
-            const { fetchData } = await import('../../network/services/network.js');
-            const { getValidationToken } = await import('../../auth/services/tokenUtils.js');
+            const [{ fetchData }, { getValidationToken }] = await Promise.all([
+                import('../../network/services/network.js'),
+                import('../../auth/services/tokenUtils.js')
+            ]);
 
             const token = getValidationToken();
             if (!token) {
@@ -279,7 +269,9 @@ export class AppError extends Error {
     }
 
     /**
-     * Main error logging method
+     * Main error logging method.
+     * @param {boolean} [shouldRethrow=false] - Whether to rethrow the error after logging.
+     * @returns {Promise<void>}
      */
     async logError(shouldRethrow = false) {
         // Single source of console logging
@@ -309,7 +301,8 @@ export class AppError extends Error {
     }
 
     /**
-     * Displays error message to user
+     * Displays error message to user.
+     * @returns {Promise<void>}
      */
     async displayError() {
         try {
@@ -329,7 +322,8 @@ export class AppError extends Error {
     }
 
     /**
-     * Fallback error display
+     * Fallback error display.
+     * @returns {void}
      */
     displayFallbackError() {
         try {
@@ -341,7 +335,8 @@ export class AppError extends Error {
     }
 
     /**
-     * Queues error for sync when offline
+     * Queues error for sync when offline.
+     * @returns {Promise<void>}
      */
     async queueForSync() {
         try {
@@ -361,7 +356,10 @@ export class AppError extends Error {
     }
 
     /**
-     * Creates an AppError from an existing error
+     * Creates an AppError from an existing error.
+     * @param {Error} error - The existing error.
+     * @param {Object} [config] - Configuration for the new AppError.
+     * @returns {AppError}
      */
     static from(error, config = {}) {
         return new AppError(error.message, {

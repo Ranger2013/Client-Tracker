@@ -28,7 +28,6 @@ export async function dropDownClientMenu(evt) {
         }
 
     } catch (err) {
-        const { default: errorLogs } = await import("../../../../utils/error-messages/errorLogs.js");
-        await errorLogs('dropDownClientMenuError', 'Drop down client menu error:', err);
+        throw err;
     }
 }

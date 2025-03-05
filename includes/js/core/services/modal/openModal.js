@@ -1,5 +1,5 @@
-import { buildEle } from "../../utils/dom/elements";
-import { addListener } from "../../utils/dom/listeners";
+import { buildEle } from "../../utils/dom/elements.js";
+import { addListener } from "../../utils/dom/listeners.js";
 
 // DOM Elements
 const modal = document.getElementById('modal');

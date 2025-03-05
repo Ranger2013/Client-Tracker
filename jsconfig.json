@@ -14,9 +14,9 @@
 	"include": [
 		 "includes/js/**/*"
 	],
-	"exclude": [
-		 "old-js-code/**/*",
-		 "node_modules",
-		 "**/node_modules/*"
-	]
+// 	// "excludePath": [
+// 	// 	 "old-js-code/**/*",
+// 	// 	 "node_modules",
+// 	// 	 "**/node_modules/*"
+// 	// ]
 }

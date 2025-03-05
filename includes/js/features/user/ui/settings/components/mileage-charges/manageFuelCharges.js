@@ -56,53 +56,15 @@ export async function addFuelCharges({ userData, formType, manageUser }) {
         return await handleMileageChargesIDBOoperation({ userData: mileageCharges, manageUser });
     }
     catch(err){
-        const { handleError } = await import("../../../../../../../../old-js-code/js/utils/error-messages/handleError.js");
-        await handleError({
-            filename: 'addFuelChargesError',
-            consoleMsg: 'Add fuel charges error: ',
-            err,
+        const { AppError } = await import("../../../../../../core/errors/models/AppError.js");
+        AppError.handleError(err, {
+            errorCode: AppError.Types.FORM_SUBMISSION_ERROR,
+            userMessage: 'Failed to add fuel charges',
+            displayTarget: 'form-msg',
         });
         return false;
     }
 }
-
-
-// // Cleaner, more direct approach
-// export async function addFuelChargesByRange({ userData, manageUser }) {
-//     try {
-//         // Direct data transformation
-//         const mileageCharges = await buildMileageStructure({ formType: 'range', userData });
-
-//         return await handleMileageChargesIDBOoperation({ userData: mileageCharges, manageUser });
-//     }
-//     catch (err) {
-//         const { handleError } = await import("../../../../utils/error-messages/handleError.js");
-//         await handleError({
-//             filename: 'addFuelChargesByRangeError',
-//             consoleMsg: 'Add fuel charges by range error: ',
-//             err
-//         });
-//         return false;
-//     }
-// }
-
-// export async function addFuelChargesByMile({ userData, manageUser }) {
-//     try {
-//         // Direct data transformation
-//         const mileageCharges = await buildMileageStructure({ formType: 'mile', userData });
-
-//        return await handleMileageChargesIDBOoperation({ userData: mileageCharges, manageUser });
-//     }
-//     catch (err) {
-//         const { handleError } = await import("../../../../utils/error-messages/handleError.js");
-//         await handleError({
-//             filename: 'addFuelChargesByMileError',
-//             consoleMsg: 'Add fuel charges by mile error: ',
-//             err
-//         });
-//         return false;
-//     }
-// }
 
 // Helper function for data transformation
 async function buildRangeData({ userData }) {
@@ -116,13 +78,12 @@ async function buildRangeData({ userData }) {
         );
     }
     catch (err) {
-        const { handleError } = await import("../../../../../../../../old-js-code/js/utils/error-messages/handleError.js");
-        await handleError({
-            filename: 'buildRangeDataError',
-            consoleMsg: 'Build range data error: ',
-            err
-        });
-        throw err;
+        const { AppError } = await import("../../../../../../core/errors/models/AppError.js");
+        AppError.process(err, {
+            errorCode: AppError.Types.DATA_ERROR,
+            userMessage: 'Failed to build range data',
+            displayTarget: 'form-msg',
+        }, true);
     }
 }
 
@@ -174,13 +135,11 @@ async function handleMileageChargesIDBOoperation({ userData, manageUser }) {
         return true;
     }
     catch (err) {
-        const { handleError } = await import("../../../../../../../../old-js-code/js/utils/error-messages/handleError.js");
-        await handleError({
-            filename: 'handleIDBOoperationError',
-            consoleMsg: 'Handle IDBO operation error: ',
-            err
-        });
-
-        throw err;
+        const { AppError } = await import("../../../../../../core/errors/models/AppError.js");
+        AppError.process(err, {
+            errorCode: AppError.Types.DATABASE_ERROR,
+            userMessage: AppError.BaseMessages.system.generic,
+            displayTarget: 'form-msg',
+        }, true);
     }
 }

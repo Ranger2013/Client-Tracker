@@ -1,4 +1,4 @@
-import { clearMsg } from '../../../../core/utils/dom/messages.js';
+import { clearMsg } from '../../../../../../core/utils/dom/messages.js';
 
 /**
  * Sets the active tab that the user has selected.
@@ -8,7 +8,7 @@ import { clearMsg } from '../../../../core/utils/dom/messages.js';
  * @param {Object} tabs - An object containing the list of tabs for the page.
  * @param {Element|string} msgElement - The Element Node or the string ID of the element to remove the message.
  */
-export function setActiveTab(evt, tabs, msgElement) {
+export function setActiveTab({evt, tabs, msgElement}) {
 	// Clear any messages when the user selects a different tab
 	clearMsg({ container: msgElement });
 

@@ -81,16 +81,13 @@ export async function comparePasswords(evt, passwordFieldId, errorContainer, sub
 	}
 	catch (error) {
 		const { AppError } = await import('../../core/errors/models/AppError.js');
-		const { ErrorTypes } = await import('../../core/errors/constants/errorTypes.js');
-		const { handleError } = await import('../../core/errors/services/errorHandler.js');
 
-		await handleError(new AppError('Password validation failed', {
-			originalError: error,
+		AppError.handleError(error, {
 			errorCode: ErrorTypes.INPUT_ERROR,
 			userMessage: 'Unable to validate password. Please try again.',
 			displayTarget: 'form-msg',
 			shouldLog: false
-		}));
+		})
 
 		return false; // Ensure we return false on error
 	}
@@ -123,16 +120,13 @@ export async function checkPasswordStrength(evt, strengthBadge, errorContainer, 
 	catch (error) {
 		console.warn('Error in checkPasswordStrength:', error);
 		const { AppError } = await import('../../core/errors/models/AppError.js');
-		const { ErrorTypes } = await import('../../core/errors/constants/errorTypes.js');
-		const { handleError } = await import('../../core/errors/services/errorHandler.js');
 
-		await handleError(new AppError('Password strength check failed', {
-			originalError: error,
+		AppError.handleError(error, {
 			errorCode: ErrorTypes.INPUT_ERROR,
 			userMessage: 'Unable to check password strength. Please ensure your password meets the requirements.',
 			displayTarget: 'form-msg',
 			shouldLog: false
-		}));
+		});
 
 		return false; // Ensure we return false on error
 	}

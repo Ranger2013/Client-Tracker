@@ -3,7 +3,7 @@ import { buildEle } from "../../../../../../core/utils/dom/elements.js";
 export default function buildInputBlocks(numBlocks, inputName, form, display, value = null) {
     try {
         // Resolve display element
-        const displayEle = typeof display === 'string' 
+        const displayEle = typeof display === 'string'
             ? document.getElementById(display)
             : display;
 
@@ -20,28 +20,26 @@ export default function buildInputBlocks(numBlocks, inputName, form, display, va
                 displayEle.appendChild(buildBlock(i + 1, inputName, blockValue));
             }
         }
-		  else if (numBlocks < currentBlocks && numBlocks !== 0 && numBlocks !== '') {
+        else if (numBlocks < currentBlocks && numBlocks !== 0 && numBlocks !== '') {
             // Remove excess blocks
             while (displayEle.children.length > numBlocks) {
                 displayEle.removeChild(displayEle.lastChild);
             }
         }
-		  else if (numBlocks === 0) {
+        else if (numBlocks === 0) {
             displayEle.innerHTML = '';
         }
     }
     catch (err) {
         import("../../../../../../core/errors/models/AppError.js")
-        .then(({AppError}) => {
-            throw new AppError('Error building accessory inputs: ', {
-                originalError: err,
-                shouldLog: true,
-                userMessage: 'Unable to create accessory inputs',
-                errorCode: 'RENDER_ERROR',
-                displayTarget: display,
-            }).handle();
-        })
-        .catch(err => console.error('Error handler failed:', err));
+            .then(({ AppError }) => {
+                AppError.handleError(err, {
+                    errorCode: AppError.Types.RENDER_ERROR,
+                    userMessage: 'Error building accessory inputs',
+                    displayTarget: display
+                });
+            })
+            .catch(err => console.error('Error handler failed:', err));
     }
 }
 
@@ -89,7 +87,7 @@ function buildBlock(index, name, value = null) {
     };
 
     // Build all elements in one go using map
-    const [block, nameLabel, nameInput, costLabel, costInput] = 
+    const [block, nameLabel, nameInput, costLabel, costInput] =
         Object.entries(blockConfig).map(([_, config]) => buildEle(config));
 
     // Set values and build structure
