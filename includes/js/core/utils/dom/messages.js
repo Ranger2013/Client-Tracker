@@ -7,7 +7,7 @@ import { getValidElement } from './elements.js';
  * @param {string} options.message Message to display
  * @param {boolean} [options.isSuccess=false] If true, shows as success message
  * @param {string} [options.color='w3-text-green'] CSS class for success color
- * @returns {Promise<void>}
+ * @returns {<void>}
  */
 export function safeDisplayMessage({
     elementId,

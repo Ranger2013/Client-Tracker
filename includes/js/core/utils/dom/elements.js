@@ -75,3 +75,10 @@ export function getValidElement(element) {
 	return element;
 }
 
+export function buildElementsFromConfig(config) {
+	return Object.entries(config).reduce((acc, [key, value]) => {
+		acc[key] = buildEle(value);
+		return acc;
+	}, {});
+}
+

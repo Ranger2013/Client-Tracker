@@ -1,3 +1,5 @@
+import { AppError } from '../../errors/models/AppError.js';
+
 /**
  * @typedef {Object} StoreConfig
  * @property {string} [keyPath] - Primary key path
@@ -121,16 +123,21 @@ export default class IndexedDBOperations {
         ERRORQUEUE: 'error_queue', // For storing errors when offline
     };
 
-    async #handleError(details) {
-        const [{ handleError }, { DOM_IDS }] = await Promise.all([
-            import("../../../../old-js-code/js/utils/error-messages/handleError.js"),
-            import("../../../../old-js-code/js/utils/dom/domConstants.js")
-        ]);
-        
-        await handleError({
-            ...details,
-            errorEle: 'page-msg'
-        });
+    /**
+     * Handles errors using the AppError class.
+     * @param {Object} details - The error details.
+     * @param {string} details.consoleMsg - The console message to log.
+     * @param {Error} details.err - The error object.
+     * @param {string} details.userMsg - The user message to display.
+     * @returns {Promise<void>}
+     */
+    async #handleError({ consoleMsg, err, userMsg }) {
+        const { AppError } = await import('../../errors/models/AppError.js');
+        await AppError.process(err, {
+            errorCode: AppError.Types.DATABASE_ERROR,
+            userMessage: userMsg,
+            displayTarget: 'page-msg'
+        }, true);
     }
 
     /**
@@ -155,12 +162,10 @@ export default class IndexedDBOperations {
         } 
         catch (err) {
             await this.#handleError({
-                filename: 'openDBPromiseError',
                 consoleMsg: 'Database open failed: ',
                 err,
                 userMsg: 'Unable to access local storage'
             });
-            throw err;
         }
     }
 
@@ -213,12 +218,10 @@ export default class IndexedDBOperations {
         }
         catch (err) {
             await this.#handleError({
-                filename: 'transReadWriteError',
                 consoleMsg: `Transaction error in store ${store}: `,
                 err,
                 userMsg: 'Unable to access storage'
             });
-            throw err;
         }
     }
 
@@ -237,17 +240,15 @@ export default class IndexedDBOperations {
         }
         catch (err) {
             await this.#handleError({
-                filename: 'transReadOnlyError',
                 consoleMsg: `Failed to access store ${store}: `,
                 err,
                 userMsg: 'Unable to read from storage'
             });
-            throw err;
         }
     }
 
     getLastKeyForID(store) {
-        return new Promise(async (resolve, reject) => {
+        return new Promise(async (resolve) => {
             // Open the idb db
             const db = await this.openDBPromise();
 
@@ -268,12 +269,10 @@ export default class IndexedDBOperations {
 
             req.onerror = async err => {
                 await this.#handleError({
-                    filename: 'getLastKeyForIDError',
                     consoleMsg: `Failed to get last key from ${store}: `,
                     err,
                     userMsg: 'Unable to generate new ID'
                 });
-                reject(err);
             };
         });
     }
@@ -288,7 +287,7 @@ export default class IndexedDBOperations {
     * @returns {Promise<any>} A promise that resolves with the result of the operation.
     */
     addStorePromise(db, data, store, clearStore = false, transaction) {
-        return new Promise(async (resolve, reject) => {
+        return new Promise(async (resolve) => {
             try {
                 const myStore = await this.transReadWrite(db, store, transaction);
 
@@ -296,12 +295,10 @@ export default class IndexedDBOperations {
                     const clearRequest = myStore.clear();
                     clearRequest.onerror = async err => {
                         await this.#handleError({
-                            filename: 'addStorePromiseError',
                             consoleMsg: `Error clearing store ${store}: `,
                             err,
                             userMsg: 'Unable to add data'
                         });
-                        reject(err);
                     };
                 }
 
@@ -309,21 +306,17 @@ export default class IndexedDBOperations {
                 request.onsuccess = (evt) => resolve(evt.target.result);
                 request.onerror = async err => {
                     await this.#handleError({
-                        filename: 'addStorePromiseError',
                         consoleMsg: `Error adding data to ${store}: `,
                         err,
                         userMsg: 'Unable to add data'
                     });
-                    reject(err);
                 };
             } catch (err) {
                 await this.#handleError({
-                    filename: 'addStorePromiseError',
                     consoleMsg: `Error initializing store ${store}: `,
                     err,
                     userMsg: 'Unable to add data'
                 });
-                reject(err);
             }
         });
     }
@@ -339,7 +332,7 @@ export default class IndexedDBOperations {
     * @returns {Promise<any>} A promise that resolves with the result of the operation.
     */
     putStorePromise(db, data, store, clearStore = false, transaction) {
-        return new Promise(async (resolve, reject) => {
+        return new Promise(async (resolve) => {
             const myStore = await this.transReadWrite(db, store, transaction);
 
             if (clearStore) {
@@ -350,12 +343,10 @@ export default class IndexedDBOperations {
             response.onsuccess = () => resolve(response.result);
             response.onerror = async err => {
                 await this.#handleError({
-                    filename: 'putStorePromiseError',
                     consoleMsg: `Error updating data in ${store}: `,
                     err,
                     userMsg: 'Unable to update data'
                 });
-                reject(err);
             };
         });
     }
@@ -370,7 +361,7 @@ export default class IndexedDBOperations {
     * @returns {Promise<any>} A promise that resolves with the result of the operation.
     */
     getStorePromise(db, store, key, transaction) {
-        return new Promise(async (resolve, reject) => {
+        return new Promise(async (resolve) => {
             const myStore = await this.transReadOnly(db, store, transaction);
 
             let request = myStore.get(key);
@@ -381,12 +372,10 @@ export default class IndexedDBOperations {
 
             request.onerror = async err => {
                 await this.#handleError({
-                    filename: 'getStorePromiseError',
                     consoleMsg: `Error retrieving data from ${store}: `,
                     err,
                     userMsg: 'Unable to retrieve data'
                 });
-                reject(err);
             };
         });
     }
@@ -400,8 +389,7 @@ export default class IndexedDBOperations {
     * @param {bool} noKeyAdded - Whether to include the primary key or not with the returned records
     * @returns {Promise<any>} A promise that resolves with the result of the operation.
     */
-    getAllStorePromise(db, store) {
-        
+    getAllStorePromise(db, store) {        
         return new Promise(async (resolve, reject) => {
             try {
                 const myStore = await this.transReadOnly(db, store);
@@ -416,16 +404,13 @@ export default class IndexedDBOperations {
                 request.onerror = async err => {
                     
                     await this.#handleError({
-                        filename: 'getAllStorePromiseError',
                         consoleMsg: `Error retrieving data from ${store}: `,
                         err,
                         userMsg: 'Unable to retrieve data'
                     });
-                    reject(err);
                 };
             } catch (err) {
                 await this.#handleError({
-                    filename: 'getAllStorePromiseError',
                     consoleMsg: `Error accessing store ${store}: `,
                     err,
                     userMsg: 'Unable to access data store'
@@ -445,7 +430,7 @@ export default class IndexedDBOperations {
     * @returns {Promise<any>} A promise that resolves with the result of the operation.
     */
     getAllStoreByIndexPromise(db, store, indexName, value, transaction) {
-        return new Promise(async (resolve, reject) => {
+        return new Promise(async (resolve) => {
             const myStore = await this.transReadOnly(db, store, transaction);
             const index = myStore.index(indexName);
             const response = index.openCursor(IDBKeyRange.only(value));
@@ -466,12 +451,10 @@ export default class IndexedDBOperations {
             }
             response.onerror = async err => {
                 await this.#handleError({
-                    filename: 'getAllStoreByIndexPromiseError',
                     consoleMsg: `Error retrieving data from ${store}: `,
                     err,
                     userMsg: 'Unable to retrieve data'
                 });
-                reject(err);
             };
         });
     }
@@ -484,19 +467,17 @@ export default class IndexedDBOperations {
     * @returns {Promise<void>} A promise that resolves when the operation is complete.
     */
     clearStorePromise(db, store, transaction) {
-        return new Promise(async (resolve, reject) => {
+        return new Promise(async (resolve) => {
             const myStore = await this.transReadWrite(db, store, transaction);
             const response = myStore.clear();
 
             response.onsuccess = () => resolve(response.result);
             response.onerror = async err => {
                 await this.#handleError({
-                    filename: 'clearStorePromiseError',
                     consoleMsg: `Error clearing data from ${store}: `,
                     err,
                     userMsg: 'Unable to clear data'
                 });
-                reject(err);
             };
         });
     }
@@ -519,12 +500,10 @@ export default class IndexedDBOperations {
                     const clearRequest = myStore.clear();
                     clearRequest.onerror = async err => {
                         await this.#handleError({
-                            filename: 'addIndexDBPromiseError',
                             consoleMsg: `Error clearing store ${storeName}: `,
                             err,
                             userMsg: 'Unable to add data'
                         });
-                        reject(err);
                     };
                 }
 
@@ -533,17 +512,14 @@ export default class IndexedDBOperations {
                 request.onsuccess = (evt) => resolve(evt.target.result);
                 request.onerror = async err => {
                     await this.#handleError({
-                        filename: 'addIndexDBPromiseError',
                         consoleMsg: `Error adding data to ${storeName}: `,
                         err,
                         userMsg: 'Unable to add data'
                     });
-                    reject(err);
                 };
             }
             catch (err) {
                 await this.#handleError({
-                    filename: 'addIndexDBPromiseError',
                     consoleMsg: `Error initializing store ${storeName}: `,
                     err,
                     userMsg: 'Unable to add data'
@@ -570,17 +546,14 @@ export default class IndexedDBOperations {
                 response.onsuccess = () => resolve(response.result);
                 response.onerror = async err => {
                     await this.#handleError({
-                        filename: 'putIndexDBPromiseError',
                         consoleMsg: `Error updating data in ${storeName}: `,
                         err,
                         userMsg: 'Unable to update data'
                     });
-                    reject(err);
                 };
             }
             catch (err) {
                 await this.#handleError({
-                    filename: 'putIndexDBPromiseError',
                     consoleMsg: `Error initializing store ${storeName}: `,
                     err,
                     userMsg: 'Unable to update data'
@@ -615,23 +588,19 @@ export default class IndexedDBOperations {
                 };
                 deleteRecord.onerror = async err => {
                     await this.#handleError({
-                        filename: 'deleteRecordPromiseError',
                         consoleMsg: `Error deleting record from ${store}: `,
                         err,
                         userMsg: 'Unable to delete record'
                     });
-                    reject(err);
                 };
             });
         }
         catch (err) {
             await this.#handleError({
-                filename: 'deleteRecordPromiseError',
                 consoleMsg: `Error deleting record from ${store}: `,
                 err,
                 userMsg: 'Unable to delete record'
             });
-            throw err;
         }
     }
 
@@ -644,7 +613,6 @@ export default class IndexedDBOperations {
 
             db.onerror = async err => {
                 await this.#handleError({
-                    filename: 'deleteIDBDatabasePromiseError',
                     consoleMsg: `Error deleting database: `,
                     err,
                     userMsg: 'Unable to delete database'

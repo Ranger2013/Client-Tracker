@@ -111,3 +111,42 @@ export function formatTime(t, f) {
 	}
 	return time[1] + ':' + time[2];
 }
+
+/**
+ * Gets the current date or a future date in the format YYYY-MM-DD.
+ * If a number of days is provided, it returns the date that many days in the future.
+ * 
+ * @param {number|null} [days=null] - The number of days to add to the current date. If null, the current date is used.
+ * @returns {string} The formatted date in YYYY-MM-DD.
+ */
+export function getReadableCurrentFutureDate(days = null) {
+	const now = new Date();
+	now.setHours(0, 0, 0, 0); // Sets the time to midnight
+
+	let futureDate;
+
+	if (days) {
+		futureDate = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+	} else {
+		futureDate = now;
+	}
+
+	return futureDate.toISOString().split('T')[0];
+}
+
+/**
+* Gets the current time in the format HH:MM (24-hour format).
+* Pads the hours and minutes with a leading zero if they are less than 10.
+* 
+* @returns {string} The formatted current time in HH:MM.
+*/
+export function getCurrentTime() {
+	const now = new Date();
+	let currentHours = now.getHours();
+	let currentMinutes = now.getMinutes();
+
+	currentHours = currentHours < 10 ? '0' + currentHours : currentHours;
+	currentMinutes = currentMinutes < 10 ? '0' + currentMinutes : currentMinutes;
+
+	return currentHours + ':' + currentMinutes;
+}

@@ -43,7 +43,7 @@ export class AppError extends Error {
                 navigation: 'Some navigation features are not working. Please refresh the page.',
                 backup: 'The backup system is not responding. Your work will still be saved.',
                 calendar: 'Calendar features are currently unavailable.',
-                search: 'Search functionality is currently unavailable.'
+                search: 'Search functionality is currently unavailable.',
             },
 
             // Form validation messages
@@ -127,6 +127,8 @@ export class AppError extends Error {
     static get Types() {
         return {
             INITIALIZATION_ERROR: 'INITIALIZATION_ERROR',
+            PROCESSING_ERROR: 'PROCESSING_ERROR',
+            CALCULATION_ERROR: 'CALCULATION_ERROR',
             NAVIGATION_ERROR: 'NAVIGATION_ERROR',
             BACKUP_ERROR: 'BACKUP_ERROR',
             SETTINGS_ERROR: 'SETTINGS_ERROR',
@@ -150,7 +152,8 @@ export class AppError extends Error {
     static async handleError(err, config = {}) {
         if (err instanceof AppError) {
             await err.handle();
-        } else {
+        }
+        else {
 
             const error = new AppError(err.message, {
                 originalError: err,
@@ -171,7 +174,8 @@ export class AppError extends Error {
         let appError;
         if (error instanceof AppError) {
             appError = error;
-        } else {
+        }
+        else {
             appError = new AppError(error.message, {
                 originalError: error,
                 ...config

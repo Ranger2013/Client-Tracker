@@ -77,30 +77,31 @@ export async function networkFirst(evt) {
 		}
 		else {
 			// For developement, just return the response to see all errors
-			// return response;
+			console.warn('In networkFirst: Bad Response: ', response);
+			return response;
 
 			// For production, handle the different status types
-			if (response.status >= 400 && response.status < 500) {
-				console.error('In networkFirst: Client Error: response.statusText: ', response.statusText);
+			// if (response.status >= 400 && response.status < 500) {
+			// 	console.error('In networkFirst: Client Error: response.statusText: ', response.statusText);
 
-				// Return a new reponse with a custom error message, don't forget to add a link to go back to the home page.
-				return new Response(
-					`<div style="text-align: center"><span style="color: red">Oops, something went wrong</span></div>
-					<p>${response.text()}</p>`
-				);
+			// 	// Return a new reponse with a custom error message, don't forget to add a link to go back to the home page.
+			// 	return new Response(
+			// 		`<div style="text-align: center"><span style="color: red">Oops, something went wrong</span></div>
+			// 		<p>${response.text()}</p>`
+			// 	);
 
-				// Send the log error to the error api and display a generic page for the user notifying them of the error
-			}
-			else if (response.status >= 500) {
-				console.error('Server Error:', response.statusText);
+			// 	// Send the log error to the error api and display a generic page for the user notifying them of the error
+			// }
+			// else if (response.status >= 500) {
+			// 	console.error('Server Error:', response.statusText);
 
-				// Send the log error to the error api and display a generic page for the user notifying them of the error
-			}
-			else {
-				console.error('Unknown Error:', response.statusText);
+			// 	// Send the log error to the error api and display a generic page for the user notifying them of the error
+			// }
+			// else {
+			// 	console.error('Unknown Error:', response.statusText);
 
-				// Send the log error to the error api and display a generic page for the user notifying them of the error
-			}
+			// 	// Send the log error to the error api and display a generic page for the user notifying them of the error
+			// }
 		}
 	} catch (err) {
 		await handleFallback(evt);

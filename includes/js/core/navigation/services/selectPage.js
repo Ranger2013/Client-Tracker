@@ -1,5 +1,6 @@
 import closeNavigationMenu from "./closeNavigationMenu.js";
 import { removeListeners } from "../../utils/dom/listeners.js";
+// import buildAddEditClientPage from '../../layout/client/pages/add-edit-client/buildAddEditClientPage.js';
 
 /** @type {Function|null} */
 let cleanup = null;
@@ -39,9 +40,9 @@ export default async function selectPage({ evt, page, cID = null, closeMenu = nu
                     getArgs: () => [{ active: 'no', mainContainer: main, manageClient, manageUser }]
                 },
                 add: {
-                    module: "../page-builders/pages/clients/add-edit-client/buildAddEditClientPage.js",
+                    module: "../../layout/client/pages/add-edit-client/buildAddEditClientPage.js",
                     getState: () => "/tracker/clients/add/",
-                    getArgs: () => [{ cID, primaryKey, mainContainer: main }]
+                    getArgs: () => [{ cID, primaryKey, mainContainer: main, manageClient, manageUser }]
                 },
                 duplicate: {
                     module: "../page-builders/pages/clients/add-duplicate/buildDuplicateClientPage.js",
@@ -129,11 +130,8 @@ export default async function selectPage({ evt, page, cID = null, closeMenu = nu
         const { config: pageConfig, displayName } = pageMapping;
 
         await loadNewPage(pageConfig, page, cID, primaryKey); // Pass page here
-
     }
     catch (err) {
-        console.log('In catch block for the display navigation error');
-
         const { displayNavigationError } = await import('../components/backupErrorPage.js');
 
         // Display backup page with context
@@ -161,6 +159,7 @@ async function loadNewPage(pageConfig, page, cID, primaryKey) {
     try {
         // Use importModule helper instead of direct import()
         const module = await importModule(pageConfig.module);
+
         const args = pageConfig.getArgs(cID, primaryKey);
         cleanup = await module.default(...args);
 
@@ -180,14 +179,15 @@ async function importModule(modulePath) {
         const currentPath = '/includes/js/utils/navigation/';
         const absolutePath = new URL(modulePath, 'https://cavalierhorsemanship.com' + currentPath).pathname;
 
+        // Try to import from the cache
         const response = await caches.match(absolutePath);
-        if (!response) throw err;
 
+        if (!response) throw err;
+        
         const text = await response.text();
 
         const blob = new Blob([text], { type: 'application/javascript' });
         const url = URL.createObjectURL(blob);
-
         try {
             const module = await import(url);
             URL.revokeObjectURL(url);

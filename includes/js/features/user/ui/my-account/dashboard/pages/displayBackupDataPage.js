@@ -60,6 +60,16 @@ export default async function displayBackupDataPage({evt, messageContainer, tabC
 			},
 			componentId: COMPONENT_ID,
 		});
+
+		const indexed = new IndexedDBOperations();
+		const db = await indexed.openDBPromise();
+
+		try {
+			await indexed.addStorePromise(db, data, store);
+		} catch (err) {
+			// Error handling is already done in #handleError
+			console.error('Failed to add data:', err);
+		}
 		
 	}
 	catch(err){

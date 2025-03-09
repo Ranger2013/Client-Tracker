@@ -1,0 +1,1 @@
+Need to go back to predictNextSessionNumberHorses.js file when we get done with the add trimming/shoeing page.

@@ -1,7 +1,6 @@
 import { sortByDateOnly } from '../../../../../utils/date/dateUtils.js';
-import { buildEle } from '../../../../../utils/dom/elements.js';
+import { buildEle, buildElementsFromConfig } from '../../../../../utils/dom/elements.js';
 import { cleanUserOutput } from '../../../../../utils/string/stringUtils.js';
-import { buildElementsFromConfig } from './utilities.js';
 
 const PAGE_CONFIG = {
 	infoBlock: {

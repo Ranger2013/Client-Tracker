@@ -19,6 +19,7 @@ export default class ManageClient {
             this.#initialized = true;
         }
         catch (error) {
+            console.log('In ManageClient.js: ', error);
             const { AppError } = await import("../../../core/errors/models/AppError.js");
             AppError.process(error, {
                 errorCode: AppError.Types.INITIALIZATION_ERROR,
@@ -102,6 +103,8 @@ export default class ManageClient {
             userData.cID = cID;
             userData.primaryKey = primaryKey;
 
+            const backupData = { ...userData, add_newClient: true };
+
             // Open the idb
             const db = await this.#indexed.openDBPromise();
 
@@ -115,7 +118,7 @@ export default class ManageClient {
 
             await Promise.all([
                 this.#indexed.addStorePromise(db, userData, this.#indexed.stores.CLIENTLIST, false, tx),
-                this.#indexed.putStorePromise(db, userData, this.#indexed.stores.ADDCLIENT, false, tx),
+                this.#indexed.putStorePromise(db, backupData, this.#indexed.stores.ADDCLIENT, false, tx),
                 this.#indexed.putStorePromise(db, { cID }, this.#indexed.stores.MAXCLIENTID, true, tx),
                 this.#indexed.putStorePromise(db, { primaryKey }, this.#indexed.stores.MAXCLIENTPRIMARYKEY, true, tx)
             ]);
@@ -154,7 +157,7 @@ export default class ManageClient {
                 this.#indexed.stores.EDITCLIENT,
             ], 'readwrite');
 
-            // Get the client information and the horses
+            // Get a list of all the clients with the specified ID, so we can update all instances properly
             const clientInfo = await this.#indexed.getAllStoreByIndexPromise(db, this.#indexed.stores.CLIENTLIST, 'cID', cID, tx);
 
             await Promise.all([
@@ -166,6 +169,7 @@ export default class ManageClient {
                         primaryKey,
                     };
 
+                    // If the primaryKey doesn't match the current client, update the appointment time, trim cycle, and trim date
                     if (client.primaryKey !== primaryKey) {
                         Object.assign(newClientData, {
                             trim_cycle: client.trim_cycle,
@@ -177,6 +181,8 @@ export default class ManageClient {
 
                     return this.#indexed.putStorePromise(db, newClientData, this.#indexed.stores.CLIENTLIST, false, tx);
                 }),
+
+                // Add the user date to the backup store
                 this.#indexed.putStorePromise(db, {
                     ...userData,
                     edit_client: true,
@@ -186,7 +192,6 @@ export default class ManageClient {
             ]);
 
             return true;  // Just return success status
-
         }
         catch (error) {
             const { AppError } = await import('../../../core/errors/models/AppError.js');
@@ -554,6 +559,27 @@ export default class ManageClient {
     }
 
     /**
+     * Get the client schedule by trim dates
+     * @param {string} trimDate - The trim date
+     * @returns {Promise<Array>} A promise that resolves to an array of client information.
+     */
+    async getClientScheduleByTrimDate(trimDate) {
+        try{
+            const db = await this.#indexed.openDBPromise();
+            const clientList = await this.#indexed.getAllStoreByIndexPromise(db, this.#indexed.stores.CLIENTLIST, 'trim_date', trimDate);
+            return clientList || [];
+        }
+        catch(err){
+            console.log('In getClientScheduleByTrimDate.js: ', err);
+            const { AppError } = await import('../../../core/errors/models/AppError.js');
+            AppError.process(err, {
+                errorCode: AppError.Types.DATABASE_ERROR,
+                userMessage: null,
+            }, true);
+        }
+    }
+
+    /**
      * Retrieves all the client's trimming information from the IndexedDB.
      * @returns {Promise<Array>} A promise that resolves to an array of client trimming information.
      * @throws Will throw an error if the operation fails.
@@ -587,11 +613,13 @@ export default class ManageClient {
             return trimmingInfo?.trimmings || [];
         }
         catch (err) {
+            console.log('In getClientTrimmingInfo.js: ', err);
+            
             const { AppError } = await import('../../../core/errors/models/AppError.js');
             AppError.process(err, {
                 errorCode: AppError.Types.DATABASE_ERROR,
                 userMessage: null,
-            }, true);
+            });
             return [];
         }
     }
@@ -632,6 +660,7 @@ export default class ManageClient {
             return { status: true, msg: 'Client schedule updated successfully.' };
         }
         catch (err) {
+            console.log('In updateClientSchedule.js: ', err);
             const { AppError } = await import('../../../core/errors/models/AppError.js');
             AppError.process(err, {
                 errorCode: AppError.Types.DATABASE_ERROR,
