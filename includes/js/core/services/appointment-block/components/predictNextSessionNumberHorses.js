@@ -9,9 +9,8 @@
  */
 export default async function predictNextSessionNumberHorses({ clientID, manageClient, totalHorses }) {
 	try {
-		console.log('In predictNextSessionNumberHorses: clientID: ', clientID);
 		const clientTrimmingInfo = await manageClient.getClientTrimmingInfo(clientID);
-		console.log('In predictNextSessionNumberHorses: after clientTrimmingInfo: ', clientTrimmingInfo);
+
 		if (!clientTrimmingInfo || clientTrimmingInfo.length === 0) {
 			return 1;
 		}

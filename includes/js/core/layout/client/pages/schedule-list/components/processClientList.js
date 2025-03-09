@@ -1,4 +1,6 @@
 import { sortByTrimDateAndAppTime } from '../../../../../utils/date/dateUtils.js';
+import { buildEle } from '../../../../../utils/dom/elements.js';
+import buildClientListRow from './buildClientListRow.js';
 
 export default async function processClientList({
 	clientList,
@@ -31,11 +33,21 @@ export default async function processClientList({
 				index,
 				colorOptions,
 				dateTime,
-			})
+			});
+
+			fragment.appendChild(clientRow);
 		}
+
+		// Build the client counter
+		const clientCounter = buildEle({ type: 'div', myClass: ['w3-small'], text: `Total Clients: ${counter}` });
+		fragment.appendChild(clientCounter);
 	}
 	catch(err){
-		console.log(err);
+		const { AppError } = await import("../../../../../errors/models/AppError.js");
+		AppError.process(err, {
+			errorCode: AppError.Types.PROCESSING_ERROR,
+			userMessage: AppError.BaseMessages.system.processing,
+		}, true);
 	}
 }
 

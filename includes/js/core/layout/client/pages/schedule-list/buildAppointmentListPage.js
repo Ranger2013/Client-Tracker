@@ -9,14 +9,20 @@ export default async function buildAppointmentListPage({ active, cID = null, pri
 
 		// Build the appointment page components
 		const pageElements = await buildPageElements({ active, cID, primaryKey, manageClient, manageUser });
-
+		
 		// Clear the main container then append the new page contents
 		mainContainer.innerHTML = '';
 		mainContainer.appendChild(pageElements);
+
+		const { default: appointmentList } = await import("../../../../../features/client/ui/schedule-list/appointmentListJS.js");
+		appointmentList({active, cID, primaryKey, manageClient, manageUser, mainContainer});
 	}
 	catch(err){
-		console.log('Error: ', err);
-		
+		const { AppError } = await import("../../../../errors/models/AppError.js");
+		AppError.process(err, {
+			errorCode: AppError.Types.RENDER_ERROR,
+			userMessage: AppError.BaseMessages.system.render,
+		}, true);		
 	}	
 }
 

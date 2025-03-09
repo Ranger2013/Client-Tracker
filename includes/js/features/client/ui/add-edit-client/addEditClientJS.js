@@ -50,7 +50,6 @@ export default async function addEditClient({ cID, primaryKey, clientInfo = null
 		return () => removeListeners(COMPONENT_ID);
 	}
 	catch (err) {
-		console.log('In addEditClientJS.js: ', err);
 		const { AppError } = await import("../../../../core/errors/models/AppError.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.INITIALIZATION_ERROR,
@@ -297,7 +296,6 @@ async function handleFormSubmission({evt, cID, primaryKey, clientInfo, manageCli
 				return;
 			}
 
-			console.log('In addEditClients: After new client added: ', clientInfo);
 			// Reset the check appointments
 			checkAppointment({
 				trimDate: 'trim-date',
@@ -315,7 +313,6 @@ async function handleFormSubmission({evt, cID, primaryKey, clientInfo, manageCli
 		}
 	}
 	catch (err) {
-		console.log('In addEditClientJS.js: ', err);
 		top();
 		const { AppError } = await import("../../../../core/errors/models/AppError.js");
 		AppError.handleError(err, {

@@ -31,7 +31,6 @@ export default async function checkAppointment({
 	manageClient,
 	manageUser
 }) {
-	console.log('In checkAppointment:');
 	try {
 		// DOM Elements
 		trimDate = getValidElement(trimDate);
@@ -64,19 +63,11 @@ export default async function checkAppointment({
 			clearMsg({ container: trimDateError, hide: true, input: trimDateError });
 		}
 
-		let bookedAppointments, projectedAppointments;
 		// Get the booked appointments and the projected appointments concurrently
-		try {
-			[bookedAppointments, projectedAppointments] = await Promise.all([
-				getCurrentAppointments({ appointmentDate: trimDate.value, scheduleOptions, dateTimeFormats, manageClient }),
-				getProjectedAppointments({ appointmentDate: trimDate, trimCycle, clientInfo, scheduleOptions, manageClient })
-			]);
-		}
-		catch (err) {
-			console.log('In checkAppointent: after current and projected appointments: err: ', err);
-		}
-
-
+		const [bookedAppointments, projectedAppointments] = await Promise.all([
+			getCurrentAppointments({ appointmentDate: trimDate.value, scheduleOptions, dateTimeFormats, manageClient }),
+			getProjectedAppointments({ appointmentDate: trimDate, trimCycle, clientInfo, scheduleOptions, manageClient })
+		]);
 
 		// Build the booked appointments or no appointments blocks
 		if (bookedAppointments?.length > 0) {
@@ -98,7 +89,6 @@ export default async function checkAppointment({
 		}
 	}
 	catch (err) {
-		console.log('In checkAppointment: err: ', err);
 		const { AppError } = await import("../../errors/models/AppError.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.RENDER_ERROR,

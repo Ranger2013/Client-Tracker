@@ -1,4 +1,5 @@
-import { buildElementsFromConfig } from '../../utils/dom/elements.js';
+import { buildEle, buildElementsFromConfig } from '../../utils/dom/elements.js';
+import { buildGenericSelectOptions } from '../../utils/dom/forms/buildGenericSelectOptions.js';
 
 /**
  * Configuration for search block UI elements
@@ -64,7 +65,7 @@ const PAGE_CONFIG = {
  * @returns {Promise<HTMLElement>} The constructed search block
  * @throws {Error} If building elements fails
  */
-export default async function buildSearchBlock(filterOptions) {
+export default async function buildSearchBlockSection(filterOptions) {
 	try {
 		const elements = buildElementsFromConfig(PAGE_CONFIG);
 

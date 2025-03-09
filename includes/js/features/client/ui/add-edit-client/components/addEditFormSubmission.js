@@ -38,7 +38,6 @@ export default async function addEditFormSubmission({ evt, cID, primaryKey, mana
 		}
 	}
 	catch (err) {
-		console.log(err);
 		throw err;
 	}
 }

@@ -16,16 +16,21 @@ export default async function buildAppointmentList({ active, clientId, primaryKe
 			date_time: dateTime,
 		} = userSettings;
 		
-		const fragment = document.createDocumentFragment();
 		const uniqueClientIds = new Set();
 		let counter = 0;
 
 		// Display a message to the user if there are no settings
 		await handleNoSettings({colorOptions, dateTime});
+
+		// Create a document fragment. We will return this to the buildPageElements function
+		const fragment = document.createDocumentFragment();
+
+		// Process the client list. Returns an array with the fragment and counter
 		await processClientList({clientList, active, primaryKey, fragment, uniqueClientIds, counter, colorOptions, dateTime});
+		return fragment;
 	}
 	catch(err){
-
+		throw err;
 	}
 }
 

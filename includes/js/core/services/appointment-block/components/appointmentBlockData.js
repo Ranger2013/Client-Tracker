@@ -2,7 +2,7 @@ import { formatTime } from '../../../utils/date/dateUtils.js';
 import { cleanUserOutput } from '../../../utils/string/stringUtils.js';
 import getBlockOfTime from './getBlockOfTime.js';
 
- 
+
 /**
  * Processes appointment data and returns an object with formatted appointment block details.
  * 
@@ -30,8 +30,9 @@ export default async function appointmentBlockData(data) {
 			primary_key: primaryKey
 		} = data;
 
+
 		// Get the block of time
-		const timeBlock = await getBlockOfTime(avgNumHorsesPerHour, numberOfClientHorses, avgDriveTime, appTime);
+		const timeBlock = await getBlockOfTime({ avgHorses: avgNumHorsesPerHour, numberHorses: numberOfClientHorses, avgDriveTime, time: appTime });
 
 		// Set the start and end times according to the format
 		const startTime = parseInt(timeFormat) === 12 ? formatTime(appTime, 12) : formatTime(appTime, 24);

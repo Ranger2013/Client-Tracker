@@ -25,6 +25,7 @@ export class AppError extends Error {
                 generic: 'A system error occurred.',
                 network: 'Network connection error. Please check your connection.',
                 server: 'Server error occurred. Please try again later.',
+                processing: 'An error occurred while processing your request.',
                 initialization: 'System initialization failed. Please refresh the page.',
                 render: 'An error occurred while trying to render the page.',
                 helpDesk: 'If this problem persists, please submit a new Help Desk Ticket for this issue. Thank You'

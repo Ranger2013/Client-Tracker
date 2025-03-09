@@ -17,12 +17,11 @@ import predictNextSessionNumberHorses from './predictNextSessionNumberHorses.js'
  * @throws {Error} Throws an error if there's an issue retrieving or processing the appointment data.
  */
 export default async function getCurrentAppointments({ appointmentDate, scheduleOptions, dateTimeFormats, manageClient = null }) {
-	console.log('In getCurrentAppointments:');
 	try {
 		if (!scheduleOptions || !dateTimeFormats) throw new Error('No Schedule Options or Date/Time Options to create booked appointments. Please update your settings.');
-		
-		const { avg_horses, avg_drive_time } = scheduleOptions;
-		const { date_format, time_format } = dateTimeFormats;
+
+		const { avg_horses: avgHorses, avg_drive_time: avgDriveTime } = scheduleOptions;
+		const { date_format: dateFormat, time_format: timeFormat } = dateTimeFormats;
 
 		let appList = [];
 		const clientDataByTrimDate = await manageClient.getClientScheduleByTrimDate(appointmentDate);
@@ -36,17 +35,15 @@ export default async function getCurrentAppointments({ appointmentDate, schedule
 		let clientsSet = new Set();
 
 		for (let client of clientDataByTrimDate) {
+
 			const { cID,
 				primaryKey,
 				active,
 				client_name: clientName,
 				city,
 				horses,
-				avg_horses: avgHorses,
-				avg_drive_time: avgDriveTime,
 				app_time: appTime,
-				time_format: timeFormat,
-				date_format: dateFormat } = client;
+			 } = client;
 
 			// Don't show appointments for inactive clients
 			if (active === 'no') {
@@ -65,9 +62,7 @@ export default async function getCurrentAppointments({ appointmentDate, schedule
 			const clientHorses = horses.length > 0 ? horses.length : 1;
 
 			// Using a prediction algorythm to determine how many horses we may be doing at the next appointment
-			console.log('In getCurrentAppointments: before predictNextSessionOfHorses: ', cID, clientHorses);
-			const nextSessionOfHorses = await predictNextSessionNumberHorses({ clientId: cID, manageClient, totalHorses: clientHorses });
-			console.log('In getCurrentAppointments: after nextSessionOfHorses: ', nextSessionOfHorses);
+			const nextSessionOfHorses = await predictNextSessionNumberHorses({ clientID: cID, manageClient, totalHorses: clientHorses });
 			const appointmentData = {
 				cID,
 				primary_key: primaryKey,
@@ -83,7 +78,6 @@ export default async function getCurrentAppointments({ appointmentDate, schedule
 
 			appList.push(await appointmentBlockData(appointmentData));
 		}
-		console.log('In getCurrentAppointments: pushing appList:');
 		return appList;
 	}
 	catch (err) {

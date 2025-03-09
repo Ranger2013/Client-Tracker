@@ -22,7 +22,7 @@ export function buildEle({ type, attributes, myClass, text }) {
 		if (typeof text === 'string' || typeof text === 'number') {
 			ele.innerHTML = text;			
 		}
-		else if (text instanceof HTMLElement) {
+		else if (text instanceof Node) {
 			ele.appendChild(text);
 		}
 	}

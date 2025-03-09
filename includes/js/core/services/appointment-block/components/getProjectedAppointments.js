@@ -15,15 +15,12 @@ import getBlockOfTime from './getBlockOfTime.js';
  * @throws {Error} Throws an error if there's an issue retrieving or processing the projected appointments.
  */
 export default async function getProjectedAppointments({appointmentDate, trimCycle, clientInfo, scheduleOptions, manageClient}) {
-	console.log('In getProjectedAppointments:');
 	try {
 		let cID = clientInfo?.cID || null;
 		
 		const trimCycleValue = clientInfo?.trim_cycle || (trimCycle.options[trimCycle.selectedIndex].value !== 'null' ? trimCycle.options[trimCycle.selectedIndex].value : null);
 		
-		console.log('In getProjectedAppointments: before trimCycleValue: ', trimCycleValue);
 		if(!trimCycleValue) return null;
-		console.log('In getProjectedAppointments: after trimCycleValue: ', trimCycleValue);
 
 		// Set up the Dates
 		const [year, month, day] = appointmentDate.value.split('-');
@@ -40,12 +37,8 @@ export default async function getProjectedAppointments({appointmentDate, trimCyc
 			const formatedPastDate = pastDate.toISOString().slice(0,10);
 
 			// Get the trim dates from the db
-			console.log('In getProjectedAppointments.js: before trimDates: ', formatedPastDate);
 			const trimDates = await manageClient.getClientScheduleByTrimDate(formatedPastDate);
-			console.log('In getProjectedAppointments.js: after trimDates: ', trimDates);
-			// const trimDates = await indexed.getAllStoreByIndexPromise(db, indexed.stores.CLIENTLIST, 'trim_date', formatedPastDate);
 
-			console.log('In getProjectedAppointments.js, trimDates: ', trimDates);
 			// Loop through the trim dates
 			if(trimDates && trimDates.length > 0){
 				for(const trimDate of trimDates){

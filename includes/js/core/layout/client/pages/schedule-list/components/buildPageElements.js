@@ -1,8 +1,8 @@
 import { buildEle } from '../../../../../utils/dom/elements.js';
 import buildPersonalNotesSection from './buildPersonaNotesSection.js';
-import buildSearchBlockSection from './buildSearchBlockSection.js';
 import buildAppointmentTitleSection from './buildAppointmentTitleSection.js';
 import buildAppointmentList from './buildAppointmentList.js';
+import buildSearchBlockSection from '../../../../components/buildSearchBlockSection.js';
 
 /**
  * Configuration for schedule list page elements
@@ -29,7 +29,7 @@ const PAGE_CONFIG = {
 			{ value: 'phone', text: 'Search By Phone' },
 			{ value: 'address', text: 'Search By Address' },
 			{ value: 'app-time', text: 'Search By Appointment Time' },
-			{ value: 'app-date', text: 'Search By Appointment Date' },
+			// { value: 'app-date', text: 'Search By Appointment Date' },
 		],
 		value: opt => opt.value,
 		text: opt => opt.text,
@@ -40,7 +40,7 @@ const PAGE_CONFIG = {
 	},
 	wrapper: {
 		type: 'div',
-		attirbutes: { id: 'appointment-list'},
+		attributes: { id: 'appointment-list'},
 	},
 	counter: {
 		type: 'div',
@@ -57,19 +57,20 @@ export default async function buildPageElements({ active, cID = null, primaryKey
 			personalNotesContainer,
 			searchBlockContainer,
 			appointmentTitleContainer,
-			// [appointmentList, count]
+			appointmentList,
 		  ] = await Promise.all([
 			buildPersonalNotesSection({ manageUser }),
 			buildSearchBlockSection(PAGE_CONFIG.filterOptions),
 			buildAppointmentTitleSection(),
 			buildAppointmentList({ active, clientId: cID, primaryKey, manageClient, manageUser }),
 		  ]);
-
+		  
 		  container.append(personalNotesContainer, searchBlockContainer, appointmentTitleContainer, appointmentWrapper);
+		  appointmentWrapper.append(appointmentList);
+		  
 		  return container;
 	 }
 	 catch (err) {
-		console.log(err);
-		
+		throw err;
 	 }
 }

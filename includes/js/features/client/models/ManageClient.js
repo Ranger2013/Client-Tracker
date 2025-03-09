@@ -19,7 +19,6 @@ export default class ManageClient {
             this.#initialized = true;
         }
         catch (error) {
-            console.log('In ManageClient.js: ', error);
             const { AppError } = await import("../../../core/errors/models/AppError.js");
             AppError.process(error, {
                 errorCode: AppError.Types.INITIALIZATION_ERROR,
@@ -570,7 +569,6 @@ export default class ManageClient {
             return clientList || [];
         }
         catch(err){
-            console.log('In getClientScheduleByTrimDate.js: ', err);
             const { AppError } = await import('../../../core/errors/models/AppError.js');
             AppError.process(err, {
                 errorCode: AppError.Types.DATABASE_ERROR,
@@ -613,8 +611,6 @@ export default class ManageClient {
             return trimmingInfo?.trimmings || [];
         }
         catch (err) {
-            console.log('In getClientTrimmingInfo.js: ', err);
-            
             const { AppError } = await import('../../../core/errors/models/AppError.js');
             AppError.process(err, {
                 errorCode: AppError.Types.DATABASE_ERROR,
@@ -660,7 +656,6 @@ export default class ManageClient {
             return { status: true, msg: 'Client schedule updated successfully.' };
         }
         catch (err) {
-            console.log('In updateClientSchedule.js: ', err);
             const { AppError } = await import('../../../core/errors/models/AppError.js');
             AppError.process(err, {
                 errorCode: AppError.Types.DATABASE_ERROR,

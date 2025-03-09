@@ -36,10 +36,10 @@ const NOTES_CONFIG = {
 };
 
 export default async function buildPersonalNotesSection({manageUser}) {
+	const fragment = document.createDocumentFragment();
 	try{
 		let userNotes = null;
 
-		const fragment = document.createDocumentFragment();
 		const notes = await manageUser.getUserPersonalNotes();
 
 		// Build the page elements from the PAGE_CONFIG object
@@ -56,7 +56,22 @@ export default async function buildPersonalNotesSection({manageUser}) {
 		return fragment;
 	}
 	catch(err){
-		console.log(err);
+		// Log the error
+		const { AppError } = await import("../../../../../errors/models/AppError.js");
+		AppError.handleError(err, {
+			errorCode: AppError.Types.RENDER_ERROR,
+			userMessage: null,
+		});
+
+		// Display an error message to the user
+		const error = buildEle({
+			type: 'div',
+			myClass: ['w3-center', 'w3-text-red'],
+			text: 'Error loading personal notes',
+		});
+
+		fragment.append(error);
+		return fragment;
 	}
 }
 
