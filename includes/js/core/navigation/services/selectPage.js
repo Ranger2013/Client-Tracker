@@ -26,7 +26,8 @@ const main = document.getElementById('main');
  */
 export default async function selectPage({ evt, page, cID = null, closeMenu = null, primaryKey, manageUser, manageClient }) {
     evt.preventDefault();
-        // Page configuration map
+
+    // Page configuration map
         const PAGE_CONFIG = {
             clients: {
                 active: {
@@ -38,6 +39,11 @@ export default async function selectPage({ evt, page, cID = null, closeMenu = nu
                     module: "../../layout/client/pages/schedule-list/buildAppointmentListPage.js",
                     getState: () => "/tracker/clients/appointments/?active=no",
                     getArgs: () => [{ active: 'no', mainContainer: main, manageClient, manageUser }]
+                },
+                single: {
+                    module: "../../layout/client/pages/schedule-list/buildAppointmentListPage.js",
+                    getState: () => {`/tracker/clients/appointments/?cID=${cID}&primaryKey=${primaryKey}`},
+                    getArgs: () => [{mainContainer: main, cID, primaryKey, manageClient, manageUser }]
                 },
                 add: {
                     module: "../../layout/client/pages/add-edit-client/buildAddEditClientPage.js",
@@ -96,6 +102,7 @@ export default async function selectPage({ evt, page, cID = null, closeMenu = nu
         const PAGE_MAPPINGS = {
             'activeClients': { config: PAGE_CONFIG.clients.active, displayName: 'Active Clients' },
             'inactiveClients': { config: PAGE_CONFIG.clients.inactive, displayName: 'Inactive Clients' },
+            'singleClient': { config: PAGE_CONFIG.clients.single, displayName: 'Single Client' },
             'addClient': { config: PAGE_CONFIG.clients.add, displayName: 'Add Client' },
             'duplicateClient': { config: PAGE_CONFIG.clients.duplicate, displayName: 'Duplicate Client' },
             'deleteDuplicateClient': { config: PAGE_CONFIG.clients.deleteDuplicate, displayName: 'Delete Duplicate Client' },

@@ -1,6 +1,6 @@
 import { buildEle } from '../../../../utils/dom/elements.js';
 import { trimCycleConfigurations } from '../../../../utils/dom/forms/trimCycleConfigurations.js';
-import { removeAllListeners } from '../../../../utils/dom/listeners.js';
+import { removeListeners } from '../../../../utils/dom/listeners.js';
 import { clearMsg } from '../../../../utils/dom/messages.js';
 import buildPageContainer from '../../../components/buildPageContainer.js';
 import buildSubmitButtonSection from '../../../components/buildSubmitButtonSection.js';
@@ -9,7 +9,7 @@ import buildTwoColumnInputSection from '../../../components/buildTwoColumnInputS
 import buildTwoColumnRadioButtonSection from '../../../components/buildTwoColumnRadioButtonSection.js';
 import buildTwoColumnSelectElementSection from '../../../components/buildTwoColumnSelectElementSection.js';
 
-const PAGE_BUILDER_ID = 'add-edit-client-builder';
+export const COMPONENT_ID = 'add-edit-client';
 
 /**
  * @typedef {Object} ClientFields
@@ -233,9 +233,9 @@ export default async function buildAddEditClientPage({ cID = null, primaryKey = 
         mainContainer.appendChild(container);
         
         const { default: addEditClient } = await import("../../../../../features/client/ui/add-edit-client/addEditClientJS.js");
-        await addEditClient({cID, primaryKey, clientInfo, manageClient, manageUser});
+        await addEditClient({cID, primaryKey, clientInfo, manageClient, manageUser, componentId: COMPONENT_ID});
 
-        return () => removeAllListeners(PAGE_BUILDER_ID);
+        return () => removeListeners(COMPONENT_ID);
     }
     catch (err) {
         const { AppError } = await import("../../../../errors/models/AppError.js");

@@ -7,7 +7,6 @@ import { clearMsg, safeDisplayMessage } from '../../../../core/utils/dom/message
 import { hyphenToSpaces, hyphenToUnderscore, ucwords } from '../../../../core/utils/string/stringUtils.js';
 import { top } from '../../../../core/utils/window/scroll.js';
 
-const COMPONENT_ID = 'add-edit-client';
 const FORM_FIELDS = [
 	'client-name', 'street', 'city', 'state',
 	'zip', 'distance', 'phone', 'email', 'trim-cycle'
@@ -20,34 +19,19 @@ const FORM_FIELDS = [
  * @param {Object|null} clientInfo - Existing client information for editing
  * @returns {Promise<Function>} Cleanup function to remove event listeners
  */
-export default async function addEditClient({ cID, primaryKey, clientInfo = null, manageClient, manageUser }) {
+export default async function addEditClient({ cID, primaryKey, clientInfo, manageClient, manageUser, componentId }) {
 	try {
 		const elements = getAllFormIdElements('client-form');
 
 		// Simplified anchor listener since selectPage handles its own errors. This is if we are editing a client
 		const clientNav = document.querySelector('[data-component="client-navigation"]');
 		if (clientNav) {
-			const { default: selectPage } = await import('../../../../core/navigation/services/selectPage.js');
-			addListener({
-				elementOrId: clientNav,
-				eventType: 'click',
-				handler: evt => {
-					evt.preventDefault();
-					selectPage({
-						evt,
-						page: 'singleClient',
-						cID: clientNav.dataset.clientId,
-						primaryKey: clientNav.dataset.primaryKey
-					});
-				},
-				componentId: COMPONENT_ID
-			});
+			const { default: clientAnchorNav } = await import("../../../../core/navigation/components/setupClientAnchorListener.js");
+			await clientAnchorNav({ componentId });
 		}
 
-		initializeAppointmentCheck({ elements, clientInfo, manageClient, manageUser });
-		initializeForm({ cID, primaryKey, clientInfo, manageClient, manageUser });
-
-		return () => removeListeners(COMPONENT_ID);
+		initializeAppointmentCheck({ elements, clientInfo, manageClient, manageUser, componentId });
+		initializeForm({ cID, primaryKey, clientInfo, manageClient, manageUser, componentId });
 	}
 	catch (err) {
 		const { AppError } = await import("../../../../core/errors/models/AppError.js");
@@ -69,7 +53,7 @@ export default async function addEditClient({ cID, primaryKey, clientInfo = null
  * @param {Object} manageClient - Client management instance
  * @param {Object} manageUser - User management instance
  */
-function initializeAppointmentCheck({ elements, clientInfo, manageClient, manageUser }) {
+function initializeAppointmentCheck({ elements, clientInfo, manageClient, manageUser, componentId }) {
 	const appointmentParams = {
 		trimDate: elements['trim-date'],
 		trimCycle: elements['trim-cycle'],
@@ -89,7 +73,7 @@ function initializeAppointmentCheck({ elements, clientInfo, manageClient, manage
 		handler: () => {
 			checkAppointment(appointmentParams);
 		},
-		componentId: COMPONENT_ID,
+		componentId,
 	})
 }
 
@@ -99,7 +83,7 @@ function initializeAppointmentCheck({ elements, clientInfo, manageClient, manage
  * @param {string|null} primaryKey - Database primary key
  * @param {Object|null} clientInfo - Client information
  */
-function initializeForm({ cID, primaryKey, clientInfo, manageClient, manageUser }) {
+function initializeForm({ cID, primaryKey, clientInfo, manageClient, manageUser, componentId }) {
 	const form = document.getElementById('client-form');
 	if (!form) return;
 
@@ -111,13 +95,13 @@ function initializeForm({ cID, primaryKey, clientInfo, manageClient, manageUser 
 			const field = evt.target;
 			if (FORM_FIELDS.includes(field.id)) {
 				const debouncedValidation = createDebouncedHandler(
-					() => handleFormValidation({ evt, field: field.id, cID, primaryKey, clientInfo, manageClient }),
+					() => handleFormValidation({ evt, field: field.id, cID, primaryKey, clientInfo, manageClient, componentId }),
 					getOptimalDelay('validation')
 				);
 				debouncedValidation();
 			}
 		},
-		componentId: COMPONENT_ID
+		componentId
 	});
 
 	// Handle the form submission
@@ -128,7 +112,7 @@ function initializeForm({ cID, primaryKey, clientInfo, manageClient, manageUser 
 			evt.preventDefault();
 			handleFormSubmission({evt, cID, primaryKey, clientInfo, manageClient, manageUser});
 		},
-		componentId: COMPONENT_ID
+		componentId
 	});
 }
 
@@ -141,7 +125,7 @@ function initializeForm({ cID, primaryKey, clientInfo, manageClient, manageUser 
  * @returns {Promise<void>}
  * @throws {Error} If validation fails
  */
-async function handleFormValidation({ evt, field, cID, primaryKey, clientInfo, manageClient }) {
+async function handleFormValidation({ evt, field, cID, primaryKey, clientInfo, manageClient, componentId }) {
 	try {
 		const error = await checkClientFormValidity({ evt, cID, primaryKey, manageClient });
 		const errorContainer = `${field}-error`;
@@ -156,7 +140,7 @@ async function handleFormValidation({ evt, field, cID, primaryKey, clientInfo, m
 				elementOrId: field,
 				eventType: 'focus',
 				handler: () => clearMsg({ container: errorContainer, hide: true, input: field }),
-				componentId: COMPONENT_ID,
+				componentId,
 			});
 		} else {
 			clearMsg({ container: errorContainer, hide: true, input: field });

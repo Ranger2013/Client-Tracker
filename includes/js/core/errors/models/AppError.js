@@ -117,6 +117,7 @@ export class AppError extends Error {
             'DATABASE_ERROR',
             'API_ERROR',
             'FORM_VALIDATION_ERROR',
+            'FORM_SUBMISSION_ERROR'
         ];
 
         if (criticalErrors.includes(this.errorCode)) {

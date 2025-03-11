@@ -36,9 +36,7 @@ export default class ManageClient {
      */
     async getClientInfo({ primaryKey }) {
         await this.#initializeClientData();
-        return this.#clientList.find(client => 
-            client.primaryKey === parseInt(primaryKey, 10)
-        );
+        return this.#clientList.find(client => client.primaryKey === parseInt(primaryKey, 10));
     }
 
     /**
@@ -332,6 +330,22 @@ export default class ManageClient {
         }
     }
 
+    async getClientHorses({primaryKey}){
+        try{
+            if(!primaryKey) throw new Error('No primaryKey provided.');
+
+            const clientInfo = await this.getClientInfo({primaryKey});
+            return clientInfo?.horses || [];
+        }
+        catch(err){
+            const { AppError } = await import('../../../core/errors/models/AppError.js');
+            AppError.process(err, {
+                errorCode: AppError.Types.DATABASE_ERROR,
+                userMessage: null,
+            }, true);
+        }
+    }
+
     /**
      * Adds a new horse to the client's horse list in the IndexedDB.
      * @param {string} horseName - The name of the horse.
@@ -340,9 +354,10 @@ export default class ManageClient {
      * @returns {Promise<Object>} A promise that resolves to an object containing the status and message.
      * @throws Will throw an error if the operation fails.
      */
-    async addNewHorse(horseName, cID, primaryKey) {
+    async addNewHorse({horseName, cID, primaryKey}) {
         try {
             if (!cID || !primaryKey) throw new Error('No cID or primaryKey provided.');
+
             // Get the hID for the new horse. Doing this prior to the transaction to prevent transaction finishing early
             const hID = await this.#indexed.getLastKeyForID(this.#indexed.stores.MAXHORSEID);
 
@@ -355,43 +370,30 @@ export default class ManageClient {
                 this.#indexed.stores.ADDHORSE,
                 this.#indexed.stores.MAXHORSEID,
             ], 'readwrite');
+            console.log('In addNewHorse: cID: ', typeof cID);
+            console.log('In addNewHorse: primaryKey: ', typeof primaryKey);
 
             // Get all the clients information
             const clientInfo = await this.#indexed.getAllStoreByIndexPromise(db, this.#indexed.stores.CLIENTLIST, 'cID', cID, tx);
+            console.log('In addNewHorse, clientInfo:', clientInfo);
             const clientHorses = clientInfo[0]?.horses || [];
             const clientName = clientInfo[0]?.client_name;
-
-            // Check for duplicate horses. This is redundant as there is an event listener for real time checking on the page as well.
-            if (clientHorses.some(horse => horse.horse_name.toLowerCase() === horseName.toLowerCase())) {
-                return { status: false, msg: `${horseName} is already listed.` };
-            }
 
             // Add the new horse to the horse list
             const newHorse = { hID, horse_name: horseName };
             clientHorses.push(newHorse);
 
-            const updatePromises = [];
+            await Promise.all([
+                clientInfo.flatMap(client => this.#indexed.putStorePromise(db, { ...client, horses: clientHorses }, this.#indexed.stores.CLIENTLIST, false, tx)),
+                this.#indexed.putStorePromise(db, { add_newHorse: true, horse_name: horseName, cID, hID }, this.#indexed.stores.ADDHORSE, false, tx),
+                this.#indexed.putStorePromise(db, { hID }, this.#indexed.stores.MAXHORSEID, true, tx),
+            ]);
 
-            // Loop through each client
-            for (const client of clientInfo) {
-                // Update the horse list for each client
-                const updatedUserData = { ...client, horses: clientHorses };
+            // Reset the cache after successful update
+            this.#clientList = null;
+            this.#initialized = false;
 
-                // Update the client information
-                updatePromises.push(this.#indexed.putStorePromise(db, updatedUserData, this.#indexed.stores.CLIENTLIST, false, tx));
-            }
-
-            // Add the api tag for backup
-            const backupHorses = { add_newHorse: true, horse_name: horseName, client_name: clientName, cID, hID };
-            updatePromises.push(this.#indexed.putStorePromise(db, backupHorses, this.#indexed.stores.ADDHORSE, false, tx));
-
-            // Put the new horse id back in the max horse id
-            updatePromises.push(this.#indexed.putStorePromise(db, { hID }, this.#indexed.stores.MAXHORSEID, true, tx));
-
-            // Wait for all promises to resolve
-            await Promise.all(updatePromises);
-
-            return { status: true, msg: `${horseName} has been added.` };
+            return true;
         }
         catch (err) {
             const { AppError } = await import('../../../core/errors/models/AppError.js');
@@ -694,13 +696,7 @@ export default class ManageClient {
         const db = await this.#indexed.openDBPromise();
         const tx = db.transaction([this.#indexed.stores.CLIENTLIST], 'readwrite');
         
-        await this.#indexed.putStorePromise(
-            db, 
-            data, 
-            this.#indexed.stores.CLIENTLIST, 
-            false, 
-            tx
-        );
+        await this.#indexed.putStorePromise( db, data, this.#indexed.stores.CLIENTLIST, false, tx );
         
         return true;
     }

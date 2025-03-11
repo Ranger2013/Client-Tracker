@@ -39,7 +39,6 @@ export default async function buildPersonalNotesSection({manageUser}) {
 	const fragment = document.createDocumentFragment();
 	try{
 		let userNotes = null;
-
 		const notes = await manageUser.getUserPersonalNotes();
 
 		// Build the page elements from the PAGE_CONFIG object

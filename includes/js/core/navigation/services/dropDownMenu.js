@@ -13,8 +13,6 @@ export default function dropDownMenu(evt) {
     const allDropdowns = document.querySelectorAll('.w3-dropdown-content');
     const allArrows = document.querySelectorAll('.arrow');
     
-    console.log('All arrows: ', allArrows);
-    
     allDropdowns.forEach(d => {
         if (d.id !== contentId) {
             d.classList.remove('w3-show');

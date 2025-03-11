@@ -460,21 +460,13 @@ export default class IndexedDBOperations {
 
                 const myStore = await this.transReadOnly(db, store, transaction);
                 const index = myStore.index(indexName);
-                const response = index.openCursor(IDBKeyRange.only(value));
 
-                const results = [];
+                // Convert value to a number
+                const searchValue = typeof value === 'string' ? parseInt(value, 10) : value;
+                const request = index.getAll(IDBKeyRange.only(searchValue));
 
-                response.onsuccess = (evt) => {
-                    const cursor = evt.target.result;
-                    if (cursor) {
-                        results.push({ ...cursor.value });
-                        cursor.continue();
-                    } else {
-                        resolve(results);
-                    }
-                };
-
-                response.onerror = (evt) => reject(evt.target.error); // Just reject
+                request.onsuccess = (evt) => resolve(evt.target.result);
+                request.onerror = (evt) => reject(evt.target.error); // Just reject
             }
             catch (err) {
                 await this.#handleError({

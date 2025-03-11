@@ -12,17 +12,16 @@ export default async function processClientList({
 	colorOptions,
 	dateTime
 }) {
-	try{
+	try {
 		// Sort the client list by date and app time
-		clientList.sort((a,b) => sortByTrimDateAndAppTime(a, b, true));
-
+		clientList.sort((a, b) => sortByTrimDateAndAppTime(a, b, true));
 		// Loop through the client list
-		for( const [index, client] of clientList.entries()){
+		for (const [index, client] of clientList.entries()) {
 			// Make sure we are going to show this client
-			if(!shouldProcessClient(client, active, primaryKey)) continue;
+			if (!shouldProcessClient(client, active, primaryKey)) continue;
 
 			// We are setting up our counter to count how many clients we have
-			if(!uniqueClientIds.has(client.cID)){
+			if (!uniqueClientIds.has(client.cID)) {
 				uniqueClientIds.add(client.cID);
 				counter++;
 			}
@@ -34,7 +33,6 @@ export default async function processClientList({
 				colorOptions,
 				dateTime,
 			});
-
 			fragment.appendChild(clientRow);
 		}
 
@@ -42,7 +40,7 @@ export default async function processClientList({
 		const clientCounter = buildEle({ type: 'div', myClass: ['w3-small'], text: `Total Clients: ${counter}` });
 		fragment.appendChild(clientCounter);
 	}
-	catch(err){
+	catch (err) {
 		const { AppError } = await import("../../../../../errors/models/AppError.js");
 		AppError.process(err, {
 			errorCode: AppError.Types.PROCESSING_ERROR,
@@ -57,11 +55,11 @@ export default async function processClientList({
  */
 function shouldProcessClient(client, active, primaryKey) {
 	if (typeof active === 'string' && client.active.toLowerCase() === active.toLowerCase()) {
-		 return true;
+		return true;
 	}
-	
-	if (client.primaryKey === primaryKey) {
-		 return true;
+
+	if (parseInt(client.primaryKey, 10) === parseInt(primaryKey, 10)) {
+		return true;
 	}
 
 	return false;

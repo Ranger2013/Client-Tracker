@@ -284,6 +284,9 @@ function buildClientMenu({ client, index }) {
 				type: 'a',
 				attributes: {
 					href: `/tracker/clients/edit-client/?cID=${client.cID}&key=${client.primaryKey}`,
+					'data-page': 'edit-client',
+					'data-clientid': client.cID,
+					'data-primarykey': client.primaryKey,
 				},
 				myClass: ['w3-border-bottom', 'w3-border-white', 'w3-bar-item', 'w3-button', 'w3-text-white', 'w3-black'],
 				text: 'Edit Client',
@@ -302,12 +305,22 @@ function buildClientMenu({ client, index }) {
 							address: `../../trimming/add/?cID=${client.cID}&key=${client.primaryKey}`,
 							text: 'Add Trim/Shoeing'
 						},
+						dataPage: {
+							'data-page': 'add-trimming',
+							'data-clientid': client.cID,
+							'data-primarykey': client.primaryKey,
+						},
 						pageName: 'add-trimming'
 					},
 					view: {
 						href: {
 							address: `../../trimming/view/?cID=${client.cID}&key=${client.primaryKey}`,
 							text: 'View Dates'
+						},
+						dataPage: {
+							'data-page': 'view-trim-dates',
+							'data-clientid': client.cID,
+							'data-primarykey': client.primaryKey,
 						},
 						pageName: 'view-trim-dates'
 					}
@@ -324,12 +337,22 @@ function buildClientMenu({ client, index }) {
 							address: `../../client-horses/add/?cID=${client.cID}&key=${client.primaryKey}`,
 							text: 'Add Horse'
 						},
+						dataPage: {
+							'data-page': 'add-horse',
+							'data-clientid': client.cID,
+							'data-primarykey': client.primaryKey,
+						},
 						pageName: 'add-horse'
 					},
 					edit: {
 						href: {
 							address: `../../client-horses/edit/?cID=${client.cID}&key=${client.primaryKey}`,
 							text: 'Edit Horse'
+						},
+						dataPage: {
+							'data-page': 'edit-horse',
+							'data-clientid': client.cID,
+							'data-primarykey': client.primaryKey,
 						},
 						pageName: 'edit-horse'
 					}
@@ -403,10 +426,11 @@ function buildDropDownMenuConfig(config) {
 				const href = pages[page].href.address;
 				const text = pages[page].href.text;
 				const pageToBuild = pages[page].pageName;
+				const targetPage = pages[page].dataPage;
 
 				const pageLink = buildEle({
 					type: 'a',
-					attributes: { href },
+					attributes: { href, ...targetPage },
 					myClass: ['w3-border-bottom', 'w3-bar-item', 'w3-button', 'w3-text-white'],
 					text,
 				});

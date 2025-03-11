@@ -59,8 +59,8 @@ export default async function buildPageContainer({ pageTitle, clientName = null,
                 ...PAGE_ELEMENTS.anchor,
                 attributes: {
                     'data-component': 'client-navigation',  // Identifies purpose
-                    'data-client-id': cID,                 // Stores client data
-                    'data-primary-key': primaryKey,        // Stores key data
+                    'data-clientid': cID,                 // Stores client data
+                    'data-primarykey': primaryKey,        // Stores key data
                     href: `/tracker/clients/appointments/?cID=${cID}&key=${primaryKey}`
                 },
                 text: clientName
