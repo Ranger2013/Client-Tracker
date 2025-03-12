@@ -1,5 +1,4 @@
-import { buildEle, buildElementsFromConfig } from '../../utils/dom/elements.js';
-import { buildGenericSelectOptions } from '../../utils/dom/forms/buildGenericSelectOptions.js';
+import { buildEle, buildElementsFromConfig, buildGenericSelectOptions } from '../../utils/dom/elements.js';
 
 /**
  * Configuration for search block UI elements

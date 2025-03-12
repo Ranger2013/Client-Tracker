@@ -5,8 +5,6 @@ export default async function populateColorOptionsForm({ form, manageUser }) {
 	try{
 		const userColors = await manageUser.getColorOptions();
 		
-		console.log('User Colors:', userColors);
-		
 		if(!userColors || Object.keys(userColors).length === 0){
 			return;
 		}
@@ -16,8 +14,6 @@ export default async function populateColorOptionsForm({ form, manageUser }) {
 
 		// Get all form elements
 		const colorInputs = getAllFormIdElements(form);
-
-		console.log(colorInputs);
 
 		Object.entries(colorInputs).forEach(([_, element]) => {
 			if(userColors[element.name] !== null){

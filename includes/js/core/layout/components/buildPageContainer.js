@@ -8,7 +8,8 @@ const PAGE_ELEMENTS = {
     },
     card: {
         type: 'div',
-        myClass: ['w3-card']
+        myClass: ['w3-card'],
+        attributes: { id: 'card' },
     },
     titleContainer: {
         type: 'div',

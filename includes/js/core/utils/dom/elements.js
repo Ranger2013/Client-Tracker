@@ -17,10 +17,10 @@ export function buildEle({ type, attributes, myClass, text }) {
 	if (myClass) {
 		ele.classList.add(...myClass);
 	}
-	
+
 	if (text) {
 		if (typeof text === 'string' || typeof text === 'number') {
-			ele.innerHTML = text;			
+			ele.innerHTML = text;
 		}
 		else if (text instanceof Node) {
 			ele.appendChild(text);
@@ -34,25 +34,25 @@ export function buildEle({ type, attributes, myClass, text }) {
  * @param {HTMLElement|string} button - The button element or its ID to enable/disable.
  */
 export function disableEnableSubmitButton(button) {
-    try {
-        const buttonElement = getValidElement(button);
-        const errors = document.querySelectorAll('.error');
-        buttonElement.disabled = errors.length > 0;
-    }
-    catch (error) {
-        // Let AppError handle all logging
-        import('../../errors/models/AppError.js')
-            .then(({ AppError }) => {
-                return new AppError('Submit button state update failed', {
-                    originalError: error,
-                    errorCode: AppError.Types.RENDER_ERROR,
-                    shouldLog: true,
-                    displayTarget: 'page-msg',
-                    userMessage: null
-                }).logError();
-            })
-            .catch(err => console.error('Error handler failed:', err));
-    }
+	try {
+		const buttonElement = getValidElement(button);
+		const errors = document.querySelectorAll('.error');
+		buttonElement.disabled = errors.length > 0;
+	}
+	catch (error) {
+		// Let AppError handle all logging
+		import('../../errors/models/AppError.js')
+			.then(({ AppError }) => {
+				return new AppError('Submit button state update failed', {
+					originalError: error,
+					errorCode: AppError.Types.RENDER_ERROR,
+					shouldLog: true,
+					displayTarget: 'page-msg',
+					userMessage: null
+				}).logError();
+			})
+			.catch(err => console.error('Error handler failed:', err));
+	}
 }
 
 /**
@@ -82,3 +82,84 @@ export function buildElementsFromConfig(config) {
 	}, {});
 }
 
+/**
+ * Generates an array of option elements based on the provided configuration.
+ *
+ * @param {Object} config - The configuration object for building select options.
+ * @param {Array} config.list - The array of options to be processed.
+ * @param {function(Object): string} config.value - A function that returns the value for each option element.
+ * @param {function(Object): string} config.text - A function that returns the text for each option element.
+ * 
+ * @returns {Array} - An array of option elements.
+ *
+ * @example
+ * const config = {
+ *   list: [
+ *     { id: 1, name: 'Option 1' },
+ *     { id: 2, name: 'Option 2' }
+ *   ],
+ *   value: opt => opt.id,
+ *   text: opt => opt.name
+ * };
+ * const options = buildGenericSelectOptions(config);
+ * // options will be an array of option elements with the specified value and text.
+ */
+export function buildGenericSelectOptions(config) {
+	return config.list.map(opt => {
+		// Set the value and the text of the option
+		const value = config.value(opt);
+		const text = config.text(opt);
+
+		// Return the option element
+		return buildEle({
+			type: 'option',
+			attributes: { value },
+			text
+		});
+	});
+}
+
+/**
+ * Updates a select element with new options generated from an array of items
+ * 
+ * @param {string|HTMLElement} select - The select element or its ID
+ * @param {Array} items - An array of data objects to convert into options
+ * @param {Object} config - Configuration for generating options
+ * @param {function(Object): string|number} config.valueMapper - Function that extracts the value attribute for each option
+ * @param {function(Object): string} config.textMapper - Function that extracts the display text for each option
+ * @param {*} [config.selectedValue=null] - The value to select after updating options (optional)
+ * @returns {void}
+ */
+export function updateSelectOptions(select, items, { valueMapper, textMapper, selectedValue = null, preserveFirst = true }) {
+	// Get the valid element
+	const selectedElement = getValidElement(select);
+
+	// Save the first option unless we're not preserving it
+	const firstOption = preserveFirst && selectedElement.options.length > 0
+		? selectedElement.options[0].cloneNode(true)
+		: null;
+
+	// Build the options
+	const options = buildGenericSelectOptions({
+		list: items,
+		value: valueMapper,
+		text: textMapper,
+	});
+
+	const fragment = document.createDocumentFragment();
+
+	// Add the preserved first option if it exists
+	if (firstOption) {
+		fragment.appendChild(firstOption);
+	}
+
+	// Add the new options
+	options.forEach(option => fragment.appendChild(option));
+
+	selectedElement.innerHTML = '';
+	selectedElement.appendChild(fragment);
+
+	if (selectedValue !== null) {
+		selectedElement.value = selectedValue;
+	}
+}

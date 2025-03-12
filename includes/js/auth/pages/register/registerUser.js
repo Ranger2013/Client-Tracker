@@ -108,8 +108,6 @@ function initializeRegistrationForm() {
 
 async function handleValidationResponse({ response, errorEle, inputEle }) {
     try {
-        console.log('In handleValidationResponse:', response);
-
         // Invalid formatting
         if (response) {
             safeDisplayMessage({
@@ -128,8 +126,6 @@ async function handleValidationResponse({ response, errorEle, inputEle }) {
 
 async function handleFormatting({ target, format }) {
     try {
-        console.log('In handleFormatting:');
-
         if (format === 'phone') {
             const formattedPhone = formatPhone(target.value);
             if (!formattedPhone) {
@@ -143,7 +139,7 @@ async function handleFormatting({ target, format }) {
         }
         else if (format === 'email') {
             const formattedEmail = formatEmail(target.value);
-            console.log('In handleFormatting: formattedEmail: ', formattedEmail);
+
             if (!formattedEmail) {
                 await handleValidationResponse({ response: `Invalid ${format} format.`, errorEle: `${target.id}-error`, inputEle: target });
                 return false;

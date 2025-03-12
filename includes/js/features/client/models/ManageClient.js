@@ -15,7 +15,7 @@ export default class ManageClient {
 
         try {
             const db = await this.#indexed.openDBPromise();
-            this.#clientList = await this.#indexed.getAllStorePromise( db, this.#indexed.stores.CLIENTLIST);
+            this.#clientList = await this.#indexed.getAllStorePromise(db, this.#indexed.stores.CLIENTLIST);
             this.#initialized = true;
         }
         catch (error) {
@@ -47,7 +47,7 @@ export default class ManageClient {
     async getAllDuplicateClients() {
         try {
             const db = await this.#indexed.openDBPromise();
-            const clientInfo = await this.#indexed.getAllStorePromise( db, this.#indexed.stores.CLIENTLIST );
+            const clientInfo = await this.#indexed.getAllStorePromise(db, this.#indexed.stores.CLIENTLIST);
 
             return this.#findDuplicates(clientInfo);
         }
@@ -162,8 +162,8 @@ export default class ManageClient {
                     const newClientData = {
                         ...userData,
                         horses: clientInfo[0].horses || [],
-                        cID,
-                        primaryKey,
+                        cID: parseInt(cID, 10),
+                        primaryKey: parseInt(primaryKey, 10),
                     };
 
                     // If the primaryKey doesn't match the current client, update the appointment time, trim cycle, and trim date
@@ -187,6 +187,10 @@ export default class ManageClient {
                     primaryKey,
                 }, this.#indexed.stores.EDITCLIENT, false, tx)
             ]);
+
+            // Reset the cache after successful update
+            this.#clientList = null;
+            this.#initialized = false;
 
             return true;  // Just return success status
         }
@@ -330,14 +334,14 @@ export default class ManageClient {
         }
     }
 
-    async getClientHorses({primaryKey}){
-        try{
-            if(!primaryKey) throw new Error('No primaryKey provided.');
+    async getClientHorses({ primaryKey }) {
+        try {
+            if (!primaryKey) throw new Error('No primaryKey provided.');
 
-            const clientInfo = await this.getClientInfo({primaryKey});
+            const clientInfo = await this.getClientInfo({ primaryKey });
             return clientInfo?.horses || [];
         }
-        catch(err){
+        catch (err) {
             const { AppError } = await import('../../../core/errors/models/AppError.js');
             AppError.process(err, {
                 errorCode: AppError.Types.DATABASE_ERROR,
@@ -354,7 +358,7 @@ export default class ManageClient {
      * @returns {Promise<Object>} A promise that resolves to an object containing the status and message.
      * @throws Will throw an error if the operation fails.
      */
-    async addNewHorse({horseName, cID, primaryKey}) {
+    async addNewHorse({ horseName, cID, primaryKey }) {
         try {
             if (!cID || !primaryKey) throw new Error('No cID or primaryKey provided.');
 
@@ -370,21 +374,17 @@ export default class ManageClient {
                 this.#indexed.stores.ADDHORSE,
                 this.#indexed.stores.MAXHORSEID,
             ], 'readwrite');
-            console.log('In addNewHorse: cID: ', typeof cID);
-            console.log('In addNewHorse: primaryKey: ', typeof primaryKey);
 
             // Get all the clients information
             const clientInfo = await this.#indexed.getAllStoreByIndexPromise(db, this.#indexed.stores.CLIENTLIST, 'cID', cID, tx);
-            console.log('In addNewHorse, clientInfo:', clientInfo);
             const clientHorses = clientInfo[0]?.horses || [];
-            const clientName = clientInfo[0]?.client_name;
 
             // Add the new horse to the horse list
             const newHorse = { hID, horse_name: horseName };
             clientHorses.push(newHorse);
 
             await Promise.all([
-                clientInfo.flatMap(client => this.#indexed.putStorePromise(db, { ...client, horses: clientHorses }, this.#indexed.stores.CLIENTLIST, false, tx)),
+                ...clientInfo.map(client => this.#indexed.putStorePromise(db, { ...client, horses: clientHorses }, this.#indexed.stores.CLIENTLIST, false, tx)),
                 this.#indexed.putStorePromise(db, { add_newHorse: true, horse_name: horseName, cID, hID }, this.#indexed.stores.ADDHORSE, false, tx),
                 this.#indexed.putStorePromise(db, { hID }, this.#indexed.stores.MAXHORSEID, true, tx),
             ]);
@@ -409,10 +409,10 @@ export default class ManageClient {
      * @param {number} hID - The horse ID.
      * @param {string} cID - The client ID.
      * @param {string} horseName - The new name of the horse.
-     * @returns {Promise<Object>} A promise that resolves to an object containing the status and message.
+     * @returns {Promise<boolean>} A promise that resolves to an object containing the status and message.
      * @throws Will throw an error if the operation fails.
      */
-    async editClientHorse(hID, cID, horseName) {
+    async editClientHorse({ hID, cID, horseName }) {
         try {
             if (!hID || !cID) throw new Error('No horse id or client id provided.');
 
@@ -431,32 +431,28 @@ export default class ManageClient {
             const clientInfo = await this.#indexed.getAllStoreByIndexPromise(db, this.#indexed.stores.CLIENTLIST, 'cID', cID, tx);
             const clientName = clientInfo[0]?.client_name;
 
-            // Store the promises
-            const updatePromises = [];
+            await Promise.all([
+                // Update all the client horses
+                ...clientInfo.map(client => {
+                    const updatedHorses = client.horses.map(horse => {
+                        if (horse.hID === Number(hID)) {
+                            return { ...horse, horse_name: horseName };
+                        }
+                        return horse;
+                    });
 
-            // Loop through each client
-            for (const client of clientInfo) {
-                const updatedHorses = client.horses.map(horse => {
-                    if (horse.hID === Number(hID)) {
-                        return { ...horse, horse_name: horseName };
-                    }
-                    return horse;
-                });
+                    return this.#indexed.putStorePromise(db, { ...client, horses: updatedHorses }, this.#indexed.stores.CLIENTLIST, false, tx);
+                }),
+                // Add the horse data to the EDITHORSE object store
+                this.#indexed.putStorePromise(db, { hID, cID, horse_name: horseName, edit_clientHorse: true }, this.#indexed.stores.EDITHORSE, false, tx),
 
-                const updatedClient = { ...client, horses: updatedHorses };
+            ]);
 
-                // Update the client information
-                updatePromises.push(this.#indexed.putStorePromise(db, updatedClient, this.#indexed.stores.CLIENTLIST, false, tx));
-            }
+            // Reset the cache after successful update
+            this.#clientList = null;
+            this.#initialized = false;
 
-            // Add the horse data to the EDITHORSE object store
-            const editHorseData = { hID, cID, horse_name: horseName, edit_clientHorse: true, client_name: clientName };
-            updatePromises.push(this.#indexed.putStorePromise(db, editHorseData, this.#indexed.stores.EDITHORSE, false, tx));
-
-            // Wait for all promises to resolve
-            await Promise.all(updatePromises);
-
-            return { status: true, msg: `${horseName} has been updated.` };
+            return true;
         }
         catch (err) {
             const { AppError } = await import('../../../core/errors/models/AppError.js');
@@ -474,7 +470,7 @@ export default class ManageClient {
      * @returns {Promise<Object>} A promise that resolves to an object containing the status and message.
      * @throws Will throw an error if the operation fails.
      */
-    async deleteClientHorse(hID, cID) {
+    async deleteClientHorse({ hID, cID }) {
         try {
             if (!hID || !cID) throw new Error('No horse id or client id provided.');
 
@@ -491,7 +487,7 @@ export default class ManageClient {
             const db = await this.#indexed.openDBPromise();
             const tx = db.transaction([
                 this.#indexed.stores.CLIENTLIST,
-                this.#indexed.stores.DELETEHORSE // Ensure DELETEHORSE store is correctly referenced
+                this.#indexed.stores.DELETEHORSE
             ], 'readwrite');
 
             const clientInfo = await this.#indexed.getAllStoreByIndexPromise(db, this.#indexed.stores.CLIENTLIST, 'cID', cID, tx);
@@ -517,18 +513,17 @@ export default class ManageClient {
             // Wait for all promises to resolve
             await Promise.all(updatePromises);
 
-            // Commit the transaction
-            tx.oncomplete = () => {
-                console.log('Transaction completed successfully.');
-            };
-
             // Handle transaction error
             tx.onerror = (err) => {
                 console.error('Transaction failed:', err);
                 throw new Error('Transaction failed: ' + err.target.error);
             };
 
-            return { status: true, msg: `Horse has been deleted.` };
+            // Reset the cache after successful update
+            this.#clientList = null;
+            this.#initialized = false;
+
+            return true;
         }
         catch (err) {
             const { AppError } = await import('../../../core/errors/models/AppError.js');
@@ -565,12 +560,12 @@ export default class ManageClient {
      * @returns {Promise<Array>} A promise that resolves to an array of client information.
      */
     async getClientScheduleByTrimDate(trimDate) {
-        try{
+        try {
             const db = await this.#indexed.openDBPromise();
             const clientList = await this.#indexed.getAllStoreByIndexPromise(db, this.#indexed.stores.CLIENTLIST, 'trim_date', trimDate);
             return clientList || [];
         }
-        catch(err){
+        catch (err) {
             const { AppError } = await import('../../../core/errors/models/AppError.js');
             AppError.process(err, {
                 errorCode: AppError.Types.DATABASE_ERROR,
@@ -670,11 +665,11 @@ export default class ManageClient {
         try {
             // Update IDB
             await this.#performDatabaseUpdate(newData);
-            
+
             // Update cache
             this.#clientList = null;
             this.#initialized = false;
-            
+
             return true;
         }
         catch (error) {
@@ -695,9 +690,9 @@ export default class ManageClient {
     async #performDatabaseUpdate(data) {
         const db = await this.#indexed.openDBPromise();
         const tx = db.transaction([this.#indexed.stores.CLIENTLIST], 'readwrite');
-        
-        await this.#indexed.putStorePromise( db, data, this.#indexed.stores.CLIENTLIST, false, tx );
-        
+
+        await this.#indexed.putStorePromise(db, data, this.#indexed.stores.CLIENTLIST, false, tx);
+
         return true;
     }
 }

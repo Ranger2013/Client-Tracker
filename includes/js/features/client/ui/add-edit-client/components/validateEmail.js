@@ -1,9 +1,9 @@
 import { clearMsg } from '../../../../../core/utils/dom/messages.js';
 
-export default async function validateEmail({ evt, manageClient }) {
+export default async function validateEmail({ evt, primaryKey, manageClient }) {
 	try {
 		// No email, clear message as email is optional
-		if (!evt.target.value) {			
+		if (!evt.target.value) {
 			clearMsg({ container: `${evt.target.id}-error`, hide: true, input: evt.target });
 			return;
 		}
@@ -12,9 +12,9 @@ export default async function validateEmail({ evt, manageClient }) {
 
 		if (!evt.target.value.match(emailPattern)) return 'Please provide a valid email.';
 
-		if(evt.target.value && await checkForDuplicateEmail({email: evt.target.value, manageClient})) return 'Email is already in use.';
+		if (evt.target.value && await checkForDuplicateEmail({ email: evt.target.value, primaryKey, manageClient })) return 'Email is already in use.';
 
-		clearMsg({container: `${evt.target.id}-error`, hide: true, input: evt.target});
+		clearMsg({ container: `${evt.target.id}-error`, hide: true, input: evt.target });
 		return;
 	}
 	catch (err) {
@@ -22,10 +22,13 @@ export default async function validateEmail({ evt, manageClient }) {
 	}
 }
 
-async function checkForDuplicateEmail({email, manageClient}) {
+async function checkForDuplicateEmail({ email, primaryKey, manageClient }) {
 	try {
 		const clientList = await manageClient.getClientScheduleList();
-		const duplicate = clientList?.some(client => client.email === email);		
+		const duplicate = clientList?.some(client => {
+			if (client.primaryKey === parseInt(primaryKey, 10)) return false;
+			return client.email === email
+		});
 		return duplicate;
 	}
 	catch (err) {

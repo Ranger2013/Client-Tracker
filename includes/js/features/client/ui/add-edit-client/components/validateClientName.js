@@ -23,7 +23,7 @@ export default async function validateClientName({ evt, cID, primaryKey, manageC
 		// Check for a duplicate
 		if (clientList?.length > 0) {
 			const duplicate = clientList.some(client => {
-				if (client.primaryKey === primaryKey || client.cID === cID) return false; // continue in case we are editing the client
+				if (client.primaryKey === parseInt(primaryKey, 10) || client.cID === parseInt(cID, 10)) return false; // continue in case we are editing the client
 				return client.client_name.trim().toUpperCase() === evt.target.value.trim().toUpperCase();
 			});
 

@@ -27,7 +27,6 @@ export default class ManageUser {
             this.#initialized = true;
         }
         catch (error) {
-            console.log('In ManageUser #initializeSettings error: ', error);
             const { AppError } = await import('../../../core/errors/models/AppError.js');
             // Process because this is a worker, let parent handle display
             await AppError.process(error, {

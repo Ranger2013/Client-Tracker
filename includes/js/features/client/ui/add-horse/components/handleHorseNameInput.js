@@ -14,7 +14,7 @@ export async function handleHorseNameInput({ evt, cID, primaryKey, manageClient,
 			return;
 		}
 
-		const duplicate = await isDuplicateHorseName({ evt, cID, primaryKey, manageClient });
+		const duplicate = await isDuplicateHorseName({ horseName: horseNameValue, cID, primaryKey, manageClient });
 
 		if (duplicate) {
 			safeDisplayMessage({
@@ -25,6 +25,8 @@ export async function handleHorseNameInput({ evt, cID, primaryKey, manageClient,
 
 			// Disable the submit button
 			disableEnableSubmitButton('submit-button');
+			clearMsg({ container: 'form-msg' });
+
 			return;
 		}
 
@@ -36,6 +38,7 @@ export async function handleHorseNameInput({ evt, cID, primaryKey, manageClient,
 		clearMsg({ container: 'form-msg' });
 		document.getElementById('submit-button').disabled = false;
 		disableEnableSubmitButton('submit-button');
+
 		return;
 	}
 	catch (err) {
@@ -48,14 +51,15 @@ export async function handleHorseNameInput({ evt, cID, primaryKey, manageClient,
 	}
 }
 
-export async function isDuplicateHorseName({ evt, cID, primaryKey, manageClient }) {
+export async function isDuplicateHorseName({ horseName, cID, primaryKey, manageClient }) {
 	try {
 		const clientHorses = await manageClient.getClientHorses({ primaryKey });
 
 		// Return early if no horses
 		if (!clientHorses?.length) return false;
 
-		return clientHorses.some(horse => horse.horse_name.toLowerCase() === evt.target.value.toLowerCase());
+
+		return clientHorses.some(horse => horse.horse_name.toLowerCase() === horseName.trim().toLowerCase());
 
 	}
 	catch (err) {
@@ -90,7 +94,7 @@ export async function handleAddHorseFormSubmission({ evt, cID, primaryKey, manag
 
 		// Add the new horse
 		const response = await manageClient.addNewHorse({horseName, cID, primaryKey});
-		console.log(response);
+
 		if(response){
 			// Clear the form
 			evt.target.reset();

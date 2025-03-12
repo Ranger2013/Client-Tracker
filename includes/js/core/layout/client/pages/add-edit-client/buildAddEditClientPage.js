@@ -3,7 +3,6 @@ import { trimCycleConfigurations } from '../../../../utils/dom/forms/trimCycleCo
 import { removeListeners } from '../../../../utils/dom/listeners.js';
 import { clearMsg } from '../../../../utils/dom/messages.js';
 import buildPageContainer from '../../../components/buildPageContainer.js';
-import buildSubmitButtonSection from '../../../components/buildSubmitButtonSection.js';
 import buildTwoColumnAddressSection from '../../../components/buildTwoColumnAddressSection.js';
 import buildTwoColumnInputSection from '../../../components/buildTwoColumnInputSection.js';
 import buildTwoColumnRadioButtonSection from '../../../components/buildTwoColumnRadioButtonSection.js';
@@ -60,10 +59,8 @@ export default async function buildAddEditClientPage({ cID = null, primaryKey = 
 
         // Check if we are editing or adding a client
         if ((cID && cID !== '') || (primaryKey && primaryKey !== '')) {
-            const { default: getClientInformation } = await import("./helpers/getClientInformation.js");
-
-            // Get the client's information
-            clientInfo = await getClientInformation({ cID, primaryKey, fieldValues });
+            // Get the client information
+            clientInfo = await manageClient.getClientInfo({ primaryKey });
             clientAnchor = `/tracker/clients/appointments/?cID=${cID}&key=${primaryKey}`;
             clientName = clientInfo.client_name;
 
@@ -74,12 +71,14 @@ export default async function buildAddEditClientPage({ cID = null, primaryKey = 
                 }
             });
 
+            const { default: buildSubmitDeleteButtonSection } = await import('../../../components/buildSubmitDeleteButtonSection.js');
             submitButton = await buildSubmitDeleteButtonSection({
                 submitButtonText: 'Edit Client',
                 deleteButtonText: 'Delete Client'
             });
         }
         else {
+            const { default: buildSubmitButtonSection } = await import('../../../components/buildSubmitButtonSection.js');
             submitButton = await buildSubmitButtonSection('Add Client');
         }
 
@@ -231,9 +230,9 @@ export default async function buildAddEditClientPage({ cID = null, primaryKey = 
 
         mainContainer.innerHTML = '';
         mainContainer.appendChild(container);
-        
+
         const { default: addEditClient } = await import("../../../../../features/client/ui/add-edit-client/addEditClientJS.js");
-        await addEditClient({cID, primaryKey, clientInfo, manageClient, manageUser, componentId: COMPONENT_ID});
+        await addEditClient({ cID, primaryKey, clientInfo, manageClient, manageUser, componentId: COMPONENT_ID });
 
         return () => removeListeners(COMPONENT_ID);
     }

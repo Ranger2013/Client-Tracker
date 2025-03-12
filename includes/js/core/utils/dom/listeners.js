@@ -6,12 +6,11 @@ import { getValidElement } from './elements.js';
  */
 const listenerRegistry = new Map();
 
-
 /**
  * Adds an event listener and tracks it by component ID
  * @param {Object} options - The listener options
  * @param {string|HTMLElement} options.elementOrId - Element or element ID to attach listener to
- * @param {keyof HTMLElementEventMap} options.eventType - Type of event to listen for
+ * @param {string|string[]} options.eventType - Type of event to listen for
  * @param {EventListener} options.handler - Event handler function
  * @param {string} options.componentId - ID for grouping related listeners
  * @throws {AppError} If element not found or listener registration fails
@@ -26,13 +25,17 @@ export function addListener({elementOrId, eventType, handler, componentId}) {
 
         // Use our utility function instead
         const element = getValidElement(elementOrId);
-        
-        // Add listener and track
-        element.addEventListener(eventType, handler);
-        registerListener({element, type: eventType, listener: handler, componentId});
+
+        // Normalize eventType to always be an array
+        const eventTypes = Array.isArray(eventType) ? eventType : [eventType];
+
+        // Process all event types in a single loop
+        eventTypes.forEach(type => {
+            element.addEventListener(type, handler);
+            registerListener({element, type, listener: handler, componentId});
+        });
 
         return true;
-
     }
     catch (error) {
         const elementDesc = typeof elementOrId === 'string' 

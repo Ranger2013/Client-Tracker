@@ -50,7 +50,6 @@ const PAGE_CONFIG = {
 
 export default async function buildPageElements({ active, cID = null, primaryKey = null, manageClient, manageUser }) {
 	 try {
-		
 		  const container = buildEle(PAGE_CONFIG.container);
 		  const appointmentWrapper = buildEle(PAGE_CONFIG.wrapper);
 		  const [

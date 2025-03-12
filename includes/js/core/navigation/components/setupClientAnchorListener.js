@@ -5,7 +5,6 @@ export default async function setupClientAnchorListener({ manageUser, manageClie
 	try{
 		// Simplified anchor listener since selectPage handles its own errors. This is if we are editing a client
 		const clientNav = document.querySelector('[data-component="client-navigation"]');
-
 		if (clientNav) {
 			addListener({
 				elementOrId: clientNav,

@@ -10,13 +10,6 @@
 export default async function handleClearingStore({indexed, db, response, store}) {
 	// Handle the removal of data from the object store
 	try {
-		if(Array.isArray(response)){
-			console.log('response is an array: ', response);			
-		}
-		else {
-			console.log('response is not an array: ', response);
-		}
-
 		for (const { key, clearStore } of response) {
 			if (key) {
 				await indexed.deleteRecordPromise(key, store);

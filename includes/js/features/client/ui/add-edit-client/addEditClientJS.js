@@ -27,7 +27,7 @@ export default async function addEditClient({ cID, primaryKey, clientInfo, manag
 		const clientNav = document.querySelector('[data-component="client-navigation"]');
 		if (clientNav) {
 			const { default: clientAnchorNav } = await import("../../../../core/navigation/components/setupClientAnchorListener.js");
-			await clientAnchorNav({ componentId });
+			await clientAnchorNav({ manageClient, manageUser, componentId });
 		}
 
 		initializeAppointmentCheck({ elements, clientInfo, manageClient, manageUser, componentId });

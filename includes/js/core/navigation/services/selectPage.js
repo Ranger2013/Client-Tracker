@@ -42,13 +42,13 @@ export default async function selectPage({ evt, page, cID = null, closeMenu = nu
                 },
                 single: {
                     module: "../../layout/client/pages/schedule-list/buildAppointmentListPage.js",
-                    getState: () => {`/tracker/clients/appointments/?cID=${cID}&primaryKey=${primaryKey}`},
-                    getArgs: () => [{mainContainer: main, cID, primaryKey, manageClient, manageUser }]
+                    getState: (cID, primaryKey) => `/tracker/clients/appointments/?cID=${cID}&primaryKey=${primaryKey}`,
+                    getArgs: (cID, primaryKey) => [{mainContainer: main, cID, primaryKey, manageClient, manageUser }]
                 },
                 add: {
                     module: "../../layout/client/pages/add-edit-client/buildAddEditClientPage.js",
                     getState: () => "/tracker/clients/add/",
-                    getArgs: () => [{ cID, primaryKey, mainContainer: main, manageClient, manageUser }]
+                    getArgs: (cID, primaryKey) => [{ cID, primaryKey, mainContainer: main, manageClient, manageUser }]
                 },
                 duplicate: {
                     module: "../page-builders/pages/clients/add-duplicate/buildDuplicateClientPage.js",

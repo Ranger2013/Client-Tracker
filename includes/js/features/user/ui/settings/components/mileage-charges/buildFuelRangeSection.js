@@ -83,7 +83,6 @@ function buildElements(structure) {
  * @returns {<HTMLElement|null>} The constructed paragraph element containing the range input or null if error
  */
 function buildMileageRangeInput(iteration, value, componentId) {
-    console.log('In buildMileageRangeInput: componentId: ', componentId);
     try {
         const p1 = buildEle({
             type: 'p',

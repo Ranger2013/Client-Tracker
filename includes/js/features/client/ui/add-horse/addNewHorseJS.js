@@ -1,12 +1,12 @@
-import { createDebouncedHandler, getOptimalDelay } from '../../../../core/utils/dom/eventUtils';
-import { addListener } from '../../../../core/utils/dom/listeners';
-import { clearMsg, safeDisplayMessage } from '../../../../core/utils/dom/messages';
-import { handleAddHorseFormSubmission, handleHorseNameInput } from './components/handleHorseNameInput';
+import { createDebouncedHandler, getOptimalDelay } from '../../../../core/utils/dom/eventUtils.js';
+import { addListener } from '../../../../core/utils/dom/listeners.js';
+import { clearMsg, safeDisplayMessage } from '../../../../core/utils/dom/messages.js';
+import { handleAddHorseFormSubmission, handleHorseNameInput } from './components/handleHorseNameInput.js';
+import clientAnchorNav from '../../../../core/navigation/components/setupClientAnchorListener.js';
 
 export default async function addNewHorse({ cID, primaryKey, mainContainer, manageClient, manageUser, componentId }) {
 	try {
 		// Add the event listener for the client name to navigate back to the client page
-		const { default: clientAnchorNav } = await import("../../../../core/navigation/components/setupClientAnchorListener.js");
 		await clientAnchorNav({ manageUser, manageClient, componentId });
 
 		// Set up the debouncer for validation.
@@ -15,11 +15,8 @@ export default async function addNewHorse({ cID, primaryKey, mainContainer, mana
 			handleHorseNameInput({ evt, cID, primaryKey, manageClient, componentId });
 		}, getOptimalDelay('validation'));
 
-		// Event listener to validate the horse name. Ensuring no duplicate horse names are added.
-		addListener({
-			elementOrId: 'horse-name',
-			eventType: 'input',
-			handler: (evt) => {
+		const eventHandlers = {
+			'input:horse-name': (evt) => {
 				if (evt.target.value !== '') {
 					safeDisplayMessage({
 						elementId: 'form-msg',
@@ -29,19 +26,24 @@ export default async function addNewHorse({ cID, primaryKey, mainContainer, mana
 					});
 					document.getElementById('submit-button').disabled = true;
 				}
-
 				debouncedValidate(evt);
 			},
-			componentId,
-		});
-
-		// Add the form submission event listener
-		addListener({
-			elementOrId: 'add-horse-form',
-			eventType: 'submit',
-			handler: async (evt) => {
+			'focusin:horse-name': (evt) => clearMsg({ container: `${evt.target.id}-error`, hide: true, input: evt.target }),
+			'submit:add-horse-form': async (evt) => {
 				evt.preventDefault();
 				await handleAddHorseFormSubmission({ evt, cID, primaryKey, manageClient, componentId });
+			},
+		};
+
+		addListener({
+			elementOrId: 'card',
+			eventType: ['input', 'focusin', 'submit'],
+			handler: (evt) => {
+				const eventKey = `${evt.type}:${evt.target.id}`;
+
+				if (eventHandlers[eventKey]) {
+					eventHandlers[eventKey](evt);
+				}
 			},
 			componentId,
 		});

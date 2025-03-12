@@ -45,24 +45,24 @@ export default async function selectClientMenuPage({ evt, page, cID, primaryKey,
             //     historyState: `/tracker/trimming/view/?cID=${cID}&key=${primaryKey}`,
             //     args: [{ cID, primaryKey, mainContainer: main }],
             // },
-            // 'edit-client': {
-            //     importPath: "../page-builders/pages/clients/add-edit-client/buildAddEditClientPage.js",
-            //     importFunction: "default",
-            //     historyState: `/tracker/clients/edit-client/?cID=${cID}&key=${primaryKey}`,
-            //     args: [{ cID, primaryKey, mainContainer: main }],
-            // },
+            'edit-client': {
+                importPath: "../../layout/client/pages/add-edit-client/buildAddEditClientPage.js",
+                importFunction: "default",
+                historyState: `/tracker/clients/edit-client/?cID=${cID}&key=${primaryKey}`,
+                args: [{ cID, primaryKey, mainContainer: main, manageClient, manageUser }],
+            },
             'add-horse': {
                 importPath: "../../layout/client/menu/horses/add/buildAddHorsePage.js",
                 importFunction: "default",
                 historyState: `/tracker/client-horses/add/?cID=${cID}&key=${primaryKey}`,
                 args: [{ cID, primaryKey, mainContainer: main, manageClient, manageUser }],
             },
-            // 'edit-horse': {
-            //     importPath: "../page-builders/pages/client-menu/client-horses/edit-horse/buildEditHorsePage.js",
-            //     importFunction: "default",
-            //     historyState: `/tracker/client-horses/edit/?cID=${cID}&key=${primaryKey}`,
-            //     args: [{ cID, primaryKey, mainContainer: main }],
-            // },
+            'edit-horse': {
+                importPath: "../../layout/client/menu/horses/edit/buildEditHorsePage.js",
+                importFunction: "default",
+                historyState: `/tracker/client-horses/edit/?cID=${cID}&key=${primaryKey}`,
+                args: [{ cID, primaryKey, mainContainer: main, manageClient, manageUser }],
+            },
         };
 
         const pageBuilder = PAGE_BUILDERS[page];

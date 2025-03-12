@@ -48,14 +48,12 @@ export default async function handleRadioButtonSelect({ rangeButton, mileButton,
         const mileageCharges = await manageUser.getMileageCharges();
 
         if (Array.isArray(mileageCharges) && mileageCharges.length > 0) {
-            console.log('We should have mileage ranges.');
             await listenForFuelRangeInput({ userClass: manageUser, rangeContainer, rangeInputId: RANGE_INPUT_ID });
             mileContainer.classList.add('w3-hide');
             rangeContainer.classList.remove('w3-hide');
             rangeButton.checked = true;
         }
         else {
-            console.log('We should have per-mile charges.');
             await populateByMileForm({ form: 'per-mile-form', manageUser });
             rangeContainer.classList.add('w3-hide');
             mileContainer.classList.remove('w3-hide');
