@@ -1,3 +1,12 @@
+const COMPONENT = 'Elements.js';
+const DEBUG = false;
+
+const debugLog = (...args) => {
+	if (DEBUG) {
+		console.log(`[${COMPONENT}]`, ...args);
+	}
+}
+
 /**
  * @typedef {Object} BuildEleArgs
  * @property {string} type - The type of the element to create
@@ -69,7 +78,7 @@ export function getValidElement(element) {
 	}
 
 	if (!(element instanceof HTMLElement)) {
-		throw new Error('The provided element is not valid.');
+		throw new Error(`The provided element "${element}" is not valid.`);
 	}
 
 	return element;
@@ -105,6 +114,7 @@ export function buildElementsFromConfig(config) {
  * // options will be an array of option elements with the specified value and text.
  */
 export function buildGenericSelectOptions(config) {
+	debugLog('Building select options with config:', config);
 	return config.list.map(opt => {
 		// Set the value and the text of the option
 		const value = config.value(opt);

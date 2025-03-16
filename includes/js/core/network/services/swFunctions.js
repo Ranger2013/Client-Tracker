@@ -1,5 +1,5 @@
-export const staticCacheName = 'static-cache-v2';
-export const dynamicCacheName = 'dynamic-cache-v2';
+export const staticCacheName = 'static-cache-v1';
+export const dynamicCacheName = 'dynamic-cache-v1';
 
 // Do not cache these pages. Some are api pages, but most are the generated offline pages.
 const noCache = [

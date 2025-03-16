@@ -33,12 +33,12 @@ export default async function selectClientMenuPage({ evt, page, cID, primaryKey,
 
     try {
         const PAGE_BUILDERS = {
-            // 'add-trimming': {
-            //     importPath: "../page-builders/pages/client-menu/trimming/add/buildAddTrimmingPage.js",
-            //     importFunction: "default",
-            //     historyState: `/tracker/trimming/add/?cID=${cID}&key=${primaryKey}`,
-            //     args: [{ cID, primaryKey, mainContainer: main }],
-            // },
+            'add-trimming': {
+                importPath: "../../layout/client/menu/trimming/add/buildAddTrimmingPage.js",
+                importFunction: "default",
+                historyState: `/tracker/trimming/add/?cID=${cID}&key=${primaryKey}`,
+                args: [{ cID, primaryKey, mainContainer: main, manageClient, manageUser }],
+            },
             // 'view-trim-dates': {
             //     importPath: "../page-builders/pages/client-menu/trimming/view/buildViewTrimmingPage.js",
             //     importFunction: "default",

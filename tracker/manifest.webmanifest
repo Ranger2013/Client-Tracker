@@ -1,4 +1,6 @@
 {
+	"lang": "en",
+	"dir": "ltr",
 	"theme_color": "#000",
 	"background_color": "#fff",
 	"display": "standalone",
@@ -8,7 +10,6 @@
 	"name": "Client Tracker by Cavalier Farrier Services",
 	"short_name": "Client Tracker",
 	"description": "Web Application to track all aspects of your farrier business",
-	"version": "1.0.1",
 	"icons": [{
 			"src": "/public/siteImages/icon-192x192.png",
 			"sizes": "192x192",
@@ -33,10 +34,5 @@
 			"type": "image/png",
 			"purpose": "any maskable"
 		}
-	],
-	"permissions": [
-		"camera",
-		"filesystem",
-		"notifications"
 	]
 }

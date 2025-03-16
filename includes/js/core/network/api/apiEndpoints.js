@@ -14,7 +14,7 @@ export const systemAPI = {
 
 export const accountAPI = {
     unpaidInvoices: "/includes/api/my-account/unpaid-invoices/getUnpaidInvoicesAPI.php",
-    subscription: "/includes/api/my-account/subsciptions/getSubscriptionAPI.php"
+    subscription: "/includes/api/my-account/subsciptions/getSubscriptionAPI.php",
 };
 
 export const dataAPI = {

@@ -4,12 +4,52 @@ import IndexedDBOperations from "../../../core/database/IndexedDBOperations.js";
  * Manages user-related operations and settings using IndexedDB
  */
 export default class ManageUser {
+    // Static private property to hold the singleton instance
+    static #instance = null;
+
+    // Instance private properties
     #settings = null;
     #initialized = false;
     #indexed;
+    #debug = false; // Debug flag - off by default
 
-    constructor() {
+    constructor(options = { debug: false }) {
+        // If an instance already exists, return it
+        if (ManageUser.#instance) {
+            // Optionally update debug setting if passed
+            if (options.debug !== undefined) {
+                ManageUser.#instance.setDebugMode(options.debug);
+            }
+            return ManageUser.#instance;
+        }
+
+        // First-time initialization
         this.#indexed = new IndexedDBOperations();
+        this.#debug = options.debug || false;
+
+        // Store this instance as the singleton
+        ManageUser.#instance = this;
+
+        this.#log('ManageUser singleton instance created.');
+        return this;
+    }
+
+    /**
+     * Enable or disable debug logging
+     * @param {boolean} enabled - Whether to enable debug logging
+     */
+    setDebugMode(enabled) {
+        this.#debug = !!enabled;
+    }
+
+    /**
+     * Debug log helper - only logs when debug is enabled
+     * @private
+     */
+    #log(...args) {
+        if (this.#debug) {
+            console.log(`[ManageUser]`, ...args);
+        }
     }
 
     /**
@@ -18,13 +58,16 @@ export default class ManageUser {
      * @throws {Error} If initialization fails
      */
     async #initializeSettings() {
+        this.#log('Is this.#initialized: ', this.#initialized);
         if (this.#initialized) return;
 
         try {
             const db = await this.#indexed.openDBPromise();
             const userSettings = await this.#indexed.getAllStorePromise(db, this.#indexed.stores.USERSETTINGS);
+            this.#log('In #initializeSettings: userSettings: ', userSettings);
             this.#settings = userSettings?.length === 1 ? userSettings[0] : null;
             this.#initialized = true;
+            this.#log('In #initializeSettings: #settings set: ', this.#settings);
         }
         catch (error) {
             const { AppError } = await import('../../../core/errors/models/AppError.js');
@@ -47,13 +90,15 @@ export default class ManageUser {
      */
     async getSettings(...keys) {
         try {
+            this.#log('In getSettings: ', keys);
             await this.#initializeSettings();
+            this.#log('In getSettings: ', this.#settings);
             if (!this.#settings) return null;
-            
+
             return keys.length === 0
                 ? this.#settings
                 : keys.filter(key => this.#settings[key] != null)
-                     .reduce((acc, key) => ({ ...acc, [key]: this.#settings[key] }), {});
+                    .reduce((acc, key) => ({ ...acc, [key]: this.#settings[key] }), {});
         }
         catch (error) {
             const { AppError } = await import('../../../core/errors/models/AppError.js');
@@ -107,6 +152,7 @@ export default class ManageUser {
     // Other getters can be similarly simplified
     async getFarrierPrices() {
         try {
+
             const { farrier_prices } = await this.getSettings('farrier_prices') ?? {};
             return farrier_prices ?? null;
         }
@@ -162,12 +208,12 @@ export default class ManageUser {
      * @returns {Promise<Array|null>} Array of personal notes or null if none found
      */
     async getUserPersonalNotes() {
-        try{
+        try {
             const db = await this.#indexed.openDBPromise();
             const personalNotes = await this.#indexed.getAllStorePromise(db, this.#indexed.stores.PERSONALNOTES);
             return personalNotes ?? null;
         }
-        catch(err){
+        catch (err) {
             throw err;
         }
     }
@@ -211,7 +257,7 @@ export default class ManageUser {
                 // Dynamically import the userSettingsDataStructure.js file and then set the userSettings to that structure
                 const { default: userSettingsDataStructure } = await import("../components/userSettingsDataStructure.js");
                 const setUserSettings = userSettingsDataStructure();
-                
+
                 const db = await this.#indexed.openDBPromise();
                 await this.#indexed.putStorePromise(db, setUserSettings, this.#indexed.stores.USERSETTINGS);
                 // Get all of the user's settings
@@ -223,7 +269,7 @@ export default class ManageUser {
             }
 
             userSettings[settingsProperty] = userData;
-            
+
             // This operation needs error handling
             await this.#manageIDBTransactions({
                 userData,
@@ -259,10 +305,7 @@ export default class ManageUser {
     }) {
         try {
             const db = await this.#indexed.openDBPromise();
-            const [clearResult, putResult] = await Promise.all([
-                this.#indexed.clearStorePromise(db, this.#indexed.stores.USERSETTINGS),
-                this.#indexed.putStorePromise(db, userSettings, this.#indexed.stores.USERSETTINGS)
-            ]);
+            await this.#indexed.putStorePromise(db, userSettings, this.#indexed.stores.USERSETTINGS, true);
 
             if (backupStore && backupAPITag) {
                 await this.#backupData(userData, backupStore, backupAPITag, backupData);

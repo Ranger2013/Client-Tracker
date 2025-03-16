@@ -205,7 +205,7 @@ const assets = [
 	// '/includes/js/utils/validation/validateAddPersonalNotesForm.js',
 	// '/includes/js/utils/validation/validateTrimmingForm.js',
 	// '/includes/js/utils/validation/validationUtils.js',
-	'/tracker/manifest.webmanifest',
+	// '/tracker/manifest.webmanifest',
 	// '/tracker/public/src/libs/trackerFallBackPage.php',
 	// '/public/siteImages/icon-192x192.png',
 	// '/public/siteImages/caret-down-white.svg',

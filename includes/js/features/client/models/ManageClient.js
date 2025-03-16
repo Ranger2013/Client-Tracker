@@ -1,13 +1,52 @@
 import IndexedDBOperations from '../../../core/database/IndexedDBOperations.js';
 
 export default class ManageClient {
+    // Static private property to hold the singleton instance
+    static #instance = null;
+
+    // Instance private properties
     #indexed;
     #clientList = null;
     #initialized = false;
     #trimmingInfo = null;
+    #debug = false;
 
-    constructor() {
+    constructor(options = { debug: true }) {
+        // If an instance already exists, return it
+        if (ManageClient.#instance) {
+            // Optionally update debug setting if passed
+            if (options.debug !== undefined) {
+                ManageClient.#instance.setDebugMode(options.debug);
+            }
+            return ManageClient.#instance;
+        }
+
         this.#indexed = new IndexedDBOperations();
+        this.#debug = options.debug || false;
+
+        // Store this instance as the singleton
+        ManageClient.#instance = this;
+
+        this.#log('ManageClient singleton instance created.');
+        return this;
+    }
+
+    /**
+     * Enable or disable debug logging
+     * @param {boolean} enabled - Whether to enable debug logging
+     */
+    setDebugMode(enabled) {
+        this.#debug = !!enabled;
+    }
+
+    /**
+     * Debug log helper - only logs when debug is enabled
+     * @private
+     */
+    #log(...args) {
+        if (this.#debug) {
+            console.log(`[ManageClient]`, ...args);
+        }
     }
 
     async #initializeClientData() {
@@ -92,8 +131,8 @@ export default class ManageClient {
 
             // Get the cID and primary key concurrently
             const [cID, primaryKey] = await Promise.all([
-                this.#indexed.getLastKeyForID(this.#indexed.stores.MAXCLIENTID),
-                this.#indexed.getLastKeyForID(this.#indexed.stores.MAXCLIENTPRIMARYKEY)
+                this.#indexed.getLastKeyForID({store: this.#indexed.stores.MAXCLIENTID}),
+                this.#indexed.getLastKeyForID({store: this.#indexed.stores.MAXCLIENTPRIMARYKEY})
             ]);
 
             // Add the cID and primary key to the userData
@@ -166,13 +205,15 @@ export default class ManageClient {
                         primaryKey: parseInt(primaryKey, 10),
                     };
 
+                    this.#log('NewClientData: ', newClientData);
+
                     // If the primaryKey doesn't match the current client, update the appointment time, trim cycle, and trim date
-                    if (client.primaryKey !== primaryKey) {
+                    if (parseInt(client.primaryKey, 10) !== parseInt(primaryKey, 10)) {
                         Object.assign(newClientData, {
                             trim_cycle: client.trim_cycle,
                             trim_date: client.trim_date,
                             app_time: client.app_time,
-                            primaryKey: client.primaryKey
+                            primaryKey: parseInt(client.primaryKey, 10)
                         });
                     }
 
@@ -250,7 +291,7 @@ export default class ManageClient {
             const { app_time, duplicate_client: primaryKey, next_trim_date, trim_cycle } = userData;
 
             // Get the next primaryKey for this client
-            const newPrimaryKey = await this.#indexed.getLastKeyForID(this.#indexed.stores.MAXCLIENTPRIMARYKEY);
+            const newPrimaryKey = await this.#indexed.getLastKeyForID({store: this.#indexed.stores.MAXCLIENTPRIMARYKEY});
 
             const db = await this.#indexed.openDBPromise();
 
@@ -363,7 +404,7 @@ export default class ManageClient {
             if (!cID || !primaryKey) throw new Error('No cID or primaryKey provided.');
 
             // Get the hID for the new horse. Doing this prior to the transaction to prevent transaction finishing early
-            const hID = await this.#indexed.getLastKeyForID(this.#indexed.stores.MAXHORSEID);
+            const hID = await this.#indexed.getLastKeyForID({store:this.#indexed.stores.MAXHORSEID});
 
             // Set up idb transactions
             const db = await this.#indexed.openDBPromise();
@@ -561,8 +602,10 @@ export default class ManageClient {
      */
     async getClientScheduleByTrimDate(trimDate) {
         try {
+            this.#log('In getClientScheduleByTrimDate: trimDate: ', trimDate);
             const db = await this.#indexed.openDBPromise();
             const clientList = await this.#indexed.getAllStoreByIndexPromise(db, this.#indexed.stores.CLIENTLIST, 'trim_date', trimDate);
+            this.#log('In getClientScheduleByTrimDate: clientList: ', clientList);
             return clientList || [];
         }
         catch (err) {

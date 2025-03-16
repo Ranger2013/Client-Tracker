@@ -29,9 +29,9 @@ else {
 }
 
 // Redirect to https if server port is set to http
-// if((int)$_SERVER['SERVER_PORT'] === 80){
-// 	$info->myRedirect('https://'.$_SERVER['HTTP_HOST']);
-// }
+if((int)$_SERVER['SERVER_PORT'] === 80){
+	$info->myRedirect('https://'.$_SERVER['HTTP_HOST']);
+}
 
 // Include the db connection
 include_once DOC_ROOT . "includes/configurations/db-connection/dbConnection.php";

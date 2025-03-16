@@ -1,5 +1,14 @@
 import getBlockOfTime from './getBlockOfTime.js';
 
+const COMPONENT = 'getProjectedAppointments';
+const DEBUG = false;
+
+const debugLog = (...args) => {
+	if(DEBUG) {
+		console.log(`[${COMPONENT}]`, ...args);
+	}
+};
+
 /**
  * Retrieves and processes projected appointments based on the provided trim date, trim cycle, client information, and schedule options.
  * 
@@ -14,58 +23,52 @@ import getBlockOfTime from './getBlockOfTime.js';
  * @returns {Promise<Object[]|null>} A promise that resolves to an array of projected booking data or null if no projections are found.
  * @throws {Error} Throws an error if there's an issue retrieving or processing the projected appointments.
  */
-export default async function getProjectedAppointments({appointmentDate, trimCycle, clientInfo, scheduleOptions, manageClient}) {
+export default async function getProjectedAppointments({ appointmentDate, trimCycle, clientInfo, scheduleOptions, manageClient }) {
 	try {
 		let cID = clientInfo?.cID || null;
-		
 		const trimCycleValue = clientInfo?.trim_cycle || (trimCycle.options[trimCycle.selectedIndex].value !== 'null' ? trimCycle.options[trimCycle.selectedIndex].value : null);
-		
-		if(!trimCycleValue) return null;
+
+		if (!trimCycleValue) return null;
 
 		// Set up the Dates
 		const [year, month, day] = appointmentDate.value.split('-');
 		const nextTrim = new Date(year, month - 1, day);
-		nextTrim.setHours(0,0,0,0);
- 
-		// Array of trim cycle days
-		const trimCycleDays = [7, 14, 21, 28, 35, 42, 49, 56, 63, 70];
-		const projectedBookingsData = [];
+		nextTrim.setHours(0, 0, 0, 0);
+		const currentDate = new Date();
+		currentDate.setHours(0, 0, 0, 0);
 
-		for(const cycleDays of trimCycleDays){
+		const projectedBookingsData = [];
+		const processedClients = new Set();
+
+		for (const cycleDays of [7, 14, 21, 28, 35, 42, 49, 56, 63, 70]) {
 			const pastDate = new Date(nextTrim);
 			pastDate.setDate(nextTrim.getDate() - cycleDays);
-			const formatedPastDate = pastDate.toISOString().slice(0,10);
 
-			// Get the trim dates from the db
-			const trimDates = await manageClient.getClientScheduleByTrimDate(formatedPastDate);
+			// If we've gone past current date, no need to look further back
+			if (pastDate <= currentDate) {
+				return projectedBookingsData.length > 0 ? projectedBookingsData : null;
+			}
 
-			// Loop through the trim dates
-			if(trimDates && trimDates.length > 0){
-				for(const trimDate of trimDates){
-					// Do not show the current client for projected dates or inactive clients or clients that do not match up with the trim cycle days
-					if(trimDate.cID === cID || trimDate.active === 'no' || trimDate.trim_cycle !== cycleDays.toString()) continue;
-
-					// const clientTrimming = await indexed.getStorePromise(db, indexed.stores.TRIMMING, trimDate.cID);
-					const clientTrimming = await manageClient.getClientTrimmingInfo(trimDate.cID);
-					let numHorses = trimDate.horses?.length || 1;
-					let newClientMsg = '';
-
-					if(clientTrimming?.trimmings?.length > 0){
-						numHorses = clientTrimming.trimmings[clientTrimming.trimmings.length - 1].horses.length;
-					}
-					else if(!trimDate.horses || trimDate.horses.length === 0){
-						newClientMsg = 'New Client.';
+			debugLog('Past Date: ', pastDate);
+			debugLog('Past Date to ISO String: ', pastDate.toISOString());
+			const formattedPastDate = pastDate.toISOString().slice(0, 10);
+			debugLog('Formatted Past Date: ', formattedPastDate);
+			const trimDates = await manageClient.getClientScheduleByTrimDate(formattedPastDate);
+			debugLog('Trim Dates: ', trimDates);
+			if (trimDates?.length > 0) {
+				for (const trimDate of trimDates) {
+					if (processedClients.has(trimDate.cID) ||
+						trimDate.cID === cID ||
+						trimDate.active === 'no' ||
+						trimDate.trim_cycle !== cycleDays.toString()) {
+						continue;
 					}
 
-					const bookingData = {
-						client_name: trimDate.client_name,
-						city: trimDate.city,
-						num_horses: numHorses,
-						new_client: newClientMsg,
-						time_block: await getBlockOfTime({avgHorses: scheduleOptions.avg_horses, numberHorses: numHorses, avgDriveTime: scheduleOptions.avg_drive_time}),
-					};
-
-					projectedBookingsData.push(bookingData);
+					processedClients.add(trimDate.cID);
+					const bookingData = await buildProjectedBookingData(trimDate, manageClient, scheduleOptions);
+					if (bookingData) {
+						projectedBookingsData.push(bookingData);
+					}
 				}
 			}
 		}
@@ -75,4 +78,24 @@ export default async function getProjectedAppointments({appointmentDate, trimCyc
 	catch (err) {
 		throw err;
 	}
+}
+
+async function buildProjectedBookingData(trimDate, manageClient, scheduleOptions) {
+	const clientTrimming = await manageClient.getClientTrimmingInfo(trimDate.cID);
+	const numHorses = trimDate.horses?.length || 1;
+	const newClientMsg = (!trimDate.horses || trimDate.horses.length === 0) ? 'New Client.' : '';
+
+	return {
+		client_name: trimDate.client_name,
+		city: trimDate.city,
+		num_horses: clientTrimming?.trimmings?.length > 0
+			? clientTrimming.trimmings[clientTrimming.trimmings.length - 1].horses.length
+			: numHorses,
+		new_client: newClientMsg,
+		time_block: await getBlockOfTime({
+			avgHorses: scheduleOptions.avg_horses,
+			numberHorses: numHorses,
+			avgDriveTime: scheduleOptions.avg_drive_time
+		}),
+	};
 }

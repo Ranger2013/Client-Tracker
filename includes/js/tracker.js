@@ -31,6 +31,15 @@ import ManageClient from './features/client/models/ManageClient.js';
  */
 let validationToken = null;
 
+const COMPONENT = 'Tracker';
+const DEBUG = false;
+
+const debugLog = (...args) => {
+    if (DEBUG) {
+        console.log(`[${COMPONENT}]`, ...args);
+    }
+};
+
 /**
  * Initializes the application, handling auth and navigation
  * @async
@@ -42,6 +51,8 @@ const initializeApp = async () => {
     try {
         const manageUser = new ManageUser();
         const manageClient = new ManageClient();
+
+        debugLog('Initializing ManageUser: ', manageUser);
         
         validationToken = await userAuthorization();
         setValidationToken(validationToken);
@@ -91,7 +102,7 @@ async function initializeTracker({ manageUser, manageClient }) {
 }
 
 /**
- * Handles page navigation events
+ * Handles page navigation events, back and forward
  * @async
  * @param {PopStateEvent} evt - Navigation event
  * @returns {Promise<void>}

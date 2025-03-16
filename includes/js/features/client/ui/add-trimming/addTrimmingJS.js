@@ -1,0 +1,261 @@
+import setupClientAnchorListener from '../../../../core/navigation/components/setupClientAnchorListener.js';
+import checkAppointment from '../../../../core/services/appointment-block/checkAppointment.js';
+import { disableEnableSubmitButton } from '../../../../core/utils/dom/elements.js';
+import { addListener } from '../../../../core/utils/dom/listeners.js';
+import { clearMsg, safeDisplayMessage } from '../../../../core/utils/dom/messages.js';
+import buildListOfHorsesSection from './components/buildListOfHorsesSection.js';
+import calculateTotalCost from './components/calculateTotalCost.js';
+import { handleShowingAccessoriesSelectBox, handleShowingCostChangeInput, updateCostChangeInput, updateServiceCostSelectedIndex } from './handlers/costHandlers.js';
+import handleAddTrimmingFormSubmission from './handlers/formSubmission.js';
+
+const COMPONENT = 'AddTrimming';
+const DEBUG = false;
+
+const debugLog = (...args) => {
+	if (DEBUG) {
+		console.log(`[${COMPONENT}]`, ...args);
+	}
+};
+
+export const prevOptions = new Map();
+export default async function addTrimming({ cID, primaryKey, mainContainer, manageClient, manageUser, componentId }) {
+	try {
+		// Handle the client navigation anchor
+		setupClientAnchorListener({ manageClient, manageUser, componentId });
+		debugLog('In addTrimming: ');
+
+		// Get the clients information
+		const clientInfo = await manageClient.getClientInfo({ primaryKey });
+
+		// This is an ugly fix in the event we don't have a page, but are showing the add a horse link
+		const addHorseLink = document.getElementById('add-horse-link');
+		if (!addHorseLink) {
+			// Initial appointment check
+			checkAppointment({
+				trimDate: 'next-trim-date',
+				appBlock: 'appointment-block',
+				projAppBlock: 'projected-appointment-block',
+				clientInfo,
+				manageClient,
+				manageUser,
+			});
+		}
+
+		// Set up static event handlers for known elements
+		const staticEventHandlers = {
+			'input:number-horses': async (evt) => {
+				numberOfHorsesServiced({ evt, primaryKey, manageClient, manageUser });
+			},
+			'focusin:number-horses': (evt) => clearMsg({ container: `${evt.target.id}-error`, hide: true, input: evt.target }),
+			'change:next-trim-date': (evt) => checkAppointment({
+				trimDate: 'next-trim-date',
+				appBlock: 'appointment-block',
+				projAppBlock: 'projected-appointment-block',
+				clientInfo,
+				manageClient,
+				manageUser,
+			}),
+			'change:mileage': async (evt) => await disableMileageCharges({ evt }),
+			'submit:trimming-form': (evt) => {
+				evt.preventDefault();
+				handleAddTrimmingFormSubmission({ evt, cID, primaryKey, mainContainer, manageClient })
+			},
+			'click:add-horse-link': async (evt) => {
+				evt.preventDefault();
+				debugLog('Click event to the add horse link: ', evt.target);
+				// This only shows up if the client doesn't have a horse, so lazy load the navigation
+				const { default: selectClientMenuPage } = await import("../../../../core/navigation/services/selectClientMenuPage.js");
+				selectClientMenuPage({
+					evt,
+					page: 'add-horse',
+					cID,
+					primaryKey,
+					manageClient,
+					manageUser,
+					mainContainer,
+				});
+			},
+		};
+
+		// Registry of dynamic element handlers with their specific event types
+		const dynamicHandlers = {
+			'horse-list-': {
+				events: ['change'], // Only trigger on change event
+				handler: async (evt, index) => {
+					debugLog(`Horse list ${index} changed:`, evt.target.value);
+					await updateAllHorseListSelectElements(evt);
+				}
+			},
+			'service-cost-': {
+				events: ['change'], // Select elements use change
+				handler: async (evt, index) => {
+					debugLog(`Service cost ${index} changed:`, evt.target.value);
+					await handleShowingAccessoriesSelectBox({ evt, index });
+					await updateCostChangeInput({ evt, index });
+					calculateTotalCost();
+				}
+			},
+			'checkbox-cost-': {
+				events: ['change'], // Checkboxes use change
+				handler: async (evt, index) => {
+					debugLog(`Checkbox cost ${index} changed:`, evt.target.checked);
+					await handleShowingCostChangeInput({ evt, index });
+				}
+			},
+			'cost-change-': {
+				events: ['input'], // Text inputs use input
+				handler: async (evt, index) => {
+					debugLog(`Cost change ${index} input:`, evt.target.value);
+					await updateServiceCostSelectedIndex({ evt, index });
+				}
+			},
+			'accessories-': {
+				events: ['change'], // Multi-select uses change
+				handler: async (evt, index) => await calculateTotalCost(),
+			},
+		};
+
+		debugLog('Static event handlers: ', staticEventHandlers);
+		debugLog('Dynamic event handlers: ', dynamicHandlers);
+		// Add our event listener for the entire page. This handles all dynamic elements
+		addListener({
+			elementOrId: 'card',
+			eventType: ['input', 'change', 'submit', 'focusin', 'click'],
+			handler: (evt) => {
+				const eventKey = `${evt.type}:${evt.target.id}`;
+
+				// First check for static handlers (exact matches)
+				if (staticEventHandlers[eventKey]) {
+					debugLog('Event handler: ', evt.target);
+					staticEventHandlers[eventKey](evt);
+					return;
+				}
+
+				// Then check for dynamic handlers (prefix matches)
+				const id = evt.target.id;
+				for (const prefix in dynamicHandlers) {
+					if (id.startsWith(prefix)) {
+						const handler = dynamicHandlers[prefix];
+						// Only execute if this event type should trigger this handler
+						if (handler.events.includes(evt.type)) {
+							const index = id.split(/-/g).pop();
+							handler.handler(evt, index);
+						}
+						return;
+					}
+				}
+			},
+			componentId,
+		});
+	}
+	catch (err) {
+		debugLog('Add Trimming Error: ', err);
+		const { AppError } = await import("../../../../core/errors/models/AppError.js");
+		AppError.handleError(err, {
+			errorCode: AppError.Types.INITIALIZATION_ERROR,
+			userMessage: AppError.BaseMessages.system.initialization,
+		});
+	}
+}
+
+async function numberOfHorsesServiced({ evt, primaryKey, manageClient, manageUser }) {
+	try {
+		if (evt.target.value === '0' || evt.target.value === '') {
+			safeDisplayMessage({
+				elementId: `${evt.target.id}-error`,
+				message: 'Please enter the number of horses serviced.',
+				targetId: evt.target
+			});
+
+			disableEnableSubmitButton('submit-button');
+			return;
+		}
+
+		// Show the list of horses
+		await buildListOfHorsesSection({ evt, horseListContainer: 'number-horse-container', primaryKey, manageClient, manageUser });
+	}
+	catch (err) {
+		disableEnableSubmitButton('submit-button');
+
+		const { AppError } = await import("../../../../core/errors/models/AppError.js");
+		AppError.handleError(err, {
+			errorCode: AppError.Types.RENDER_ERROR,
+			userMessage: AppError.BaseMessages.system.render,
+			displayTarget: 'number-horses-error',
+		});
+	}
+}
+
+async function disableMileageCharges({ evt }) {
+	try {
+		debugLog('In disableMileageCharges: ', evt.target);
+		const checkbox = evt.target;
+		const mileageCharges = document.getElementById('mileage-charges');
+		const fuelCostDisplay = document.getElementById('fuel-cost-display');
+
+		fuelCostDisplay.classList.toggle('w3-hide', checkbox.checked);
+		mileageCharges.disabled = checkbox.checked;
+
+		await calculateTotalCost();
+	}
+	catch (err) {
+		const { AppError } = await import("../../../../core/errors/models/AppError.js");
+		AppError.handleError(err, {
+			errorCode: AppError.Types.INITIALIZATION_ERROR,
+			userMessage: 'We encountered an error trying to disable mileage charges.'
+		});
+	}
+}
+
+async function updateAllHorseListSelectElements(evt) {
+	try {
+		// Initialize the Map with current selections if it's empty
+		if (prevOptions.size === 0) {
+			const form = document.getElementById('trimming-form');
+			const initialSelects = form.querySelectorAll('select[id^="horse-list-"]');
+			for (const select of initialSelects) {
+				const option = select.options[select.selectedIndex];
+				prevOptions.set(select.id, option);
+			}
+		}
+		debugLog('Initialized prevOptions: ', prevOptions);
+		const select = evt.target;
+		const usersSelectedOption = select.options[select.selectedIndex];
+
+		// Get all the select elements listed
+		let horseListSelects = document.querySelectorAll('select[id^="horse-list-"]');
+
+		for (const sel of horseListSelects) {
+			if (sel.id !== select.id) {
+				// If there was a previously selected option for this select element, add it back
+				if (prevOptions.has(select.id)) {
+					let prevOption = prevOptions.get(select.id);
+					let option = document.createElement("option");
+					option.text = prevOption.text;
+					option.value = prevOption.value;
+					sel.add(option);
+				}
+
+				// Remove the newly selected option
+				for (let i = 0; i < sel.options.length; i++) {
+					if (sel.options[i].value === usersSelectedOption.value) {
+						sel.remove(i);
+						break;
+					}
+				}
+			}
+		}
+
+		// Store the newly selected option as the previous option for this select element
+		prevOptions.set(select.id, usersSelectedOption);
+
+		debugLog('Previous Options Map:', prevOptions);
+	}
+	catch (err) {
+		const { AppError } = await import("../../../../core/errors/models/AppError.js");
+		AppError.handleError(err, {
+			errorCode: AppError.Types.INITIALIZATION_ERROR,
+			userMessage: 'We encountered an error trying to update the horse list select elements.'
+		});
+	}
+}

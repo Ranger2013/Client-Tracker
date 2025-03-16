@@ -7,13 +7,21 @@ import getCurrentAppointments from './components/getCurrentAppointments.js';
 import getProjectedAppointments from './components/getProjectedAppointments.js';
 
 const COMPONENT_ID = 'check-appointment';
+const COMPONENT = 'checkAppointment';
+const DEBUG = false;
+
+const debugLog = (...args) => {
+	if(DEBUG) {
+		console.log(`[${COMPONENT}]`, ...args);
+	}
+};
 
 /**
  * Asynchronously checks and builds the appointment blocks.
  *
  * @param {Object} params - The parameters for checking appointments.
  * @param {HTMLElement|string} params.trimDate - The trim date element or Element Id.
- * @param {string} params.trimCycle - The trim cycle.
+ * @param {string|null} params.trimCycle - The trim cycle - NOT USED ON THE TRIMMING PAGE.
  * @param {HTMLElement|string} params.appBlock - The appointment block element or element id.
  * @param {HTMLElement|string} params.projAppBlock - The projected appointment block element or elment id.
  * @param {string|null} [params.clientInfo=null] - The client Information.
@@ -24,17 +32,17 @@ const COMPONENT_ID = 'check-appointment';
  */
 export default async function checkAppointment({
 	trimDate,
-	trimCycle,
+	trimCycle = null,
 	appBlock,
 	projAppBlock,
 	clientInfo = null,
 	manageClient,
-	manageUser
+	manageUser,
 }) {
 	try {
 		// DOM Elements
 		trimDate = getValidElement(trimDate);
-		trimCycle = getValidElement(trimCycle); // Only used on the add/edit client, not trimming page
+		trimCycle = trimCycle === null ? null : getValidElement(trimCycle); // Only used on the add/edit client, not trimming page
 		appBlock = getValidElement(appBlock);
 		projAppBlock = getValidElement(projAppBlock);
 
@@ -68,7 +76,7 @@ export default async function checkAppointment({
 			getCurrentAppointments({ appointmentDate: trimDate.value, scheduleOptions, dateTimeFormats, manageClient }),
 			getProjectedAppointments({ appointmentDate: trimDate, trimCycle, clientInfo, scheduleOptions, manageClient })
 		]);
-
+		debugLog('bookedAppointments: ', bookedAppointments);
 		// Build the booked appointments or no appointments blocks
 		if (bookedAppointments?.length > 0) {
 			await buildAppointmentBlock({

@@ -1927,10 +1927,10 @@ iframe[src*="paypal.com"] {
 
 .slide-down {
 	overflow: hidden;
-	transition: max-height 0.5s ease-out, padding 0.5s ease-out;
+	-o-transition: max-height 0.5s ease-out, padding 0.5s ease-out; /* Opera */
 	-webkit-transition: max-height 0.5s ease-out, padding 0.5s ease-out; /* Safari */
 	-moz-transition: max-height 0.5s ease-out, padding 0.5s ease-out; /* Firefox */
-	-o-transition: max-height 0.5s ease-out, padding 0.5s ease-out; /* Opera */
+	transition: max-height 0.5s ease-out, padding 0.5s ease-out;
 }
 
 .slide-down.collapsed {

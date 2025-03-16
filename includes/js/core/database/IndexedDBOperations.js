@@ -251,20 +251,20 @@ export default class IndexedDBOperations {
      * @returns {Promise<number>} A promise that resolves to the next available ID (last key + 1 or 1 if store is empty)
      * @throws {Error} If store name is invalid or database operation fails
      */
-    getLastKeyForID(store) {
+    getLastKeyForID({store, tx = null}) {
         return new Promise(async (resolve) => {
             try {
                 // Synchronous error checks
                 if (!store) throw new Error('Store name required');
 
                 // Open the idb db
-                const db = await this.openDBPromise();
-                const myStore = await this.transReadOnly(db, store);
-                const req = myStore.openCursor(null, 'prev');
+                const db = tx?.db || await this.openDBPromise();
+                const myStore = await this.transReadOnly(db, store, tx);
+                const req = myStore.getAll();
 
                 req.onsuccess = evt => {
-                    const cursor = evt.target.result;
-                    resolve(cursor ? cursor.key + 1 : 1);
+                    const record = req.result;
+                    resolve(record[0] + 1 || 1);
                 };
 
                 req.onerror = async evt => {
@@ -461,18 +461,19 @@ export default class IndexedDBOperations {
                 const myStore = await this.transReadOnly(db, store, transaction);
                 const index = myStore.index(indexName);
 
-                // Convert value to a number
-                const searchValue = typeof value === 'string' ? parseInt(value, 10) : value;
+                // Only convert to number if it's not the trim_date index
+                const searchValue = indexName === 'trim_date' ? value : (typeof value === 'string' ? parseInt(value, 10) : value);
+                
                 const request = index.getAll(IDBKeyRange.only(searchValue));
 
                 request.onsuccess = (evt) => resolve(evt.target.result);
-                request.onerror = (evt) => reject(evt.target.error); // Just reject
+                request.onerror = (evt) => reject(evt.target.error);
             }
             catch (err) {
                 await this.#handleError({
                     consoleMsg: `Error in database operation: `,
                     err,
-                    userMsg: 'Unable to perform database operation'
+                    userMessage: 'Unable to perform database operation'
                 });
             }
         });

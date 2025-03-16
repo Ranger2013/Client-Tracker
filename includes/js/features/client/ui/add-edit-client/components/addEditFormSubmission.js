@@ -1,8 +1,17 @@
+const COMPONENT = 'Add Edit Form Submission';
+const DEBUG = true;
+
+const debugLog = (...args) => {
+	if (DEBUG) {
+		console.log(`[${COMPONENT}]`, ...args);
+	}
+}
+
 export default async function addEditFormSubmission({ evt, cID, primaryKey, manageClient }) {
 	try {
 		// Get the submitter to determine if we are adding/editing a client or deleting a client
 		const submitter = evt.submitter;
-
+		debugLog('Submitter: ', submitter);
 		// If we are deleting the client, handle the deletion process
 		if (submitter.name === 'delete') {
 			const deleteClient = await manageClient.deleteClient(parseInt(cID, 10), parseInt(primaryKey, 10));
@@ -19,6 +28,7 @@ export default async function addEditFormSubmission({ evt, cID, primaryKey, mana
 		userData.horses = [];
 
 		// If we have the primaryKey, then we are editing a client.
+		debugLog('PrimaryKey: ', primaryKey);
 		if (primaryKey) {
 			const editClient = await manageClient.editClient(userData, cID, primaryKey);
 

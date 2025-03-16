@@ -2,6 +2,15 @@ import { sortByTrimDateAndAppTime } from '../../../utils/date/dateUtils.js';
 import appointmentBlockData from './appointmentBlockData.js';
 import predictNextSessionNumberHorses from './predictNextSessionNumberHorses.js';
 
+const COMPONENT = 'getCurrentAppointments';
+const DEBUG = false;
+
+const debugLog = (...args) => {
+	if (DEBUG) {
+		console.log(`[${COMPONENT}]`, ...args);
+	}
+};
+
 /**
  * Retrieves and processes the current appointments based on the provided date, schedule options, and date-time formats.
  * 
@@ -22,9 +31,10 @@ export default async function getCurrentAppointments({ appointmentDate, schedule
 
 		const { avg_horses: avgHorses, avg_drive_time: avgDriveTime } = scheduleOptions;
 		const { date_format: dateFormat, time_format: timeFormat } = dateTimeFormats;
-
 		let appList = [];
+		debugLog('appointmentDate: ', appointmentDate);
 		const clientDataByTrimDate = await manageClient.getClientScheduleByTrimDate(appointmentDate);
+		debugLog('clientDataByTrimDate: ', clientDataByTrimDate);
 
 		if (clientDataByTrimDate.length === 0) return null; // Return early if not dates
 

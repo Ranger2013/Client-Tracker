@@ -1,0 +1,138 @@
+import { disableEnableSubmitButton } from '../../../../../core/utils/dom/elements.js';
+import { clearMsg, safeDisplayMessage } from '../../../../../core/utils/dom/messages.js';
+import { top } from '../../../../../core/utils/window/scroll.js';
+import ManageTrimming from '../../../models/ManageTrimming.js';
+
+const COMPONENT = 'Form Submission';
+const DEBUG = true;
+
+const debugLog = (...args) => {
+	if (DEBUG) {
+		console.log(`[${COMPONENT}]`, ...args);
+	}
+};
+
+export default async function handleAddTrimmingFormSubmission({ evt, cID, primaryKey, mainContainer, manageClient }) {
+	try {
+		// Clear any previous messages
+		clearMsg({ container: 'form-msg'});
+
+		// Process the data from the form due to select elements having multiple selections
+		const userData = processFormData(new FormData(evt.target));
+
+		// Validate the form data
+		const isValidated = await validateTrimmingForm({ userData });
+		debugLog('Validation:', isValidated);
+		const { status, message, target, targetError } = isValidated;
+
+		// Return early if we have errors
+		if (!status) {
+			// Show general error message
+			safeDisplayMessage({
+				elementId: 'form-msg',
+				message: 'Please fix the following errors:',
+			});
+
+			// Show specific error message
+			safeDisplayMessage({
+				elementId: targetError,
+				message: message,
+				targetId: target,
+			});
+
+			top();
+			disableEnableSubmitButton('submit-button');
+			return;
+		}
+
+		// Submit the form
+		const submitForm = await formSubmission({ cID, primaryKey, userData, manageClient });
+		debugLog('Form Submission:', submitForm);
+	}
+	catch (err) {
+		const { AppError } = await import("../../../../../core/errors/models/AppError.js");
+		AppError.handleError(err, {
+			errorCode: AppError.Types.FORM_SUBMISSION_ERROR,
+			userMessage: AppError.BaseMessages.forms.submissionFailed,
+			displayTarget: 'form-msg',
+		});
+	}
+}
+
+/**
+ * Processes form data into a structured object
+ * @param {FormData} formData - The form data to process
+ * @returns {Object} Processed form data object
+ */
+function processFormData(formData) {
+	try {
+		const entries = Array.from(formData.entries());
+		debugLog('Form Entries:', entries);
+
+		const processedData = entries.reduce((accumulator, [key, value]) => {
+			debugLog('Processing:', { key, value });
+
+			return {
+				...accumulator,
+				...processFormField(key, value, accumulator)
+			};
+		}, {});
+
+		debugLog('Processed Data:', processedData);
+		return processedData;
+	} catch (err) {
+		console.error('Error processing form data:', err);
+		throw err;
+	}
+}
+
+/**
+ * Process individual form field based on field type
+ * @param {string} key - Field key
+ * @param {string} value - Field value
+ * @param {Object} accumulator - Current accumulated data
+ * @returns {Object} Processed field data
+ */
+function processFormField(key, value, accumulator) {
+	if (key === 'number-horses') {
+		return { number_horses: value };
+	}
+
+	if (key.startsWith('horse_list_')) {
+		return { [key]: value ?? "null" };
+	}
+
+	if (key.startsWith('accessories_')) {
+		const existingAccessories = accumulator[key] ?? [];
+		return value.trim() ? { [key]: [...existingAccessories, value] } : { [key]: existingAccessories };
+	}
+
+	return (value.trim() || value === '0') ? { [key]: value } : {};
+}
+
+async function validateTrimmingForm({ userData }) {
+	try {
+		// We only need to verify number_horses exists since the UI prevents invalid states
+		if (!userData.number_horses || userData.number_horses === '0' || userData.number_horses === '') {
+			return { status: false, message: 'Please enter the number of horses.', targetError: 'number-horses-error', target: 'number-horses' };
+		}
+
+		return { status: true };
+	}
+	catch (err) {
+		throw err;
+	}
+}
+
+async function formSubmission({ cID, primaryKey, userData, manageClient }) {
+	try {
+		const manageTrimming = new ManageTrimming();
+		const submitForm = await manageTrimming.handleAddTrimmingSession({ cID, userData});
+
+		debugLog('Form Submission:', submitForm);
+
+	}
+	catch (err) {
+		throw err;
+	}
+}

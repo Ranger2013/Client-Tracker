@@ -16,7 +16,7 @@
 		<div>There are too many different options to list them all. The best way to see all the different options is to
 			check out the Client Tracker. But first you will need to register as a guest. There is zero obligation. No
 			credit card required for a 30 day guest account. Please click
-			<a id="register-link" href="/register/"><span class="w3-underline w3-text-blue">Register</span></a>. Once your
+			<a id="register" href="/register/"><span class="w3-underline w3-text-blue">Register</span></a>. Once your
 			account is activated and you log in, you will be automatically directed to the 'Client Tracker'.
 		</div>
 	</section>
