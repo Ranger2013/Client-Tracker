@@ -29,6 +29,7 @@ export default async function addNewHorse({ cID, primaryKey, mainContainer, mana
 				debouncedValidate(evt);
 			},
 			'focusin:horse-name': (evt) => clearMsg({ container: `${evt.target.id}-error`, hide: true, input: evt.target }),
+			'focusin:trim-cycle': (evt) => clearMsg({ container: `${evt.target.id}-error`, hide: true, input: evt.target }),
 			'submit:add-horse-form': async (evt) => {
 				evt.preventDefault();
 				await handleAddHorseFormSubmission({ evt, cID, primaryKey, manageClient, componentId });

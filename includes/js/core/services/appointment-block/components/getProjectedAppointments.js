@@ -1,7 +1,8 @@
 import getBlockOfTime from './getBlockOfTime.js';
+import predictNextSessionNumberHorses from './predictNextSessionNumberHorses.js';
 
-const COMPONENT = 'getProjectedAppointments';
-const DEBUG = false;
+const COMPONENT = 'Get Projected Appointments';
+const DEBUG = true;
 
 const debugLog = (...args) => {
 	if(DEBUG) {
@@ -81,21 +82,33 @@ export default async function getProjectedAppointments({ appointmentDate, trimCy
 }
 
 async function buildProjectedBookingData(trimDate, manageClient, scheduleOptions) {
-	const clientTrimming = await manageClient.getClientTrimmingInfo(trimDate.cID);
-	const numHorses = trimDate.horses?.length || 1;
-	const newClientMsg = (!trimDate.horses || trimDate.horses.length === 0) ? 'New Client.' : '';
+    debugLog('Building projected booking data for:', trimDate);
 
-	return {
-		client_name: trimDate.client_name,
-		city: trimDate.city,
-		num_horses: clientTrimming?.trimmings?.length > 0
-			? clientTrimming.trimmings[clientTrimming.trimmings.length - 1].horses.length
-			: numHorses,
-		new_client: newClientMsg,
-		time_block: await getBlockOfTime({
-			avgHorses: scheduleOptions.avg_horses,
-			numberHorses: numHorses,
-			avgDriveTime: scheduleOptions.avg_drive_time
-		}),
-	};
+	 // Use predictNextSessionNumberHorses to get actual service predictions
+    const prediction = await predictNextSessionNumberHorses({ 
+        clientData: { 
+            ...trimDate, 
+            scheduleOptions 
+        }, 
+        manageClient 
+    });
+    debugLog('Prediction result:', prediction);
+
+    // Validate time_block value
+    const timeBlock = prediction?.totalTime || 0;
+    debugLog('Time block calculation:', {
+        predictionTotalTime: prediction?.totalTime,
+        finalTimeBlock: timeBlock
+    });
+
+    return {
+        client_name: trimDate.client_name,
+		  cID: trimDate.cID,
+		  primaryKey: trimDate.primaryKey,
+        city: trimDate.city,
+        num_horses: prediction?.horses?.length || 0,
+        new_client: (!trimDate.horses || trimDate.horses.length === 0) ? 'New Client.' : '',
+        predicted_services: prediction?.serviceBreakdown || { trims: 0, halfSets: 0, fullSets: 0 },
+        time_block: timeBlock
+    };
 }

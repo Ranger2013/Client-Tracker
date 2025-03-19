@@ -1,51 +1,46 @@
 import { formatTime } from '../../../utils/date/dateUtils.js';
 import { cleanUserOutput } from '../../../utils/string/stringUtils.js';
-import getBlockOfTime from './getBlockOfTime.js';
-
 
 /**
  * Processes appointment data and returns an object with formatted appointment block details.
  * 
  * @param {Object} data - The appointment data.
- * @param {string} data.client_name - The client's name.
- * @param {number} data.num_horses - The number of horses for the appointment.
- * @param {number} data.avg_horses - The average number of horses per hour.
- * @param {number} data.avg_drive_time - The average drive time.
- * @param {string} data.time_format - The time format (12 or 24).
- * @param {string} data.app_time - The appointment time.
- * @param {string} data.primary_key - The primary key of the appointment.
  * @returns {Promise<Object>} The formatted appointment block data.
- * @throws {Error} Throws an error if there's an issue processing the appointment data.
  */
 export default async function appointmentBlockData(data) {
 	try {
-		// Destructure the data
-		let {
+		const {
+			cID,
 			client_name: clientName,
-			num_horses: numberOfClientHorses,
-			avg_horses: avgNumHorsesPerHour,
-			avg_drive_time: avgDriveTime,
+			num_horses: numberOfHorses,
+			predicted_time: totalMinutes,
 			time_format: timeFormat,
 			app_time: appTime,
-			primary_key: primaryKey
+			primary_key: primaryKey,
+			city,
+			service_breakdown
 		} = data;
 
+		// Calculate end time by adding total minutes to start time
+		const endTime = calculateEndTime(appTime, totalMinutes);
 
-		// Get the block of time
-		const timeBlock = await getBlockOfTime({ avgHorses: avgNumHorsesPerHour, numberHorses: numberOfClientHorses, avgDriveTime, time: appTime });
-
-		// Set the start and end times according to the format
+		// Format times according to user preference
 		const startTime = parseInt(timeFormat) === 12 ? formatTime(appTime, 12) : formatTime(appTime, 24);
-		const endTime = parseInt(timeFormat) === 12 ? formatTime(timeBlock, 12) : formatTime(timeBlock, 24);
+		const formattedEndTime = parseInt(timeFormat) === 12 ? formatTime(endTime, 12) : formatTime(endTime, 24);
+
+		// Create detailed service breakdown message
+		const serviceMessage = buildServiceMessage(service_breakdown);
 
 		return {
-			cID: data.cID,
+			cID,
 			primaryKey,
 			client_name: cleanUserOutput(clientName),
-			num_horses: numberOfClientHorses,
-			city: cleanUserOutput(data.city),
+			num_horses: numberOfHorses,
+			city: cleanUserOutput(city),
 			start: startTime,
-			end: endTime
+			end: formattedEndTime,
+			service_breakdown,
+			prediction_message: `Predicted services: <span class="w3-small">${serviceMessage}</span>`,
 		};
 	}
 	catch (err) {
@@ -55,4 +50,34 @@ export default async function appointmentBlockData(data) {
 			userMessage: 'Unable to process the appointment data.',
 		}, true);
 	}
+}
+
+/**
+ * Calculates the end time by adding minutes to the start time
+ */
+function calculateEndTime(startTime, totalMinutes) {
+	const [hours, minutes] = startTime.split(':').map(Number);
+	const totalTime = hours * 60 + minutes + totalMinutes;
+	
+	const endHours = Math.floor(totalTime / 60) % 24;
+	const endMinutes = totalTime % 60;
+	
+	return `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
+}
+
+/**
+ * Builds a human-readable service breakdown message
+ */
+function buildServiceMessage(breakdown) {
+	const services = [];
+	if (breakdown.trims > 0) {
+		services.push(`${breakdown.trims} trim${breakdown.trims > 1 ? 's' : ''}`);
+	}
+	if (breakdown.halfSets > 0) {
+		services.push(`${breakdown.halfSets} half set${breakdown.halfSets > 1 ? 's' : ''}`);
+	}
+	if (breakdown.fullSets > 0) {
+		services.push(`${breakdown.fullSets} full set${breakdown.fullSets > 1 ? 's' : ''}`);
+	}
+	return services.join(', ') || 'No services predicted';
 }

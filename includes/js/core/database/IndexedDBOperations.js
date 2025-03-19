@@ -6,14 +6,48 @@
  */
 
 export default class IndexedDBOperations {
+    // Static private property to hold the singleton instance
+    static #instance = null;
+
+    // Instance private properties
     #dbName = 'ClientTrackerDB';
     #version = 1;
     #db = null;
+    #debug = false;
+
+    constructor(options = { debug: false }) {
+        // If an instance already exists, return it
+        if (IndexedDBOperations.#instance) {
+            // Optionally update debug setting if passed
+            if (options.debug !== undefined) {
+                IndexedDBOperations.#instance.setDebugMode(options.debug);
+            }
+            return IndexedDBOperations.#instance;
+        }
+
+        this.#debug = options.debug;
+
+        // Store this instance as the singleton
+        IndexedDBOperations.#instance = this;
+        this.#log('IndexedDBOperations singleton instance created');
+        return this;
+    }
+
+    // Add debug logging
+    #log(...args) {
+        if (this.#debug) {
+            console.log('[IndexedDBOperations]', ...args);
+        }
+    }
+
+    setDebugMode(enabled) {
+        this.#debug = !!enabled;
+    }
 
     // Store configurations
     #storeConfigs = {
         // Client stores
-        'CLIENTLIST': { 
+        'CLIENTLIST': {
             keyPath: 'primaryKey',
             indexes: [
                 { name: 'cID', keyPath: 'cID', unique: false },
@@ -149,7 +183,7 @@ export default class IndexedDBOperations {
 
             this.#db = await new Promise((resolve, reject) => {
                 const request = indexedDB.open(this.#dbName, this.#version);
-                
+
                 request.onupgradeneeded = (evt) => this.#handleUpgrade(evt);
                 request.onsuccess = (evt) => resolve(evt.target.result);
                 request.onerror = () => reject(new Error('Failed to open database'));
@@ -157,7 +191,7 @@ export default class IndexedDBOperations {
             });
 
             return this.#db;
-        } 
+        }
         catch (err) {
             await this.#handleError({
                 consoleMsg: 'Database open failed: ',
@@ -246,44 +280,49 @@ export default class IndexedDBOperations {
     }
 
     /**
-     * Gets the next available ID for a store by finding the last used key and incrementing it
-     * @param {string} store - The name of the store to get the last key from
-     * @returns {Promise<number>} A promise that resolves to the next available ID (last key + 1 or 1 if store is empty)
-     * @throws {Error} If store name is invalid or database operation fails
+     * Gets the next available ID for a store
+     * @param {Object} params - Parameters object
+     * @param {string} params.store - Store name to query
+     * @param {IDBTransaction} [params.tx] - Optional transaction
+     * @returns {Promise<number>} Next available ID
      */
-    getLastKeyForID({store, tx = null}) {
-        return new Promise(async (resolve) => {
-            try {
-                // Synchronous error checks
-                if (!store) throw new Error('Store name required');
+    async getLastKeyForID({ store, tx = null }) {
+        try {
+            this.#log('Getting last key for store:', store);
 
-                // Open the idb db
-                const db = tx?.db || await this.openDBPromise();
-                const myStore = await this.transReadOnly(db, store, tx);
-                const req = myStore.getAll();
+            if (!store) {
+                throw new Error('Store name required');
+            }
 
-                req.onsuccess = evt => {
-                    const record = req.result;
-                    resolve(record[0] + 1 || 1);
+            const db = tx?.db || await this.openDBPromise();
+            const objectStore = await this.transReadOnly(db, store, tx);
+
+            return new Promise((resolve, reject) => {
+                const request = objectStore.openCursor(null, 'prev');
+
+                request.onerror = (event) => {
+                    this.#log('Cursor error:', event.target.error);
+                    reject(event.target.error);
                 };
 
-                req.onerror = async evt => {
-                    evt.preventDefault(); // Prevent error from bubbling
-                    await this.#handleError({
-                        consoleMsg: `Failed to get last key from ${store}: `,
-                        err: evt.target.error,
-                        userMsg: 'Unable to generate new ID'
-                    });
+                request.onsuccess = (event) => {
+                    const cursor = event.target.result;
+                    this.#log('Cursor result:', cursor?.key);
+
+                    // If cursor exists, return next ID, otherwise return 1
+                    const nextId = cursor ? cursor.key + 1 : 1;
+                    this.#log('Next ID:', nextId);
+                    resolve(nextId);
                 };
-            }
-            catch (err) {
-                await this.#handleError({
-                    consoleMsg: `Error in getLastKeyForID operation: `,
-                    err,
-                    userMsg: 'Unable to perform database operation'
-                });
-            }
-        });
+            });
+        } catch (err) {
+            this.#log('Error in getLastKeyForID:', err);
+            await this.#handleError({
+                consoleMsg: 'Failed to get last key:',
+                err,
+                userMsg: 'Unable to generate new ID'
+            });
+        }
     }
 
     /**
@@ -295,34 +334,40 @@ export default class IndexedDBOperations {
     * @param {IDBTransaction} [transaction] - An existing transaction.
     * @returns {Promise<any>} A promise that resolves with the result of the operation.
     */
-    addStorePromise(db, data, store, clearStore = false, transaction) {
-        return new Promise(async (resolve, reject) => {
-            try {
-                // Sync error checks (will throw via #handleError if they fail)
-                if (!db) throw new Error('Database instance required');
-                if (!store) throw new Error('Store name required');
-                if (!data) throw new Error('No data provided for store operation');
+    async addStorePromise(db, data, store, clearStore = false, transaction) {
+        try {
+            // Sync error checks (will throw via #handleError if they fail)
+            if (!db) throw new Error('Database instance required');
+            if (!store) throw new Error('Store name required');
+            if (!data) throw new Error('No data provided for store operation');
 
-                const myStore = await this.transReadWrite(db, store, transaction);
+            const myStore = await this.transReadWrite(db, store, transaction);
 
+            // Return a new Promise that resolves both clear and add operations
+            return new Promise((resolve, reject) => {
                 if (clearStore) {
                     const clearRequest = myStore.clear();
-                    clearRequest.onerror = evt => reject(evt.target.error); // Just reject
+                    clearRequest.onerror = evt => reject(evt.target.error);
+                    clearRequest.onsuccess = () => {
+                        const addRequest = myStore.add(data);
+                        addRequest.onsuccess = evt => resolve(evt.target.result);
+                        addRequest.onerror = evt => reject(evt.target.error);
+                    };
                 }
-
-                const request = myStore.add(data);
-                request.onsuccess = evt => resolve(evt.target.result);
-                request.onerror = evt => reject(evt.target.error); // Just reject
-
-            } catch (err) {
-                // Sync errors get handled and thrown
-                await this.#handleError({
-                    consoleMsg: `Error in database operation: `,
-                    err,
-                    userMsg: 'Unable to perform database operation'
-                });
-            }
-        });
+                else {
+                    const addRequest = myStore.add(data);
+                    addRequest.onsuccess = evt => resolve(evt.target.result);
+                    addRequest.onerror = evt => reject(evt.target.error);
+                }
+            });
+        }
+        catch (err) {
+            await this.#handleError({
+                consoleMsg: `Error in addStorePromise operation: `,
+                err,
+                userMsg: 'Unable to add data to the database.'
+            });
+        }
     }
 
     /**
@@ -335,41 +380,40 @@ export default class IndexedDBOperations {
     * @param {IDBTransaction} [transaction] - An existing transaction.
     * @returns {Promise<any>} A promise that resolves with the result of the operation.
     */
-    putStorePromise(db, data, store, clearStore = false, transaction) {
-        return new Promise(async (resolve, reject) => {
-            try {
-                // Synchronous error checks
-                if (!db) throw new Error('Database instance required');
-                if (!store) throw new Error('Store name required');
-                if (!data) throw new Error('No data provided for store operation');
+    async putStorePromise(db, data, store, clearStore = false, transaction) {
+        try {
+            // Synchronous error checks
+            if (!db) throw new Error('Database instance required');
+            if (!store) throw new Error('Store name required');
+            if (!data) throw new Error('No data provided for store operation');
 
-                const myStore = await this.transReadWrite(db, store, transaction);
+            const myStore = await this.transReadWrite(db, store, transaction);
 
+            // Return a new Promise that resolves both clear and put operations
+            return new Promise((resolve, reject) => {
                 if (clearStore) {
                     const clearRequest = myStore.clear();
-                    clearRequest.onerror = async evt => {
-                        evt.preventDefault();
-                        await this.#handleError({
-                            consoleMsg: `Error clearing store ${store}: `,
-                            err: evt.target.error,
-                            userMsg: 'Unable to update data'
-                        });
+                    clearRequest.onerror = evt => reject(evt.target.error);
+                    clearRequest.onsuccess = () => {
+                        const putRequest = myStore.put(data);
+                        putRequest.onsuccess = evt => resolve(evt.target.result);
+                        putRequest.onerror = evt => reject(evt.target.error);
                     };
                 }
-
-                const request = myStore.put(data);
-                
-                request.onsuccess = (evt) => resolve(evt.target.result);
-                request.onerror = (evt) => reject(evt.target.error); // Just reject
-            }
-            catch (err) {
-                await this.#handleError({
-                    consoleMsg: `Error in putStorePromise database operation: `,
-                    err,
-                    userMsg: 'Unable to perform database operation'
-                });
-            }
-        });
+                else {
+                    const putRequest = myStore.put(data);
+                    putRequest.onsuccess = evt => resolve(evt.target.result);
+                    putRequest.onerror = evt => reject(evt.target.error);
+                }
+            });
+        }
+        catch (err) {
+            await this.#handleError({
+                consoleMsg: `Error in putStorePromise database operation: `,
+                err,
+                userMsg: 'Unable to save your data at this time.'
+            });
+        }
     }
 
     /**
@@ -392,7 +436,7 @@ export default class IndexedDBOperations {
                 }
 
                 const myStore = await this.transReadOnly(db, store, transaction);
-                let request = myStore.get(key);  
+                let request = myStore.get(key);
 
                 request.onsuccess = (event) => resolve(event.target.result);
                 request.onerror = (evt) => reject(evt.target.error); // Just reject
@@ -418,13 +462,13 @@ export default class IndexedDBOperations {
     * @param {bool} noKeyAdded - Whether to include the primary key or not with the returned records
     * @returns {Promise<any>} A promise that resolves with the result of the operation.
     */
-    getAllStorePromise(db, store) {        
+    getAllStorePromise(db, store) {
         return new Promise(async (resolve, reject) => {
             try {
                 const myStore = await this.transReadOnly(db, store);
-                
+
                 const request = myStore.getAll();
-                
+
                 request.onsuccess = (event) => resolve(event.target.result);
                 request.onerror = (evt) => reject(evt.target.error); // Just reject
             }
@@ -463,7 +507,7 @@ export default class IndexedDBOperations {
 
                 // Only convert to number if it's not the trim_date index
                 const searchValue = indexName === 'trim_date' ? value : (typeof value === 'string' ? parseInt(value, 10) : value);
-                
+
                 const request = index.getAll(IDBKeyRange.only(searchValue));
 
                 request.onsuccess = (evt) => resolve(evt.target.result);
@@ -509,7 +553,7 @@ export default class IndexedDBOperations {
         });
     }
 
-    /**
+    /** {
      * Adds data to a store in the IndexedDB database
      * @param {any} userData - The data to add
      * @param {string} storeName - Name of the store
@@ -517,7 +561,7 @@ export default class IndexedDBOperations {
      * @param {IDBTransaction} [transaction=null] - Optional transaction
      * @returns {Promise<any>} Result of the operation
      */
-    async addIndexDBPromise({data, storeName, clearStore = false, transaction = null}) {
+    async addIndexDBPromise({ data, storeName, clearStore = false, transaction = null }) {
         return new Promise(async (resolve, reject) => {
             try {
                 // Synchronous error checks
@@ -570,9 +614,9 @@ export default class IndexedDBOperations {
 
                 const db = await ((transaction instanceof IDBTransaction) ? transaction.db : this.openDBPromise());
                 const myStore = await this.transReadWrite(db, storeName, transaction);
-                
+
                 const request = myStore.put(userData);
-                
+
                 request.onsuccess = (evt) => resolve(evt.target.result);
                 request.onerror = (evt) => reject(evt.target.error); // Just reject
             }

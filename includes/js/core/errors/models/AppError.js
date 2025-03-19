@@ -69,7 +69,8 @@ export class AppError extends Error {
             const { messages } = await import(`../../../features/${feature}/errors.js`);
             this.#messageCache.set(feature, messages);
             return messages;
-        } catch (err) {
+        }
+        catch (err) {
             // Fallback to base messages
             return this.BaseMessages;
         }
@@ -266,11 +267,12 @@ export class AppError extends Error {
 
             this.logged = true;
 
-        } catch (loggingError) {
+        }
+        catch (loggingError) {
             console.error('Server logging failed:', loggingError);
             await this.queueForSync()
                 .catch(err => console.warn('Failed to queue error:', err));
-            throw loggingError;
+            // throw loggingError;
         }
     }
 

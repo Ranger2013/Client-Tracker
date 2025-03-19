@@ -1,6 +1,15 @@
 import { buildEle } from '../../utils/dom/elements.js';
 import buildErrorDiv from './buildErrorDiv.js';
 
+// Set up the debugging component and function
+const COMPONENT = 'Two Column Select Element Section';
+const DEBUG = false;
+const debugLog = (...args) => {
+    if (DEBUG) {
+        console.log(`[${COMPONENT}]`, ...args);
+    }
+};
+
 /**
  * Builds an HTML section with two columns, where the second column contains a select element with options.
  * @param {Object} params - The parameters for the function.
@@ -53,16 +62,20 @@ export default async function buildTwoColumnSelectElementSection({
         }));
 
         // Add options if they exist
+        debugLog('Options:', options);
         if (options?.length > 0) {
             options.forEach(option => {
+                debugLog('Option:', option);
+                const { value, disabled, selected, text, ...otherAttributes } = option;
                 select.appendChild(buildEle({
                     type: 'option',
                     attributes: {
-                        value: option.value,
-                        ...(option.disabled && { disabled: true }),
-                        ...(option.selected && { selected: true })
+                        ...otherAttributes,  // Spread any additional attributes
+                        value,
+                        ...(disabled && { disabled: true }),
+                        ...(selected && { selected: true })
                     },
-                    text: option.text
+                    text
                 }));
             });
         }

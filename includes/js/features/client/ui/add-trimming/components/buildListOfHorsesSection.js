@@ -47,6 +47,8 @@ export default async function buildListOfHorsesSection({ evt, horseListContainer
 
 		horseListSection?.forEach(horseList => horseListContainer.appendChild(horseList));
 
+		await autoUpdateServiceCost(horseListContainer);
+
 		// Get the final number of horses to determine the trimming costs
 		const finalHorseCount = document.getElementById('number-horses').value;
 
@@ -77,6 +79,10 @@ function getOptionsConfig({ clientHorses, userFarrierPrices }) {
 			list: clientHorses,
 			value: opt => `${opt.hID}:${opt.horse_name}`,
 			text: opt => opt.horse_name,
+			attributes: opt => ({
+				'data-service-type': opt.service_type,
+				'data-trim-cycle': opt.trim_cycle
+			})
 		},
 		farrierPricesOptionsConfig: {
 			list: Object.entries(farrierPrices)
@@ -121,8 +127,8 @@ async function handleShowingNumberOfHorses({ evt, horseListContainer, clientTota
 		// Number of horses we are showing
 		let numberHorsesInput = parseInt(evt.target.value, 10);
 
-		 // Clear prevOptions whenever number of horses changes
-        prevOptions.clear();
+		// Clear prevOptions whenever number of horses changes
+		prevOptions.clear();
 
 		// Handle max horses boundary condition first
 		if (numberHorsesInput >= clientTotalHorses) {
@@ -145,6 +151,7 @@ async function handleShowingNumberOfHorses({ evt, horseListContainer, clientTota
 			autoFill.map(options => options.querySelector('select[id^="horse-list-"]'))
 				.forEach(select => {
 					const selectedOption = select.options[select.selectedIndex];
+
 					Array.from(select.options).forEach(option => {
 						if (option !== selectedOption) {
 							select.removeChild(option);
@@ -177,11 +184,11 @@ async function handleShowingNumberOfHorses({ evt, horseListContainer, clientTota
 				addOptionToRemainingHorseListSelectElements({ container: horseListContainer, optionWithIndex }));
 
 			// After removing horses, reinitialize prevOptions with remaining horses
-            const remainingSelects = horseListContainer.querySelectorAll('select[id^="horse-list-"]');
-            remainingSelects.forEach(select => {
-                const selectedOption = select.options[select.selectedIndex];
-                prevOptions.set(select.id, selectedOption);
-            });
+			const remainingSelects = horseListContainer.querySelectorAll('select[id^="horse-list-"]');
+			remainingSelects.forEach(select => {
+				const selectedOption = select.options[select.selectedIndex];
+				prevOptions.set(select.id, selectedOption);
+			});
 
 			return [];
 		}
@@ -191,8 +198,8 @@ async function handleShowingNumberOfHorses({ evt, horseListContainer, clientTota
 		horseListContainer.innerHTML = '';
 		const buildShowHorseList = await autoFillHorseList({ totalHorses: numberHorsesInput, optionsConfig });
 
-		 // Replace the old dropdown management code with our new function
-        initializeHorseSelections(buildShowHorseList);
+		// Replace the old dropdown management code with our new function
+		initializeHorseSelections(buildShowHorseList);
 
 		return buildShowHorseList;
 	}
@@ -202,28 +209,62 @@ async function handleShowingNumberOfHorses({ evt, horseListContainer, clientTota
 }
 
 function initializeHorseSelections(buildShowHorseList) {
-    // Clear previous options when rebuilding list
-    prevOptions.clear();
-    
-    // Get and track selected horses
-    const selectedHorses = buildShowHorseList.map(options => {
-        const select = options.querySelector('select[id^="horse-list-"]');
-        const selectedOption = select.options[select.selectedIndex];
-        // Store initial selection in prevOptions
-        prevOptions.set(select.id, selectedOption);
-        return selectedOption.value;
-    });
+	// Clear previous options when rebuilding list
+	prevOptions.clear();
 
-    // Remove already selected horses from other dropdowns
-    buildShowHorseList.map(options => options.querySelector('select[id^="horse-list-"]'))
-        .forEach(select => {
-            const selectedOption = select.options[select.selectedIndex];
-            Array.from(select.options).forEach(option => {
-                if (option !== selectedOption && selectedHorses.includes(option.value)) {
-                    select.removeChild(option);
-                }
-            });
-        });
+	// Get and track selected horses
+	const selectedHorses = buildShowHorseList.map(options => {
+		const select = options.querySelector('select[id^="horse-list-"]');
+		const selectedOption = select.options[select.selectedIndex];
+		// Store initial selection in prevOptions
+		prevOptions.set(select.id, selectedOption);
+		return selectedOption.value;
+	});
 
-    debugLog('Initialized prevOptions:', prevOptions);
+	// Remove already selected horses from other dropdowns
+	buildShowHorseList.map(options => options.querySelector('select[id^="horse-list-"]'))
+		.forEach(select => {
+			const selectedOption = select.options[select.selectedIndex];
+			Array.from(select.options).forEach(option => {
+				if (option !== selectedOption && selectedHorses.includes(option.value)) {
+					select.removeChild(option);
+				}
+			});
+		});
+
+	debugLog('Initialized prevOptions:', prevOptions);
+}
+
+function autoUpdateServiceCost(horseListContainer) {
+	try {
+		const serviceTypeMapping = {
+			trim: 'trim',
+			half_set: 'front_',
+			full_set: 'full_',
+		};
+
+		const horseListSelects = horseListContainer.querySelectorAll('select[id^="horse-list-"]');
+
+		horseListSelects.forEach(horseListSelect => {
+			const index = horseListSelect.id.split('-').pop();
+			const serviceCostSelect = horseListContainer.querySelector(`select[id="service-cost-${index}"]`);
+			const horseListSelectedIndex = horseListSelect.options[horseListSelect.selectedIndex];
+			const serviceCostOption = Array.from(serviceCostSelect.options).find(option => {
+				return option.value.includes(serviceTypeMapping[horseListSelectedIndex.dataset.serviceType]);
+			});
+			
+			if(serviceCostOption) {
+				serviceCostOption.selected = true;
+				const changeEvent = new Event('change', {
+					bubbles: true,
+					cancelable: true
+			  });
+			  Object.defineProperty(changeEvent, 'target', {value: serviceCostSelect});
+			  serviceCostSelect.dispatchEvent(changeEvent);
+			}
+		});
+	}
+	catch (err) {
+		console.warn('Error in autoUpdateServiceCost: ', err);
+	}
 }

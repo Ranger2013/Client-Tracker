@@ -28,7 +28,7 @@ export default async function addEditFormSubmission({ evt, cID, primaryKey, mana
 		userData.horses = [];
 
 		// If we have the primaryKey, then we are editing a client.
-		debugLog('PrimaryKey: ', primaryKey);
+		debugLog('PrimaryKey: Editing a client if not undefined: ', primaryKey);
 		if (primaryKey) {
 			const editClient = await manageClient.editClient(userData, cID, primaryKey);
 
@@ -39,8 +39,9 @@ export default async function addEditFormSubmission({ evt, cID, primaryKey, mana
 		}
 		// Adding a new client
 		else {
+			debugLog('Adding a new client: ', userData);
 			const addClient = await manageClient.addNewClient(userData);
-
+			debugLog('Client Added: ', addClient);
 			if (addClient) {
 				return { status: 'success', type: 'add', msg: `${userData.client_name} has been added successfully` };
 			};

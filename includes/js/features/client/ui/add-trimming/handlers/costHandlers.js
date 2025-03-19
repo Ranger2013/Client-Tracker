@@ -50,9 +50,12 @@ export async function updateCostChangeInput({ evt, index }) {
 		// Event target is the service-cost-x select element
 		const serviceCostSelect = evt.target;
 		const selectedOptionValue = serviceCostSelect.options[serviceCostSelect.selectedIndex].value.split(':')[1];
-
+		debugLog('selectedOptionValue: ', selectedOptionValue);
 		const costChangeInput = document.getElementById(`cost-change-${index}`);
+		debugLog('costChangeInput: ', costChangeInput);
 		costChangeInput.value = selectedOptionValue;
+		debugLog('costChangeInput.value: ', costChangeInput.value);
+		debugLog('final cost change input: ', costChangeInput);
 	}
 	catch (err) {
 		const { AppError } = await import("../../../../core/errors/models/AppError.js");

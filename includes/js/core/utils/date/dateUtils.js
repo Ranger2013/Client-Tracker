@@ -150,3 +150,31 @@ export function getCurrentTime() {
 
 	return currentHours + ':' + currentMinutes;
 }
+
+/**
+ * Calculates the number of weeks and days that have passed since a given trim date.
+ * 
+ * @param {string} trim_date - The trim date in a format parseable by Date constructor (e.g., 'YYYY-MM-DD').
+ * @returns {Object} An object containing the number of weeks and remaining days.
+ * @returns {number} .weeks - The number of complete weeks since the trim date.
+ * @returns {number} .days - The remaining days after complete weeks.
+ */
+export function getWeeksAndDaysSinceLastTrim(trim_date) {
+	// Get today's date
+	const today = new Date();
+
+	// Create a date object from the trim_date
+	const trimDate = new Date(trim_date);
+
+	// Calculate the difference in milliseconds
+	const diffInMs = today - trimDate;
+
+	// Convert milliseconds to days
+	const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+	// Calculate weeks and remaining days
+	const weeks = Math.floor(diffInDays / 7);
+	const days = diffInDays % 7;
+
+	return { weeks, days };
+}

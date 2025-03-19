@@ -110,7 +110,7 @@ function initializeForm({ cID, primaryKey, clientInfo, manageClient, manageUser,
 		eventType: 'submit',
 		handler: (evt) => {
 			evt.preventDefault();
-			handleFormSubmission({evt, cID, primaryKey, clientInfo, manageClient, manageUser});
+			handleFormSubmission({evt, cID, primaryKey, clientInfo, manageClient, manageUser, componentId});
 		},
 		componentId
 	});
@@ -238,13 +238,13 @@ async function validateAllFormFields({userData, cID, primaryKey, manageClient}) 
  * @param {Object|null} clientInfo - Client information used in the check appointment process
  * @returns {Promise<void>}
  */
-async function handleFormSubmission({evt, cID, primaryKey, clientInfo, manageClient, manageUser}) {
+async function handleFormSubmission({evt, cID, primaryKey, clientInfo, manageClient, manageUser, componentId}) {
 	try {
 		const userData = Object.fromEntries(new FormData(evt.target));
 
 		const [ isValid, trimCycleCheck ] = await Promise.all([
-			validateAllFormFields({userData, cID, primaryKey, manageClient}),
-			handleTrimCycleCheck(userData)
+			validateAllFormFields({userData, cID, primaryKey, manageClient, componentId}),
+			handleTrimCycleCheck({userData, componentId})
 		]);
 
 		// Validate all form fields before submission. In the case the user found a loop hole. 
@@ -307,7 +307,7 @@ async function handleFormSubmission({evt, cID, primaryKey, clientInfo, manageCli
 	}
 }
 
-async function handleTrimCycleCheck(userData) {
+async function handleTrimCycleCheck({userData, componentId}) {
 	try {
 		if (userData.trim_cycle === 'null') {
 			top();
@@ -324,7 +324,7 @@ async function handleTrimCycleCheck(userData) {
 				elementOrId: 'trim-cycle',
 				eventType: 'focus',
 				handler: () => clearMsg({ container: 'trim-cycle-error', hide: true, input: 'trim-cycle' }),
-				componentId: COMPONENT_ID,
+				componentId,
 			});
 
 			disableEnableSubmitButton('submit-button');

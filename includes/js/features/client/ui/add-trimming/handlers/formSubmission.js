@@ -45,11 +45,26 @@ export default async function handleAddTrimmingFormSubmission({ evt, cID, primar
 			return;
 		}
 
-		// Submit the form
-		const submitForm = await formSubmission({ cID, primaryKey, userData, manageClient });
-		debugLog('Form Submission:', submitForm);
+		const manageTrimming = new ManageTrimming();
+		const result = await manageTrimming.handleAddTrimmingSession({ cID, primaryKey, userData });
+
+		debugLog('Form Submission:', result);
+
+		// Handle success
+		safeDisplayMessage({
+			elementId: 'form-msg',
+			message: result.message,
+			isSuccess: result.status === 'ok' ? true : false,
+		});
+
+		// Reset the form
+		evt.target.reset();
+		// Scroll to the top of the page
+		top();
+		document.getElementById('number-horse-container').innerHTML = '';
 	}
 	catch (err) {
+		console.warn('Error submitting form:', err);
 		const { AppError } = await import("../../../../../core/errors/models/AppError.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.FORM_SUBMISSION_ERROR,
@@ -127,12 +142,23 @@ async function validateTrimmingForm({ userData }) {
 async function formSubmission({ cID, primaryKey, userData, manageClient }) {
 	try {
 		const manageTrimming = new ManageTrimming();
+		console.log('BEFORE SUBMIT FORM');
 		const submitForm = await manageTrimming.handleAddTrimmingSession({ cID, userData});
-
+		console.log('SUBMIT FORM: ', submitForm);
 		debugLog('Form Submission:', submitForm);
 
 	}
 	catch (err) {
 		throw err;
 	}
+}
+
+function getReceiptMessage(status) {
+	const messages = {
+		'success': 'Receipt sent successfully',
+		'auth-error': 'Authorization error sending receipt',
+		'error': 'Server error sending receipt - will retry during backup',
+		'offline': 'Receipt will be sent when online'
+	};
+	return messages[status] || null;
 }

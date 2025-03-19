@@ -8,6 +8,9 @@ import { clearMsg, safeDisplayMessage } from '../../../../core/utils/dom/message
 import { createDebouncedHandler, getOptimalDelay } from '../../../../core/utils/dom/eventUtils.js';
 import { handleHorseNameInput } from '../add-horse/components/handleHorseNameInput.js';
 import handleEditHorseFormSubmission from './components/handleEditHorseFormSubmission.js';
+import buildTwoColumnRadioButtonSection from '../../../../core/layout/components/buildTwoColumnRadioButtonSection.js';
+import buildTwoColumnSelectElementSection from '../../../../core/layout/components/buildTwoColumnSelectElementSection.js';
+import { trimCycleConfigurations } from '../../../../core/utils/dom/forms/trimCycleConfigurations.js';
 
 export default async function editClientHorse({ cID, primaryKey, mainContainer, manageClient, manageUser, componentId }) {
 	try {
@@ -78,8 +81,16 @@ async function showEditHorseForm({ evt, cID, primaryKey, manageClient, manageUse
 	try {
 		// DOM Elements
 		const horseContainer = document.getElementById('horse-container');
+		const selectedIndex = evt.target.options[evt.target.selectedIndex];
 		const hID = evt.target.value;
-		const horseName = evt.target.options[evt.target.selectedIndex].text;
+		const horseName = selectedIndex.text;
+		const horseServiceType = selectedIndex.dataset.serviceType;
+		const horseTrimCycle = selectedIndex.dataset.trimCycle;
+
+		console.log('hID: ', hID);
+		console.log('horseName: ', horseName);
+		console.log('horseServiceType: ', horseServiceType);
+		console.log('horseTrimCycle: ', horseTrimCycle);
 
 		if(hID === 'null') {
 			horseContainer.innerHTML = '';
@@ -104,7 +115,12 @@ async function showEditHorseForm({ evt, cID, primaryKey, manageClient, manageUse
 		// Build Elements
 		const elements = buildElementsFromConfig(FORM_CONFIG);
 
-		const [horseNameInput, submitDeleteButtons] = await Promise.all([
+		const [
+			horseNameInput, 
+			radioButton,
+			trimCycle,
+			submitDeleteButtons,
+		] = await Promise.all([
 			buildTwoColumnInputSection({
 				labelText: "Horse's Name: ",
 				inputID: 'horse-name',
@@ -114,13 +130,29 @@ async function showEditHorseForm({ evt, cID, primaryKey, manageClient, manageUse
 				inputTitle: "Horse's Name",
 				required: true,
 			}),
+			buildTwoColumnRadioButtonSection({
+				labelText: 'Service Type: ',
+				buttons: [
+					{ name: 'service_type', value: 'trim', labelText: 'Trim: ', checked: horseServiceType === 'trim' ? true : undefined },
+					{ name: 'service_type', value: 'half_set', labelText: 'Half Set Shoes: ', checked: horseServiceType === 'half_set' ? true : undefined },
+					{ name: 'service_type', value: 'full_set', labelText: 'Full Set Shoes: ', checked: horseServiceType === 'full_set' ? true : undefined },
+				],
+			}),
+			buildTwoColumnSelectElementSection({
+				labelText: 'Trim Cycle: ',
+				selectID: 'trim-cycle',
+				selectName: 'trim_cycle',
+				selectTitle: 'Trim Cycle',
+				required: true,
+				options: trimCycleConfigurations({trim_cycle: horseTrimCycle}),
+			}),
 			buildSubmitDeleteButtonSection({
 				submitButtonText: 'Edit Horse',
 				deleteButtonText: 'Delete Horse',
 			}),
 		]);
 
-		elements.form.append(elements.hiddenHID, elements.hiddenPrimaryKey, horseNameInput, submitDeleteButtons);
+		elements.form.append(elements.hiddenHID, elements.hiddenPrimaryKey, horseNameInput, radioButton, trimCycle, submitDeleteButtons);
 		horseContainer.innerHTML = '';
 		horseContainer.appendChild(elements.form);
 	}

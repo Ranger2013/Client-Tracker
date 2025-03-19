@@ -29,7 +29,7 @@ export default class ManageTrimming {
 	 * @param {TrimmingOptions} [options={ debug: false }] - Configuration options
 	 * @returns {ManageTrimming} Singleton instance
 	 */
-	constructor(options = { debug: true }) {
+	constructor(options = { debug: false }) {
 		// If an instance already exists, return it
 		if (ManageTrimming.#instance) {
 			if (options.debug !== undefined) {
@@ -75,9 +75,9 @@ export default class ManageTrimming {
 	 * @returns {Promise<Object>} Status and message of operation
 	 * @throws {AppError} If operation fails
 	 */
-	async handleAddTrimmingSession({ cID, userData }) {
+	async handleAddTrimmingSession({ cID, primaryKey, userData }) {
 		try {
-			if (!userData || !cID) {
+			if (!userData || !cID || !primaryKey) {
 				throw new Error('Missing required data for trimming session');
 			}
 
@@ -99,31 +99,40 @@ export default class ManageTrimming {
 			const trimmingStoreData = await this.setTrimmingStoreData({ cID, prevTrims });
 			this.#log('Trimming Store Data: ', trimmingStoreData);
 
-			// Extract horse data
+			// Extract and add horse data
 			backupData.horses = await this.extractHorseData(userData);
-			this.#log('Extracted Horse Data: ', backupData.horses);
+			this.#log('Horse Data: ', backupData.horses);
 
-			// Add trim session and handle receipt
-			const [addTrimResult, receiptResult] = await Promise.all([
-				this.addTrimSession(backupData, trimmingStoreData),
-				 this.handleSendingReceipt(userData, backupData)
-			]);
+			// Check if we are going to send a receipt
+			let receiptMsg = '';
+			if (userData?.receipt === 'yes') {
+				this.#log('Sending receipt for trimming session');
+				const receiptStatus = await this.handleSendingReceipt(backupData);
+				this.#log('Receipt Status: ', receiptStatus);
 
-			if (addTrimResult.status === 'error') {
-				throw new Error(addTrimResult.msg);
+				if (receiptStatus.status === 'ok') {
+					backupData.receipt_sent = 'yes';
+					receiptMsg = '<div>Receipt sent successfully.</div>';
+				}
+				else {
+					backupData.receipt_sent = 'no';
+					receiptMsg = `<div class="w3-text-red">${receiptStatus.msg}</div>`;
+				}
 			}
 
-			// Add full userData for server invoicing
-			backupData.userData = userData;
+			this.#log('Backup Data Structure after receipt: ', backupData);
+			// First try to add the trim session
+			await this.addTrimSession(backupData, trimmingStoreData);
+			this.#log('AFTER ADD TRIMMING DATA.');
 
-			// Update client schedule
-			// await this.#manageClient.updateClientSchedule(userData);
+			// Need to update the user's next appointment
+			await this.#manageClient.updateClientSchedule({cID, primaryKey, userData});
 
-			return { ...addTrimResult, ...receiptResult };
+			return { status: 'ok', message: `Trimming/Shoeing session added successfully.${receiptMsg}` };
 		}
 		catch (err) {
 			const { AppError } = await import("../../../core/errors/models/AppError.js");
-			await AppError.process(err, {
+			AppError.process(err, {
 				errorCode: AppError.Types.PROCESSING_ERROR,
 				userMessage: 'Failed to add trimming session',
 			}, true);
@@ -145,7 +154,7 @@ export default class ManageTrimming {
 			cID,
 			mileage_cost: userData?.mileage_cost || '0',
 			receipt: userData?.receipt || 'no',
-			session_notes: userData.session_notes,
+			session_notes: userData?.session_notes || '',
 			payment_amount: userData.payment !== '' ? userData.payment : '0',
 			date_trimmed: userData.trim_date,
 			paid: userData?.paid || 'no',
@@ -175,57 +184,29 @@ export default class ManageTrimming {
 	 * @throws {AppError} If receipt sending fails
 	 * @private
 	 */
-	async handleSendingReceipt(userData, backuptrimmingDataStructure) {
+	async handleSendingReceipt(userData) {
 		try {
-			if (userData?.receipt === undefined) return { receipt_status: 'no-receipt', receipt_msg: '' }; // There was no receipt to send
-
-			// Import our files
-			const [{ getValidationToken }, { dataAPI }, {fetchData}] = await Promise.all([
+			const [{ getValidationToken }, { dataAPI }, { fetchData }] = await Promise.all([
 				import("../../../tracker.js"),
 				import("../../../core/network/api/apiEndpoints.js"),
+				import("../../../core/network/services/network.js"),
 			]);
 
-			// Import Fetch Data after validation and data api.
-			const { fetchData } = await import("../../../core/network/services/network.js");
-			
-			// Set up validation token and send the receipt
+			// Get the authorization token
 			const validationToken = getValidationToken();
-			const request = await fetchData({ api: dataAPI.receipt, data: userData, token: validationToken });
+			this.#log('Before we send the receipt.');
+			// Make the reqeust to the server api
+			const response = await fetchData({
+				api: dataAPI.receipt,
+				data: userData,
+				token: validationToken
+			});
 
-			if (serverResponse.status === 'auth-error') {
-				await noAuthorizationPage();
-				return;
-			}
-
-			if (request.status === 'ok') {
-				backuptrimmingDataStructure.receipt_sent = 'yes';
-				return { receipt_status: 'receipt-sent', receipt_msg: '<div>Receipt sent.</div>' };
-			}
-
-			if (request.status === 'error') {
-				// Add the appointment time to the backup data structure so we can resend the receipt when the user backs up their data
-				backuptrimmingDataStructure.app_time = userData.app_time;
-				backuptrimmingDataStructure.receipt_sent = 'no';
-				const { helpDeskTicket } = await import("../utils/error-messages/errorMessages.js");
-				return { receipt_status: 'no-receipt-sent', receipt_msg: `<div class="w3-text-red">Server Error: Problem on the server prevented the receipt from being sent.</div><div class="w3-text-red">The receipt should auto-send when you back up your data. If it does not, then ${helpDeskTicket}</div>` };
-			}
-
-			// An unknown error occurred if we reach here.
-			backuptrimmingDataStructure.app_time = userData.app_time;
-			backuptrimmingDataStructure.receipt_sent = 'no';
-			return { receipt_status: 'unknown-error', receipt_msg: '<div class="w3-text-red">Unknown error.</div><div class="w3-text-red">The system will try again when you backup your data.</div>' };
+			this.#log('Receipt Response: ', response);
+			return response;
 		}
 		catch (err) {
-			const { handleError } = await import("../utils/error-messages/handleError.js");
-			await handleError(
-				'handleSendingReceiptError',
-				'Handle sending receipt error: ',
-				err,
-			);
-
-			// Add the no receipt sent property
-			backuptrimmingDataStructure.receipt_sent = 'no';
-			return { receipt_status: 'no-receipt-sent', receipt_msg: '<div class="w3-text-red">Receipt not sent due to being offline.</div><div class="w3-text-red">The system will retry when you back up your data.</div>' };
+			return { status: 'error', msg: 'Could not send receipt while offline.' };
 		}
 	}
 
@@ -239,35 +220,15 @@ export default class ManageTrimming {
 	 */
 	async extractHorseData({ number_horses, ...userData }) {
 		try {
-			// 1. Object.entries creates array of [key, value] pairs:
-			// [
-			//   ['horse_list_1', '1:Ranger'],
-			//   ['horse_list_2', '2:Simon'],
-			//   ['service_cost_1', 'trim:45'],
-			//   ['accessories_1', ['pads:EasyCare Pads:15']],
-			//   // etc...
-			// ]
-
 			return Object.entries(userData)
 				.reduce((horses, [key, value]) => {
-					// 2. matchHorse will capture the number from horse_list_X
-					// For 'horse_list_1' it returns: ['horse_list_1', '1']
-					// For 'service_cost_1' it returns: null
 					const matchHorse = key.match(/^horse_list_(\d+)$/);
 					if (!matchHorse) return horses;
 
-					// 3. Get the number from the match: '1', '2', etc
 					const index = matchHorse[1];
 
-					// 4. Split horse data: '1:Ranger' becomes [1, 'Ranger']
 					const [hID, horse_name] = value.split(':');
 
-					// 5. Look for existing horse with this index
-					// horses array looks like:
-					// [
-					//   { index: '1', hID: 1, horse_name: 'Ranger', ... },
-					//   { index: '2', hID: 2, horse_name: 'Simon', ... }
-					// ]
 					const existingHorse = horses.find(h => h.index === index) || {
 						index,  // Store index for sorting
 						hID: Number(hID),
@@ -276,13 +237,9 @@ export default class ManageTrimming {
 						acc: userData[`accessories_${index}`] || []
 					};
 
-					// 6. Return new array with all horses except current index
-					// then add the current horse (either existing or new)
 					return [...horses.filter(h => h.index !== index), existingHorse];
 				}, [])
-				// 7. Sort by numeric index: '1', '2', '3'...
 				.sort((a, b) => Number(a.index) - Number(b.index))
-				// 8. Remove the temporary index property
 				.map(({ index, ...horse }) => horse);
 		}
 		catch (err) {
@@ -304,13 +261,9 @@ export default class ManageTrimming {
 	 * @throws {AppError} If database operations fail
 	 * @private
 	 */
-	async addTrimSession(backuptrimmingDataStructure, trimmingStoreData) {
+	async addTrimSession(backupData, trimmingStoreData) {
 		try {
 			// Make a shallow copy of the backup trimming data structure
-			const backupData = { ...backuptrimmingDataStructure };
-			this.#log('Add Trim Session: Backup Trimming Data Structure: ', backuptrimmingDataStructure);
-			this.#log('Add Trim Session: backupData: ', backupData);
-			this.#log('Add Trim Session: trimmingStoreData: ', trimmingStoreData);
 			const db = await this.#indexed.openDBPromise();
 
 			// Start the transaction
@@ -321,12 +274,11 @@ export default class ManageTrimming {
 			], 'readwrite');
 
 			// Add the backup trimming data and the max trim id into their appropriate stores
-			// const backupTrimming = this.#indexed.putStorePromise(db, backuptrimmingDataStructure, this.#indexed.stores.ADDTRIMMING, false, tx);
-			// const putTrimID = this.#indexed.putStorePromise(db, { trimID: backuptrimmingDataStructure.trimID }, this.#indexed.stores.MAXTRIMID, true, tx);
+			const backupTrimming = this.#indexed.putStorePromise(db, backupData, this.#indexed.stores.ADDTRIMMING, false, tx);
+			const putTrimID = this.#indexed.putStorePromise(db, { trimID: backupData.trimID }, this.#indexed.stores.MAXTRIMID, true, tx);
 
 			// Remove the cID, add_trimming boolean and the userData from the backup data structure
-			const cID = backuptrimmingDataStructure.cID;
-			delete backupData.cID;
+			const cID = backupData.cID;
 			delete backupData.add_trimming;
 			delete backupData.userData;
 
@@ -336,32 +288,24 @@ export default class ManageTrimming {
 			this.#log('Add Trim Session: trimmingStoreData after backupData push: ', trimmingStoreData);
 
 			// Now add the trimming data to the trimming store
-			// const addTrimming = this.#indexed.putStorePromise(db, trimmingStoreData, this.#indexed.stores.TRIMMING, false, tx);
+			const addTrimming = this.#indexed.putStorePromise(db, trimmingStoreData, this.#indexed.stores.TRIMMING, false, tx);
 
 			// Wait for all the promises to resolve
-			// await Promise.all([backupTrimming, putTrimID, addTrimming]);
-
+			await Promise.all([backupTrimming, putTrimID, addTrimming]);
+			this.#log('Before cleanup Trimmings.');
 			// Lets clean up the trimmings
-			// await this.cleanupTrimmings(cID);
-
+			await this.cleanupTrimmings(cID);
+			this.#log('After cleanup Trimmings.');
 			// Return a properly formatted success response
-			return {
-				status: 'success',
-				msg: 'Trimming/Shoeing has been added successfully.'
-			};
+			return true;
 		}
 		catch (err) {
-			const { handleError } = await import("../utils/error-messages/handleError.js");
-			const { helpDeskTicket } = await import("../utils/error-messages/errorMessages.js");
-			await handleError(
-				'addTrimSessionError',
-				'Add trimming session error: ',
-				err,
-			);
-			return {
-				status: 'error',
-				msg: `Unable to add trimming session at this time.<br>${helpDeskTicket}`
-			};
+			const { AppError } = await import("../../../core/errors/models/AppError.js");
+			AppError.process(err, {
+				errorCode: AppError.Types.DATABASE_ERROR,
+				userMessage: 'Failed to add trimming session',
+				displayTarget: 'form-msg',
+			}, true);
 		}
 	}
 

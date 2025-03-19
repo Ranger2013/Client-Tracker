@@ -1,6 +1,6 @@
 import { buildEle, buildElementsFromConfig } from '../../../../../core/utils/dom/elements.js';
 
-const COMPONENT = 'BuildHorseListSelectElements';
+const COMPONENT = 'buildServiceBlocks';
 const DEBUG = false;
 const debugLog = (...args) => {
 	if (DEBUG) {
@@ -18,7 +18,7 @@ const debugLog = (...args) => {
  * @param {Array} params.accessoryOptions - The options for the accessory select element.
  * @returns {Promise<HTMLElement>} The created row element containing the select elements.
  */
-export default async function buildHorseListSelectElements({ iterator, horseListOptions, farrierPricesOptions, accessoryOptions }) {
+export default async function buildServiceBlocks({ iterator, horseListOptions, farrierPricesOptions, accessoryOptions }) {
 	try {
 		const i = iterator;
 		const PAGE_MAPPING = {
@@ -93,11 +93,11 @@ export default async function buildHorseListSelectElements({ iterator, horseList
 			},
 		};
 
-		debugLog('In buildHorseListSelectElements: farrierPricesOptions: ', farrierPricesOptions);
+		debugLog('In buildServiceBlocks: farrierPricesOptions: ', farrierPricesOptions);
 		const elements = buildElementsFromConfig(PAGE_MAPPING);
 		// Main Layout elements
 		const { row, firstCol, firstColLabel, secondCol } = elements;
-		
+
 		// Form Elements
 		const { horseListSelectError, servicesContainer, accessoriesContainer } = elements;
 

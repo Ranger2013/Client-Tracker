@@ -8,7 +8,7 @@ import calculateTotalCost from './components/calculateTotalCost.js';
 import { handleShowingAccessoriesSelectBox, handleShowingCostChangeInput, updateCostChangeInput, updateServiceCostSelectedIndex } from './handlers/costHandlers.js';
 import handleAddTrimmingFormSubmission from './handlers/formSubmission.js';
 
-const COMPONENT = 'AddTrimming';
+const COMPONENT = 'Add Trimming JS';
 const DEBUG = false;
 
 const debugLog = (...args) => {
@@ -84,6 +84,7 @@ export default async function addTrimming({ cID, primaryKey, mainContainer, mana
 				handler: async (evt, index) => {
 					debugLog(`Horse list ${index} changed:`, evt.target.value);
 					await updateAllHorseListSelectElements(evt);
+					await changeServiceCostToMatchHorseService({evt, primaryKey, manageClient});
 				}
 			},
 			'service-cost-': {
@@ -115,8 +116,6 @@ export default async function addTrimming({ cID, primaryKey, mainContainer, mana
 			},
 		};
 
-		debugLog('Static event handlers: ', staticEventHandlers);
-		debugLog('Dynamic event handlers: ', dynamicHandlers);
 		// Add our event listener for the entire page. This handles all dynamic elements
 		addListener({
 			elementOrId: 'card',
@@ -258,4 +257,74 @@ async function updateAllHorseListSelectElements(evt) {
 			userMessage: 'We encountered an error trying to update the horse list select elements.'
 		});
 	}
+}
+
+async function changeServiceCostToMatchHorseService({ evt, primaryKey, manageClient }) {
+    try {
+        const shoeMapping = {
+            half_set: 'front_',
+            full_set: 'full_',
+            trim: 'trim',
+        };
+
+        // Get the selected horses id
+        const selectedHorseId = evt.target.value.split(':')[0];
+        // Get the index of this event target id
+        const index = evt.target.id.split(/-/g).pop();
+
+        // Get the service cost for the selected horse
+        const serviceCostElement = document.getElementById(`service-cost-${index}`);
+        const serviceCost = serviceCostElement.options[serviceCostElement.selectedIndex].value;
+    
+        // Get the clients list of horses
+        const clientHorses = await manageClient.getClientHorses({ primaryKey });
+        
+        // Find the selected horse from the list
+        const selectedHorse = clientHorses.find(horse => horse.hID.toString() === selectedHorseId);
+        if (!selectedHorse) return;
+
+        const mappedService = shoeMapping[selectedHorse.service_type];
+        console.log('selectedHorse.service_type: ', selectedHorse.service_type);
+		  console.log('Mapped Service: ', mappedService);
+        // Check if current selection already matches the horse's service type
+        if (!serviceCost.includes(mappedService)) {
+            // Find the first option that matches the mapped service type
+            const options = serviceCostElement.options;
+            let matchFound = false;
+
+            for (let i = 0; i < options.length; i++) {
+					console.log('options value: ', options[i].value);
+                if (options[i].value.includes(mappedService)) {
+                    serviceCostElement.selectedIndex = i;
+                    matchFound = true;
+                    // Create a proper change event that includes the target
+                    const changeEvent = new Event('change', {
+                        bubbles: true,
+                        cancelable: true
+                    });
+                    Object.defineProperty(changeEvent, 'target', {value: serviceCostElement});
+                    serviceCostElement.dispatchEvent(changeEvent);
+                    break;
+                }
+            }
+
+            // If no matching service found, default to first option
+            if (!matchFound) {
+                serviceCostElement.selectedIndex = 0;
+                const changeEvent = new Event('change', {
+                    bubbles: true,
+                    cancelable: true
+                });
+                Object.defineProperty(changeEvent, 'target', {value: serviceCostElement});
+                serviceCostElement.dispatchEvent(changeEvent);
+            }
+        }
+    }
+    catch (err) {
+        const { AppError } = await import("../../../../core/errors/models/AppError.js");
+        AppError.handleError(err, {
+            errorCode: AppError.Types.INITIALIZATION_ERROR,
+            userMessage: 'We encountered an error trying to update the service cost to match the horse service.'
+        });
+    }
 }

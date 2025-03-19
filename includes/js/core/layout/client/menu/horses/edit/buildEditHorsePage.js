@@ -21,7 +21,7 @@ export default async function buildEditHorsePage({ cID, primaryKey, mainContaine
 		const clientHorses = clientInfo?.horses || [];
 
 		// Setup the select options for the horse list
-		const selectOptionArray = clientHorses.map(horse => ({ value: horse.hID, text: cleanUserOutput(horse.horse_name) }));
+		const selectOptionArray = clientHorses.map(horse => ({ value: horse.hID, text: cleanUserOutput(horse.horse_name), 'data-service-type': horse.service_type, 'data-trim-cycle': horse.trim_cycle }));
 		selectOptionArray.unshift({ value: 'null', text: '-- Select a horse --' });
 
 		const [[container, card], selectHorse] = await Promise.all([

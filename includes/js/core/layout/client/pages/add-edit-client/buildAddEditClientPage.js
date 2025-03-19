@@ -10,35 +10,6 @@ import buildTwoColumnSelectElementSection from '../../../components/buildTwoColu
 
 export const COMPONENT_ID = 'add-edit-client';
 
-/**
- * @typedef {Object} ClientFields
- * @property {string} client_name - Client's full name
- * @property {string} street - Street address
- * @property {string} city - City name
- * @property {string} state - State code
- * @property {string} zip - ZIP/Postal code
- * @property {string} distance - Distance to client
- * @property {string} phone - Contact phone number
- * @property {string} email - Contact email
- * @property {string} trim_cycle - Trimming/Shoeing cycle
- * @property {string} trim_date - Next trim date
- * @property {string} app_time - Appointment time
- * @property {string} active - Active status
- */
-const fieldValues = {
-    client_name: '',
-    street: '',
-    city: '',
-    state: '',
-    zip: '',
-    distance: '',
-    phone: '',
-    email: '',
-    trim_cycle: '',
-    trim_date: '',
-    app_time: '',
-    active: ''
-};
 
 /**
  * Builds the Add/Edit Client page with form and handlers
@@ -47,9 +18,39 @@ const fieldValues = {
  * @param {string|null} params.primaryKey - Primary key for editing mode
  * @param {HTMLElement} params.mainContainer - Main container element
  * @returns {Function} Cleanup function for removing event listeners
- */
+*/
 export default async function buildAddEditClientPage({ cID = null, primaryKey = null, mainContainer, manageClient, manageUser }) {
     try {
+        /**
+         * @typedef {Object} ClientFields
+         * @property {string} client_name - Client's full name
+         * @property {string} street - Street address
+         * @property {string} city - City name
+         * @property {string} state - State code
+         * @property {string} zip - ZIP/Postal code
+         * @property {string} distance - Distance to client
+         * @property {string} phone - Contact phone number
+         * @property {string} email - Contact email
+         * @property {string} trim_cycle - Trimming/Shoeing cycle
+         * @property {string} trim_date - Next trim date
+         * @property {string} app_time - Appointment time
+         * @property {string} active - Active status
+         */
+        const fieldValues = {
+            client_name: '',
+            street: '',
+            city: '',
+            state: '',
+            zip: '',
+            distance: '',
+            phone: '',
+            email: '',
+            trim_cycle: '',
+            trim_date: '',
+            app_time: '',
+            active: ''
+        };
+
         clearMsg({ container: 'page-msg' });
 
         let clientInfo = null;
@@ -63,14 +64,13 @@ export default async function buildAddEditClientPage({ cID = null, primaryKey = 
             clientInfo = await manageClient.getClientInfo({ primaryKey });
             clientAnchor = `/tracker/clients/appointments/?cID=${cID}&key=${primaryKey}`;
             clientName = clientInfo.client_name;
-
             // Update field values with client info
             Object.keys(fieldValues).forEach(key => {
                 if (clientInfo[key] !== undefined) {
                     fieldValues[key] = clientInfo[key];
                 }
             });
-
+            
             const { default: buildSubmitDeleteButtonSection } = await import('../../../components/buildSubmitDeleteButtonSection.js');
             submitButton = await buildSubmitDeleteButtonSection({
                 submitButtonText: 'Edit Client',

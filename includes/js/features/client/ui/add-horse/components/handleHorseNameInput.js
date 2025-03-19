@@ -1,7 +1,17 @@
 import { disableEnableSubmitButton } from '../../../../../core/utils/dom/elements';
 import { addListener } from '../../../../../core/utils/dom/listeners';
 import { clearMsg, safeDisplayMessage } from '../../../../../core/utils/dom/messages';
-import { ucwords } from '../../../../../core/utils/string/stringUtils';
+import { ucwords, underscoreToHyphen, underscoreToHyphenPlusError } from '../../../../../core/utils/string/stringUtils';
+
+// Set up debugging log
+const COMPONENT = 'Add Horse Page';
+const DEBUG = true;
+
+const debugLog = (...args) => {
+	if (DEBUG) {
+		console.log(`[${COMPONENT}]`, ...args);
+	}
+};
 
 export async function handleHorseNameInput({ evt, cID, primaryKey, manageClient, componentId }) {
 	try {
@@ -69,33 +79,21 @@ export async function isDuplicateHorseName({ horseName, cID, primaryKey, manageC
 
 export async function handleAddHorseFormSubmission({ evt, cID, primaryKey, manageClient, componentId }) {
 	try {
+		const userData = Object.fromEntries(new FormData(evt.target));
 		// Short cut to get the form element. Only a single input, no sense in using a form object
-		const horseName = evt.target.elements['horse-name'].value.trim();
+		const horseName = userData.horse_name.trim();
 		cID = parseInt(cID, 10);
 		primaryKey = parseInt(primaryKey, 10);
 
-		// If horse name is empty, show error message and return early
-		if (!horseName) {
-			safeDisplayMessage({
-				elementId: `${evt.target.id}-error`,
-				message: 'Please enter the horse\'s name.',
-				targetId: 'horse-name',
-			});
+		// Validate the form
+		const isValidated = await validateAddHorseForm(userData);
+		if (!isValidated) return;
 
-			// Add the focus event listener
-			addListener({
-				elementOrId: evt.target,
-				eventType: 'focus',
-				handler: () => clearMsg({ container: `${evt.target.id}-error`, hide: true, input: evt.target }),
-				componentId
-			});
-			return;
-		}
-
+		debugLog('Validation:', isValidated);
 		// Add the new horse
-		const response = await manageClient.addNewHorse({horseName, cID, primaryKey});
+		const response = await manageClient.addNewHorse({userData, cID, primaryKey });
 
-		if(response){
+		if (response) {
 			// Clear the form
 			evt.target.reset();
 
@@ -114,5 +112,50 @@ export async function handleAddHorseFormSubmission({ evt, cID, primaryKey, manag
 			userMessage: AppError.BaseMessages.forms.submissionFailed,
 			displayTarget: 'form-msg',
 		});
+	}
+}
+
+async function validateAddHorseForm(userData) {
+	try {
+		const validations = [
+			{
+				test: () => !!userData.horse_name?.trim(),
+				error: {
+					message: 'Please enter a horse name.',
+					targetError: 'horse-name-error',
+					target: 'horse-name'
+				}
+			},
+			{
+				test: () => ['7','14','21','28','35','42','49','56','63','70'].includes(userData.trim_cycle),
+				error: {
+					message: 'Please select a valid trim cycle.',
+					targetError: 'trim-cycle-error',
+					target: 'trim-cycle'
+				}
+			}
+		];
+
+		const errors = validations.filter(validation => !validation.test()).map(validation => validation.error);
+
+		if (errors.length > 0) {
+			errors.forEach(error => {
+				safeDisplayMessage({
+					elementId: error.targetError,
+					message: error.message,
+					targetId: error.target
+				});
+			});
+
+			return false;
+		}
+		return true;
+	}
+	catch(err){
+		const { AppError } = await import("../../../../../core/errors/models/AppError.js");
+		AppError.process(err, {
+			errorCode: AppError.Types.VALIDATION_ERROR,
+			userMessage: AppError.BaseMessages.forms.validationFailed,
+		}, true);
 	}
 }

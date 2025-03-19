@@ -114,19 +114,21 @@ export function buildElementsFromConfig(config) {
  * // options will be an array of option elements with the specified value and text.
  */
 export function buildGenericSelectOptions(config) {
-	debugLog('Building select options with config:', config);
-	return config.list.map(opt => {
-		// Set the value and the text of the option
-		const value = config.value(opt);
-		const text = config.text(opt);
+    debugLog('Building select options with config:', config);
+    return config.list.map(opt => {
+        const value = config.value(opt);
+        const text = config.text(opt);
+        const attributes = {
+            value,
+            ...(config.attributes && config.attributes(opt)) // Add attributes if the function exists
+        };
 
-		// Return the option element
-		return buildEle({
-			type: 'option',
-			attributes: { value },
-			text
-		});
-	});
+        return buildEle({
+            type: 'option',
+            attributes,
+            text
+        });
+    });
 }
 
 /**
@@ -137,39 +139,46 @@ export function buildGenericSelectOptions(config) {
  * @param {Object} config - Configuration for generating options
  * @param {function(Object): string|number} config.valueMapper - Function that extracts the value attribute for each option
  * @param {function(Object): string} config.textMapper - Function that extracts the display text for each option
+ * @param {function(Object): Object} [config.datasetMapper] - Optional function that returns data attributes for the option
  * @param {*} [config.selectedValue=null] - The value to select after updating options (optional)
  * @returns {void}
  */
-export function updateSelectOptions(select, items, { valueMapper, textMapper, selectedValue = null, preserveFirst = true }) {
-	// Get the valid element
-	const selectedElement = getValidElement(select);
+export function updateSelectOptions(select, items, { valueMapper, textMapper, datasetMapper, selectedValue = null, preserveFirst = true }) {
+    // Get the valid element
+    const selectedElement = getValidElement(select);
 
-	// Save the first option unless we're not preserving it
-	const firstOption = preserveFirst && selectedElement.options.length > 0
-		? selectedElement.options[0].cloneNode(true)
-		: null;
+	 // Save the first option unless we're not preserving it
+    const firstOption = preserveFirst && selectedElement.options.length > 0
+        ? selectedElement.options[0].cloneNode(true)
+        : null;
 
-	// Build the options
-	const options = buildGenericSelectOptions({
-		list: items,
-		value: valueMapper,
-		text: textMapper,
-	});
+    // Build options with potential data attributes
+    const options = items.map(item => {
+        const option = buildEle({
+            type: 'option',
+            attributes: {
+                value: valueMapper(item),
+                ...(datasetMapper && datasetMapper(item)) // Only include if datasetMapper is provided
+            },
+            text: textMapper(item)
+        });
+        return option;
+    });
 
-	const fragment = document.createDocumentFragment();
+    const fragment = document.createDocumentFragment();
 
-	// Add the preserved first option if it exists
-	if (firstOption) {
-		fragment.appendChild(firstOption);
-	}
+    // Add the preserved first option if it exists
+    if (firstOption) {
+        fragment.appendChild(firstOption);
+    }
 
-	// Add the new options
-	options.forEach(option => fragment.appendChild(option));
+    // Add the new options
+    options.forEach(option => fragment.appendChild(option));
 
-	selectedElement.innerHTML = '';
-	selectedElement.appendChild(fragment);
+    selectedElement.innerHTML = '';
+    selectedElement.appendChild(fragment);
 
-	if (selectedValue !== null) {
-		selectedElement.value = selectedValue;
-	}
+    if (selectedValue !== null) {
+        selectedElement.value = selectedValue;
+    }
 }

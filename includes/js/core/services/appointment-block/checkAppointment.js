@@ -1,4 +1,5 @@
 import { getValidElement } from '../../utils/dom/elements.js';
+import { removeListeners } from '../../utils/dom/listeners.js';
 import { clearMsg, safeDisplayMessage } from '../../utils/dom/messages.js';
 import buildAppointmentBlock from './components/buildAppointmentBlock.js';
 import buildNoAppointmentsBlock from './components/buildNoAppointmentsBlock.js';
@@ -8,10 +9,10 @@ import getProjectedAppointments from './components/getProjectedAppointments.js';
 
 const COMPONENT_ID = 'check-appointment';
 const COMPONENT = 'checkAppointment';
-const DEBUG = false;
+const DEBUG = true;
 
 const debugLog = (...args) => {
-	if(DEBUG) {
+	if (DEBUG) {
 		console.log(`[${COMPONENT}]`, ...args);
 	}
 };
@@ -40,6 +41,8 @@ export default async function checkAppointment({
 	manageUser,
 }) {
 	try {
+		removeListeners(COMPONENT_ID);
+		
 		// DOM Elements
 		trimDate = getValidElement(trimDate);
 		trimCycle = trimCycle === null ? null : getValidElement(trimCycle); // Only used on the add/edit client, not trimming page
@@ -71,7 +74,7 @@ export default async function checkAppointment({
 			clearMsg({ container: trimDateError, hide: true, input: trimDateError });
 		}
 
-		// Get the booked appointments and the projected appointments concurrently
+		// Get the booked appointments and the projected appointments data concurrently
 		const [bookedAppointments, projectedAppointments] = await Promise.all([
 			getCurrentAppointments({ appointmentDate: trimDate.value, scheduleOptions, dateTimeFormats, manageClient }),
 			getProjectedAppointments({ appointmentDate: trimDate, trimCycle, clientInfo, scheduleOptions, manageClient })
@@ -93,7 +96,14 @@ export default async function checkAppointment({
 
 		// Build the projected blocks
 		if (projectedAppointments?.length > 0) {
-			await buildProjectedAppointmentBlock({ appointmentContainer: projAppBlock, data: projectedAppointments, date: dateTime });
+			await buildProjectedAppointmentBlock({
+				appointmentContainer: projAppBlock,
+				data: projectedAppointments,
+				date: dateTime,
+				manageClient,
+				manageUser,
+				componentId: COMPONENT_ID
+			});
 		}
 	}
 	catch (err) {

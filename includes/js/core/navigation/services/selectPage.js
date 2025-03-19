@@ -31,22 +31,22 @@ export default async function selectPage({ evt, page, cID = null, closeMenu = nu
         const PAGE_CONFIG = {
             clients: {
                 active: {
-                    module: "../../layout/client/pages/schedule-list/buildAppointmentListPage.js",
+                    module: "../../layout/client/pages/schedule-list/buildAppointmentListPage.min.js",
                     getState: () => "/tracker/clients/appointments/?active=yes",
                     getArgs: () => [{ active: 'yes', mainContainer: main, manageClient, manageUser }]
                 },
                 inactive: {
-                    module: "../../layout/client/pages/schedule-list/buildAppointmentListPage.js",
+                    module: "../../layout/client/pages/schedule-list/buildAppointmentListPage.min.js",
                     getState: () => "/tracker/clients/appointments/?active=no",
                     getArgs: () => [{ active: 'no', mainContainer: main, manageClient, manageUser }]
                 },
                 single: {
-                    module: "../../layout/client/pages/schedule-list/buildAppointmentListPage.js",
+                    module: "../../layout/client/pages/schedule-list/buildAppointmentListPage.min.js",
                     getState: (cID, primaryKey) => `/tracker/clients/appointments/?cID=${cID}&primaryKey=${primaryKey}`,
                     getArgs: (cID, primaryKey) => [{mainContainer: main, cID, primaryKey, manageClient, manageUser }]
                 },
                 add: {
-                    module: "../../layout/client/pages/add-edit-client/buildAddEditClientPage.js",
+                    module: "../../layout/client/pages/add-edit-client/buildAddEditClientPage.min.js",
                     getState: () => "/tracker/clients/add/",
                     getArgs: (cID, primaryKey) => [{ cID, primaryKey, mainContainer: main, manageClient, manageUser }]
                 },

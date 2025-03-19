@@ -1,3 +1,4 @@
+import { disableEnableSubmitButton } from '../../../../core/utils/dom/elements.js';
 import { addListener, removeListeners } from "../../../../core/utils/dom/listeners.js";
 import { clearMsg, safeDisplayMessage } from "../../../../core/utils/dom/messages.js";
 import { underscoreToHyphen, underscoreToHyphenPlusError } from "../../../../core/utils/string/stringUtils.js";
@@ -7,45 +8,73 @@ import populateScheduleOptionsForm from "./components/schedule-options/populateS
 
 const manageUser = new ManageUser();
 const COMPONENT_ID = 'schedule-options';
-const ERROR_COMPONENT = 'schedule-options-error';
-const scheduleOptionsForm = document.getElementById('schedule-options-form');
 
-// Populate form with local data if any
-await populateScheduleOptionsForm({ 
-    form: scheduleOptionsForm, 
-    manageUser 
-});
-
-/**
- * Validates schedule options form data
- * @param {Object} userData - Form data to validate
- * @returns {Array<{input: string, msg: string}>} Array of validation errors
- */
-function validateFormInputs(userData) {
-    const errors = [];
-
-    // Remove previous listeners before assigning new ones.
-    removeListeners(ERROR_COMPONENT);
-    
-    Object.entries(userData).forEach(([key, value]) => {
-        if (value === '' || !isNumeric(value)) {
-            errors.push({
-                input: key,
-                msg: 'Field must be a valid number'
-            });
-
-            // Add event listener to clear error messages on focus
-            addListener({
-                elementOrId: underscoreToHyphen(key),
-                eventType: 'focus',
-                handler: () => clearMsg({ container: `${underscoreToHyphenPlusError(key)}`, input: underscoreToHyphen(key)}),
-                componentId: ERROR_COMPONENT,
-            });
-        }
+(async function init() {
+    // Populate form with local data if any
+    await populateScheduleOptionsForm({ 
+        form: 'schedule-options-form', 
+        manageUser 
     });
 
-    return errors;
+    // Initialize event handlers
+    await initializeEventHandlers();
+})();
+
+async function initializeEventHandlers() {
+    try {
+        // Helper functions to reduce duplication
+        const handleNumericValidation = (fieldId) => (evt) => {
+            const isValidated = isNumeric(evt.target.value);
+            if (!isValidated) {
+                safeDisplayMessage({
+                    elementId: `${fieldId}-error`,
+                    message: 'Please enter a valid number',
+                    targetId: fieldId
+                });
+                disableEnableSubmitButton('submit-button');
+            }
+        };
+
+        const handleFieldFocus = (fieldId) => () => {
+            clearMsg({ 
+                container: `${fieldId}-error`, 
+                hide: true, 
+                input: fieldId 
+            });
+            disableEnableSubmitButton('submit-button');
+        };
+
+        // Array-based approach
+        const fields = ['avg-trim', 'half-set', 'full-set', 'avg-drive-time'];
+        const eventHandlers = fields.reduce((acc, fieldId) => {
+            acc[`input:${fieldId}`] = handleNumericValidation(fieldId);
+            acc[`focusin:${fieldId}`] = handleFieldFocus(fieldId);
+            return acc;
+        }, {
+            'submit:schedule-options-form': handleScheduleFormSubmission
+        });
+
+        addListener({
+            elementOrId: 'schedule-options-form',
+            eventType: ['input', 'focusin', 'submit'],
+            handler: (evt) => {
+                const handlerKey = `${evt.type}:${evt.target.id}`;
+                eventHandlers[handlerKey]?.(evt);
+            },
+            componentId: COMPONENT_ID,
+        });
+    }
+    catch(err) {
+        const { AppError } = await import("../../../../core/errors/models/AppError.js");
+        AppError.handleError(err, {
+            errorCode: AppError.Types.INITIALIZATION_ERROR,
+            userMessage: AppError.BaseMessages.system.initialization,
+        });
+
+        disableEnableSubmitButton('submit-button');
+    }
 }
+
 
 /**
  * Handles schedule options form submission
@@ -57,14 +86,6 @@ async function handleScheduleFormSubmission(evt) {
     try {
         clearMsg({ container: 'form-msg' });
         const userData = Object.fromEntries(new FormData(evt.target));
-
-        const validationErrors = validateFormInputs(userData);
-        
-        if (validationErrors.length > 0) {
-            const { default: displayFormValidationErrors } = await import("../../../../core/utils/dom/forms/displayFormValidationErrors.js");
-            await displayFormValidationErrors(validationErrors);
-            return;
-        }
 
         const stores = manageUser.getStoreNames();
         const success = await manageUser.updateLocalUserSettings({
@@ -94,11 +115,3 @@ async function handleScheduleFormSubmission(evt) {
         });
     }
 }
-
-// Add form submission listener
-addListener({
-    elementOrId: scheduleOptionsForm,
-    eventType: 'submit',
-    handler: handleScheduleFormSubmission,
-    componentId: COMPONENT_ID
-});

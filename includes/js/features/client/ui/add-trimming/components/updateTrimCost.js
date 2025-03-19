@@ -16,18 +16,18 @@ export async function updateTrimCost({ blockElementNode, numberHorses, userFarri
 		// Loop through the select elements and update the trim value
 		selectElements.forEach(select => {
 			// Find the option that has trim in it
-			const trimOptionArray = Array.from(select.options).find(() => 'trim');
+			const trimOption = Array.from(select.options).find(() => 'trim');
+			const selectedIndexValue = select.options[select.selectedIndex].value.split(':')[1];
+			const index = select.id.split('-').pop();
 
-			if (trimOptionArray) {
-				trimOptionArray.value = trimValue;
-
-				// Get the index, of the service cost
-				const index = select.id.split('-').pop();
-
-				// Get the change cost input element
-				const changeCostInput = blockElementNode.querySelector(`#cost-change-${index}`);
-				changeCostInput.value = trimValue.split(':')[1];
+			// Change the cost of the service cost trim option element element
+			if (trimOption) {
+				trimOption.value = trimValue;
 			}
+
+			// Get the change cost input element
+			const changeCostInput = blockElementNode.querySelector(`#cost-change-${index}`);
+			changeCostInput.value = selectedIndexValue === 'xxx' ? trimValue.split(':')[1] : selectedIndexValue ;
 		});
 	}
 	catch (err) {

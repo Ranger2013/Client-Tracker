@@ -37,7 +37,7 @@ export default async function buildAppointmentBlock({appointmentContainer, appoi
 		const reminder = buildEle({
 			type: 'div',
 			myClass: ['w3-center', 'w3-small'],
-			text: 'Remember times include your average drive time also.'
+			text: 'Appointment block times are a prediction based on your clients service history plus your drive time.'
 		});
 
 		parent.appendChild(header);
@@ -54,7 +54,11 @@ export default async function buildAppointmentBlock({appointmentContainer, appoi
 			const appointmentDetails = buildEle({
 				type: 'p',
 				myClass: ['w3-border-bottom', 'w3-padding-small'],
-				text: ` from ${obj.city}<br>Usually has ${obj.num_horses} horse(s)<br>Appointment starts at: ${obj.start}<br>Appointment ends at: ${obj.end}`
+				text: ` from ${obj.city}<br>
+				Predicted ${obj.num_horses} horse(s)<br>
+				${obj.prediction_message}<br>
+				Appointment starts at: ${obj.start}<br>
+				Appointment ends at: ${obj.end}`
 			});
 
 			// Set the event listener

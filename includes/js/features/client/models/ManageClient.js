@@ -11,7 +11,7 @@ export default class ManageClient {
     #trimmingInfo = null;
     #debug = false;
 
-    constructor(options = { debug: true }) {
+    constructor(options = { debug: false }) {
         // If an instance already exists, return it
         if (ManageClient.#instance) {
             // Optionally update debug setting if passed
@@ -127,14 +127,17 @@ export default class ManageClient {
      */
     async addNewClient(userData) {
         try {
+            this.#log('Adding new client: userData: ', userData);
             if (!userData) throw new Error('No user data provided.');
 
             // Get the cID and primary key concurrently
             const [cID, primaryKey] = await Promise.all([
-                this.#indexed.getLastKeyForID({store: this.#indexed.stores.MAXCLIENTID}),
-                this.#indexed.getLastKeyForID({store: this.#indexed.stores.MAXCLIENTPRIMARYKEY})
+                this.#indexed.getLastKeyForID({ store: this.#indexed.stores.MAXCLIENTID }),
+                this.#indexed.getLastKeyForID({ store: this.#indexed.stores.MAXCLIENTPRIMARYKEY })
             ]);
 
+            this.#log('New cID: ', cID);
+            this.#log('New Primary Key: ', primaryKey);
             // Add the cID and primary key to the userData
             userData.cID = cID;
             userData.primaryKey = primaryKey;
@@ -291,7 +294,7 @@ export default class ManageClient {
             const { app_time, duplicate_client: primaryKey, next_trim_date, trim_cycle } = userData;
 
             // Get the next primaryKey for this client
-            const newPrimaryKey = await this.#indexed.getLastKeyForID({store: this.#indexed.stores.MAXCLIENTPRIMARYKEY});
+            const newPrimaryKey = await this.#indexed.getLastKeyForID({ store: this.#indexed.stores.MAXCLIENTPRIMARYKEY });
 
             const db = await this.#indexed.openDBPromise();
 
@@ -399,13 +402,13 @@ export default class ManageClient {
      * @returns {Promise<Object>} A promise that resolves to an object containing the status and message.
      * @throws Will throw an error if the operation fails.
      */
-    async addNewHorse({ horseName, cID, primaryKey }) {
+    async addNewHorse({ userData, cID, primaryKey }) {
         try {
             if (!cID || !primaryKey) throw new Error('No cID or primaryKey provided.');
 
             // Get the hID for the new horse. Doing this prior to the transaction to prevent transaction finishing early
-            const hID = await this.#indexed.getLastKeyForID({store:this.#indexed.stores.MAXHORSEID});
-
+            const hID = await this.#indexed.getLastKeyForID({ store: this.#indexed.stores.MAXHORSEID });
+            this.#log('New Horse ID: ', hID);
             // Set up idb transactions
             const db = await this.#indexed.openDBPromise();
 
@@ -421,12 +424,17 @@ export default class ManageClient {
             const clientHorses = clientInfo[0]?.horses || [];
 
             // Add the new horse to the horse list
-            const newHorse = { hID, horse_name: horseName };
+            const newHorse = {
+                hID: hID,
+                horse_name: userData.horse_name,
+                service_type: userData.service_type,
+                trim_cycle: userData.trim_cycle
+            };
             clientHorses.push(newHorse);
 
             await Promise.all([
                 ...clientInfo.map(client => this.#indexed.putStorePromise(db, { ...client, horses: clientHorses }, this.#indexed.stores.CLIENTLIST, false, tx)),
-                this.#indexed.putStorePromise(db, { add_newHorse: true, horse_name: horseName, cID, hID }, this.#indexed.stores.ADDHORSE, false, tx),
+                this.#indexed.putStorePromise(db, { ...newHorse, add_newHorse: true, cID }, this.#indexed.stores.ADDHORSE, false, tx),
                 this.#indexed.putStorePromise(db, { hID }, this.#indexed.stores.MAXHORSEID, true, tx),
             ]);
 
@@ -453,14 +461,10 @@ export default class ManageClient {
      * @returns {Promise<boolean>} A promise that resolves to an object containing the status and message.
      * @throws Will throw an error if the operation fails.
      */
-    async editClientHorse({ hID, cID, horseName }) {
+    async editClientHorse({ cID, userData }) {
         try {
+            const { hID, ...updatedUserData } = userData;
             if (!hID || !cID) throw new Error('No horse id or client id provided.');
-
-            // Convert the horse id to a number
-            if (typeof hID === 'string') {
-                hID = Number(hID);
-            }
 
             // Set up the transaction
             const db = await this.#indexed.openDBPromise();
@@ -476,8 +480,8 @@ export default class ManageClient {
                 // Update all the client horses
                 ...clientInfo.map(client => {
                     const updatedHorses = client.horses.map(horse => {
-                        if (horse.hID === Number(hID)) {
-                            return { ...horse, horse_name: horseName };
+                        if (horse.hID === parseInt(hID, 10)) {
+                            return { ...horse, hID: parseInt(hID, 10), ...updatedUserData };
                         }
                         return horse;
                     });
@@ -485,7 +489,7 @@ export default class ManageClient {
                     return this.#indexed.putStorePromise(db, { ...client, horses: updatedHorses }, this.#indexed.stores.CLIENTLIST, false, tx);
                 }),
                 // Add the horse data to the EDITHORSE object store
-                this.#indexed.putStorePromise(db, { hID, cID, horse_name: horseName, edit_clientHorse: true }, this.#indexed.stores.EDITHORSE, false, tx),
+                this.#indexed.putStorePromise(db, { edit_clientHorse: true, hID, ...updatedUserData }, this.#indexed.stores.EDITHORSE, false, tx),
 
             ]);
 
@@ -646,6 +650,8 @@ export default class ManageClient {
      */
     async getClientTrimmingInfo(cID) {
         try {
+            cID = typeof cID === 'string' ? parseInt(cID, 10) : cID;
+            
             const db = await this.#indexed.openDBPromise();
             const trimmingInfo = await this.#indexed.getStorePromise(db, this.#indexed.stores.TRIMMING, cID);
             return trimmingInfo?.trimmings || [];
@@ -660,8 +666,12 @@ export default class ManageClient {
         }
     }
 
-    async updateClientSchedule(userData) {
+    async updateClientSchedule({ cID, primaryKey, userData }) {
         try {
+            console.log('cID: ', cID);
+            console.log('primaryKey: ', primaryKey);
+            if (!cID || !primaryKey || !userData) throw new Error('No cID, primaryKey, or userData provided.');
+
             // Destructure userData
             const { next_trim_date, app_time, ...userDataRest } = userData;
 
@@ -673,7 +683,7 @@ export default class ManageClient {
 
             const promises = [];
 
-            const clientInfo = await this.#indexed.getStorePromise(db, this.#indexed.stores.CLIENTLIST, userData.primaryKey, tx);
+            const clientInfo = await this.#indexed.getStorePromise(db, this.#indexed.stores.CLIENTLIST, parseInt(primaryKey, 10), tx);
 
             const newClientInfo = {
                 ...clientInfo,
@@ -681,26 +691,24 @@ export default class ManageClient {
                 trim_date: next_trim_date,
             }
 
-            // Update the client information
-            promises.push(this.#indexed.putStorePromise(db, newClientInfo, this.#indexed.stores.CLIENTLIST, false, tx));
+            await Promise.all([
+                this.#indexed.putStorePromise(db, newClientInfo, this.#indexed.stores.CLIENTLIST, false, tx),
+                this.#indexed.putStorePromise(db, { ...newClientInfo, edit_client: true, cID: parseInt(cID, 10), primaryKey: parseInt(primaryKey, 10) }, this.#indexed.stores.EDITCLIENT, false, tx)
+            ]);
 
-            // Add the api identifier
-            newClientInfo.edit_client = true;
+            // Reset the cache after successful update
+            this.#clientList = null;
+            this.#initialized = false;
 
-            // Add the edit client to the backup store
-            promises.push(this.#indexed.putStorePromise(db, newClientInfo, this.#indexed.stores.EDITCLIENT, false, tx));
-
-            // Wait for all promises to resolve
-            await Promise.all(promises);
-
-            return { status: true, msg: 'Client schedule updated successfully.' };
+            return true;
         }
         catch (err) {
             const { AppError } = await import('../../../core/errors/models/AppError.js');
-            AppError.process(err, {
+            AppError.handleError(err, {
                 errorCode: AppError.Types.DATABASE_ERROR,
-                userMessage: null,
+                userMessage: 'We had an issue updating the client\'s new schedule. Update their schedule through the edit client and please report this issue.',
             }, true);
+            return false;
         }
     }
 

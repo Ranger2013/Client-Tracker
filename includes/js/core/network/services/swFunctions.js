@@ -1,5 +1,5 @@
-export const staticCacheName = 'static-cache-v1';
-export const dynamicCacheName = 'dynamic-cache-v1';
+export const staticCacheName = 'static-cache-v4';
+export const dynamicCacheName = 'dynamic-cache-v4';
 
 // Do not cache these pages. Some are api pages, but most are the generated offline pages.
 const noCache = [
@@ -10,30 +10,28 @@ const noCache = [
 ];
 
 export async function cacheFirst(evt){
-	try{
-		// Check cache first
-		const cachedResponse = await caches.match(evt.request);
-		if(cachedResponse) {
-			 return cachedResponse;
-		}
+    try{
+        const cachedResponse = await caches.match(evt.request);
+        if(cachedResponse) {
+            return cachedResponse;
+        }
 
-		// Try network if not in cache
-		try{
-			const networkResponse = await fetch(evt.request);
-			if(networkResponse.ok){
-				const cache = await caches.open(dynamicCacheName);
-				cache.put(evt.request, networkResponse.clone());
-				return networkResponse;
-			}
-		}
-		catch(networrkErr){
-			await handleFallback(evt);
-		}
-	}
-	catch(err){
-		// Cache operations failed
-		return caches.match('/tracker/public/src/libs/trackerFallBackPage.php');
-	}
+        try{
+            const networkResponse = await fetch(evt.request);
+            if(networkResponse.ok){
+                const cache = await caches.open(dynamicCacheName);
+                await cache.put(evt.request, networkResponse.clone());
+                return networkResponse;
+            }
+            return handleFallback(evt); // Add return here for non-ok responses
+        }
+        catch(networkErr){
+            return handleFallback(evt); // Add return here
+        }
+    }
+    catch(err){
+        return caches.match('/tracker/public/src/libs/trackerFallBackPage.php');
+    }
 }
 
 /**
@@ -48,76 +46,72 @@ export async function cacheFirst(evt){
  * @throws Will throw an error if the network request fails and the request cannot be fulfilled from the cache.
  */
 export async function networkFirst(evt) {
-	try {
-		const response = await fetch(evt.request);
+    try {
+        const response = await fetch(evt.request);
 
-		// Good request HTTP 200
-		if (response.ok) {
-			// Don't cache these pages, just return the response
-			if (noCache.some(page => {
-				return evt.request.url.includes(page)
-			}
-			)) {
-				return response;
-			}
+        if (response.ok) {
+            if (noCache.some(page => evt.request.url.includes(page))) {
+                return response;
+            }
 
-			// Handle any errors that may be thrown from the caching process
-			try {
-				// Cache these pages and return the response;
-				const cache = await caches.open(dynamicCacheName);
-				cache.put(evt.request, response.clone());
-			}
-			catch (err) {
-				console.warn('Caching Error:', err);
-				// Send a fetch to the error logging api with this error.
-			}
+            try {
+                const cache = await caches.open(dynamicCacheName);
+                await cache.put(evt.request, response.clone());
+            } catch (err) {
+                console.warn('Caching Error:', err);
+            }
 
-			// Return the response even if the page was not able to be cached. This way to don't break the user's experience.
-			return response;
-		}
-		else {
-			// For developement, just return the response to see all errors
-			console.warn('In networkFirst: Bad Response: ', response);
-			return response;
+            return response;
+        }
 
-			// For production, handle the different status types
-			// if (response.status >= 400 && response.status < 500) {
-			// 	console.error('In networkFirst: Client Error: response.statusText: ', response.statusText);
+        // Bad response, try cache
+        const cachedResponse = await caches.match(evt.request);
+        if (cachedResponse) {
+            return cachedResponse;
+        }
 
-			// 	// Return a new reponse with a custom error message, don't forget to add a link to go back to the home page.
-			// 	return new Response(
-			// 		`<div style="text-align: center"><span style="color: red">Oops, something went wrong</span></div>
-			// 		<p>${response.text()}</p>`
-			// 	);
+        // No cache, return fallback
+        return handleFallback(evt);
 
-			// 	// Send the log error to the error api and display a generic page for the user notifying them of the error
-			// }
-			// else if (response.status >= 500) {
-			// 	console.error('Server Error:', response.statusText);
+    } catch (networkError) {
+        console.warn('Network Error:', networkError);
+        
+        // Network failed, try cache
+        const cachedResponse = await caches.match(evt.request);
+        if (cachedResponse) {
+            return cachedResponse;
+        }
 
-			// 	// Send the log error to the error api and display a generic page for the user notifying them of the error
-			// }
-			// else {
-			// 	console.error('Unknown Error:', response.statusText);
-
-			// 	// Send the log error to the error api and display a generic page for the user notifying them of the error
-			// }
-		}
-	} catch (err) {
-		await handleFallback(evt);
-	}
+        // Cache failed, return fallback
+        return handleFallback(evt);
+    }
 }
 
 async function handleFallback(evt) {
-	const fallbackTrackerURL = '/tracker/public/src/libs/trackerFallBackPage.php';
-	const req = await caches.match(evt.request);
+    const fallbackTrackerURL = '/tracker/public/src/libs/trackerFallBackPage.php';
+    
+    try {
+        // First try to get from cache
+        const cachedResponse = await caches.match(evt.request);
+        if (cachedResponse) {
+            return cachedResponse;
+        }
 
-	if (!req) {
-		if (evt.request.destination === 'script') {
-			// stub.js" is an empty file
-			return caches.match('/includes/js/utils/stub.js"');
-		}
-		return caches.match(fallbackTrackerURL);
-	}
-	return req;
+        // If not in cache, return appropriate fallback
+        if (evt.request.destination === 'script') {
+            return new Response('// Empty script fallback', {
+                headers: { 'Content-Type': 'application/javascript' }
+            });
+        }
+
+        // Return generic fallback page
+        return caches.match(fallbackTrackerURL);
+    } catch (err) {
+        console.warn('Fallback Error:', err);
+        // Return minimal response if everything fails
+        return new Response('Service Unavailable', {
+            status: 503,
+            statusText: 'Service Unavailable'
+        });
+    }
 }

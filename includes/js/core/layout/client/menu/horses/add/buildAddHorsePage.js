@@ -1,12 +1,26 @@
-import { buildEle } from '../../../../../utils/dom/elements.js';
+import { buildEle, buildElementsFromConfig } from '../../../../../utils/dom/elements.js';
+import { trimCycleConfigurations } from '../../../../../utils/dom/forms/trimCycleConfigurations.js';
 import { removeListeners } from '../../../../../utils/dom/listeners.js';
 import { clearMsg } from '../../../../../utils/dom/messages.js';
 import { cleanUserOutput } from '../../../../../utils/string/stringUtils.js';
 import buildPageContainer from '../../../../components/buildPageContainer.js';
 import buildSubmitButtonSection from '../../../../components/buildSubmitButtonSection.js';
 import buildTwoColumnInputSection from '../../../../components/buildTwoColumnInputSection.js';
+import buildTwoColumnRadioButtonSection from '../../../../components/buildTwoColumnRadioButtonSection.js';
+import buildTwoColumnSelectElementSection from '../../../../components/buildTwoColumnSelectElementSection.js';
 
 const COMPONENT_ID = 'add-horse';
+
+// Error Logging
+const COMPONENT = 'Add Horse Page';
+const DEBUG = true;
+
+const debugLog = (...args) => {
+	if (DEBUG) {
+		console.log(`[${COMPONENT}]`, ...args);
+	}
+};
+
 /**
  * Builds the Add Horse page.
  * @param {Object} params Page parameters
@@ -41,9 +55,9 @@ export default async function buildAddHorsePage({ cID, primaryKey, mainContainer
 		card.append(form);
 		container.append(card);
 		mainContainer.append(container);
-		
+
 		// Initialize UI handler file
-		const {default: addNewHorse } = await import("../../../../../../features/client/ui/add-horse/addNewHorseJS.js");
+		const { default: addNewHorse } = await import("../../../../../../features/client/ui/add-horse/addNewHorseJS.js");
 		await addNewHorse({ cID, primaryKey, mainContainer, manageClient, manageUser, componentId: COMPONENT_ID });
 
 		return () => removeListeners(COMPONENT_ID);
@@ -55,32 +69,43 @@ export default async function buildAddHorsePage({ cID, primaryKey, mainContainer
 
 async function buildHorseForm() {
 	try {
-		const FORM_CONFIG = {
-			id: 'add-horse-form',
-			input: {
+		// Build the form element
+		const form = buildEle({
+			type: 'form',
+			attributes: { id: 'add-horse-form' },
+		});
+
+		// Build the form elements
+		const [horseInput, serviceType, trimCycle, buttons] = await Promise.all([
+			buildTwoColumnInputSection({
 				labelText: 'Name of Horse: ',
 				inputID: 'horse-name',
 				inputType: 'text',
 				inputName: 'horse_name',
 				inputTitle: "Horse's Name",
 				required: true
-			}
-		};
-
-		// Build the form element
-		const form = buildEle({
-			type: 'form',
-			attributes: { id: FORM_CONFIG.id },
-		});
-
-		// Build the form elements
-		const [horseInput, buttons] = await Promise.all([
-			buildTwoColumnInputSection(FORM_CONFIG.input),
+			}),
+			buildTwoColumnRadioButtonSection({
+				labelText: 'Service Type: ',
+				buttons: [
+					{ name: 'service_type', value: 'trim', labelText: 'Trim: ', checked: true },
+					{ name: 'service_type', value: 'half_set', labelText: 'Half Set Shoes: ' },
+					{ name: 'service_type', value: 'full_set', labelText: 'Full Set Shoes: ' },
+				],
+			}),
+			buildTwoColumnSelectElementSection({
+				labelText: 'Trim Cycle: ',
+				selectID: 'trim-cycle',
+				selectName: 'trim_cycle',
+				selectTitle: 'Trim Cycle',
+				required: true,
+				options: trimCycleConfigurations(),
+			}),
 			buildSubmitButtonSection('Add New Horse'),
 		]);
 
 		// Append the form elements
-		form.append(horseInput, buttons);
+		form.append(horseInput, serviceType, trimCycle, buttons);
 		return form;
 	}
 	catch (err) {

@@ -27,7 +27,7 @@ export default async function handleEditHorseFormSubmission({ evt, cID, primaryK
 			return;
 		}
 
-		const editHorse = await manageClient.editClientHorse({ hID: userData.hID, cID: cID, horseName: userData.horse_name });
+		const editHorse = await manageClient.editClientHorse({ cID, userData });
 
 		if (editHorse) {
 			safeDisplayMessage({
@@ -44,6 +44,10 @@ export default async function handleEditHorseFormSubmission({ evt, cID, primaryK
 			updateSelectOptions('horse-list', clientHorses, {
 				valueMapper: horse => horse.hID,
 				textMapper: horse => horse.horse_name,
+				datasetMapper: horse => ({
+					'data-service-type': horse.service_type,
+					'data-trim-cycle': horse.trim_cycle
+				})
 			});
 
 			// Clear the horse container
@@ -92,6 +96,10 @@ async function deleteClientHorse({ evt, manageClient, cID, primaryKey, horseCont
 		updateSelectOptions('horse-list', clientHorses, {
 			valueMapper: horse => horse.hID,
 			textMapper: horse => horse.horse_name,
+			datasetMapper: horse => ({
+				'data-service-type': horse.type_service,
+				'data-trim-cycle': horse.trim_cycle
+			})
 		});
 
 		// Clear the horse container

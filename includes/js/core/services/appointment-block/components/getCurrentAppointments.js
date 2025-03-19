@@ -29,23 +29,23 @@ export default async function getCurrentAppointments({ appointmentDate, schedule
 	try {
 		if (!scheduleOptions || !dateTimeFormats) throw new Error('No Schedule Options or Date/Time Options to create booked appointments. Please update your settings.');
 
-		const { avg_horses: avgHorses, avg_drive_time: avgDriveTime } = scheduleOptions;
+		// const { avg_horses: avgHorses, avg_drive_time: avgDriveTime } = scheduleOptions;
+		const { avg_drive_time: avgDriveTime, avg_trim: avgTrimTime, full_set: fullSetTime, half_set: halfSetTime } = scheduleOptions;
+
 		const { date_format: dateFormat, time_format: timeFormat } = dateTimeFormats;
 		let appList = [];
-		debugLog('appointmentDate: ', appointmentDate);
-		const clientDataByTrimDate = await manageClient.getClientScheduleByTrimDate(appointmentDate);
-		debugLog('clientDataByTrimDate: ', clientDataByTrimDate);
 
-		if (clientDataByTrimDate.length === 0) return null; // Return early if not dates
+		const clientDataByTrimDate = await manageClient.getClientScheduleByTrimDate(appointmentDate);
+
+		if (clientDataByTrimDate.length === 0) return null; // Return early if no dates
 
 		// Sort the dates
 		clientDataByTrimDate.sort((a, b) => sortByTrimDateAndAppTime(a, b, true));
 
-		// Using Set to track unique client id's so we don't have more than client showing up for appointments
+		// Using Set to track unique client id's so we don't have more than one client showing up for appointments
 		let clientsSet = new Set();
 
 		for (let client of clientDataByTrimDate) {
-
 			const { cID,
 				primaryKey,
 				active,
@@ -70,24 +70,36 @@ export default async function getCurrentAppointments({ appointmentDate, schedule
 
 			// Set the number of client horses or 1 as a default
 			const clientHorses = horses.length > 0 ? horses.length : 1;
+			debugLog('clientHorses: ', clientHorses);
 
-			// Using a prediction algorythm to determine how many horses we may be doing at the next appointment
-			const nextSessionOfHorses = await predictNextSessionNumberHorses({ clientID: cID, manageClient, totalHorses: clientHorses });
+			// Get prediction including time calculations
+			const prediction = await predictNextSessionNumberHorses({ 
+				clientData: { 
+					...client, 
+					scheduleOptions 
+				}, 
+				manageClient 
+			});
+
+			debugLog('prediction: ', prediction);
+
 			const appointmentData = {
 				cID,
 				primary_key: primaryKey,
 				client_name: clientName,
 				city,
-				num_horses: nextSessionOfHorses,
-				avg_horses: avgHorses,
-				avg_drive_time: avgDriveTime,
+				num_horses: prediction.horses.length,
+				predicted_time: prediction.totalTime,
+				service_breakdown: prediction.serviceBreakdown,
 				app_time: appTime,
 				time_format: timeFormat,
 				date_format: dateFormat,
 			};
+			debugLog('appointmentData: ', appointmentData);
 
 			appList.push(await appointmentBlockData(appointmentData));
 		}
+		debugLog('appList: ', appList);
 		return appList;
 	}
 	catch (err) {
