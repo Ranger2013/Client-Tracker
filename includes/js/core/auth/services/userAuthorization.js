@@ -17,7 +17,8 @@
  * 5. Handle failures with redirect
  */
 
-import ManageUser from '../../../features/user/models/ManageUser.js';
+import ManageUser from '../../../features/user/models/ManageUser.min.js';
+import { fetchData } from '../../network/services/network.min.js';
 
 const SECURITY_MESSAGES = {
     systemError: 'System error validating credentials. Please contact support.',
@@ -48,6 +49,13 @@ export async function userAuthorization() {
             redirectToLogin(SECURITY_MESSAGES.tokenMissing);
             return null;
         }
+
+        // Check with the server to ensure the tokens match up.
+        // const isValidServerToken = await verifyTokenWithServer(userToken);
+        // if(!isValidServerToken) {
+        //     redirectToLogin(SECURITY_MESSAGES.tokenMissing);
+        //     return null;
+        // }
 
         // Admin bypass expiry check
         if (userStatus === 'admin') {
@@ -97,6 +105,22 @@ function checkAccountExpiry({ accountStatus, expiry }) {
     }
 
     return now > expiryDate;
+}
+
+async function verifyTokenWithServer(token){
+    try{
+        // const response = await fetchData({
+        //     api: '',
+        //     data: '',
+        // })
+    }
+    catch(err){
+        const { AppError } = await import('../../errors/models/AppError.js');
+        AppError.handleError(err,{
+            errorCode: AppError.Types.AUTHORIZATION_ERROR,
+            userMessage: null,
+        });
+    }
 }
 
 /**

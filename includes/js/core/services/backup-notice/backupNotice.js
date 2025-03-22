@@ -1,5 +1,5 @@
-import { getValidElement } from '../../utils/dom/elements.js';
-import { addListener, removeListeners } from '../../utils/dom/listeners.js';
+import { getValidElement } from '../../utils/dom/elements.min.js';
+import { addListener, removeListeners } from '../../utils/dom/listeners.min.js';
 
 /** 
  * Constants 

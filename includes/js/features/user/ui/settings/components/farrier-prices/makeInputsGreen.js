@@ -1,5 +1,5 @@
-import getAllFormIdElements from "../../../../../../core/utils/dom/forms/getAllFormIDElements.js";
-import { addListener } from "../../../../../../core/utils/dom/listeners.js";
+import getAllFormIdElements from "../../../../../../core/utils/dom/forms/getAllFormIDElements.min.js";
+import { addListener } from "../../../../../../core/utils/dom/listeners.min.js";
 
 const GREEN_CLASS = 'w3-light-green';
 

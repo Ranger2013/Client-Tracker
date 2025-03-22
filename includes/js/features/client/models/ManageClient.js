@@ -291,9 +291,10 @@ export default class ManageClient {
 
     async addDuplicateClient(userData) {
         try {
-            const { app_time, duplicate_client: primaryKey, next_trim_date, trim_cycle } = userData;
+            const { app_time: appTime, select_client: selectClient, next_trim_date: nextTrimDate, trim_cycle: trimCycle } = userData;
+            const primaryKey = parseInt(selectClient.split(':')[0], 10);
 
-            // Get the next primaryKey for this client
+            // Get the next primaryKey to duplicate this client
             const newPrimaryKey = await this.#indexed.getLastKeyForID({ store: this.#indexed.stores.MAXCLIENTPRIMARYKEY });
 
             const db = await this.#indexed.openDBPromise();
@@ -305,35 +306,29 @@ export default class ManageClient {
                 this.#indexed.stores.MAXCLIENTPRIMARYKEY,
             ], 'readwrite');
 
-            const promises = [];
-
             // Get the client information
             const clientInfo = await this.#indexed.getStorePromise(db, this.#indexed.stores.CLIENTLIST, parseInt(primaryKey, 10), tx);
 
             const newClient = {
                 ...clientInfo,
                 primaryKey: newPrimaryKey,
-                app_time,
-                trim_date: next_trim_date,
-                trim_cycle
+                app_time: appTime,
+                trim_date: nextTrimDate,
+                trim_cycle: trimCycle,
             }
 
-            // Add the new client to the object store
-            promises.push(this.#indexed.addStorePromise(db, newClient, this.#indexed.stores.CLIENTLIST, false, tx));
+            const backupData = {
+                ...newClient,
+                add_duplicateClient: true,
+            }
 
-            // Add the api identifier
-            newClient.add_duplicateClient = true;
-
-            // Add the duplicate client to it's object store
-            promises.push(this.#indexed.putStorePromise(db, newClient, this.#indexed.stores.ADDDUPLICATECLIENT, false, tx));
-
-            // Add the max primary key
-            promises.push(this.#indexed.putStorePromise(db, { primaryKey: newPrimaryKey }, this.#indexed.stores.MAXCLIENTPRIMARYKEY, true, tx));
-
-            await Promise.all(promises);
-
+            await Promise.all([
+                this.#indexed.addStorePromise(db, newClient, this.#indexed.stores.CLIENTLIST, false, tx),
+                this.#indexed.putStorePromise(db, backupData, this.#indexed.stores.ADDDUPLICATECLIENT, false, tx),
+                this.#indexed.putStorePromise(db, { primaryKey: newPrimaryKey }, this.#indexed.stores.MAXCLIENTPRIMARYKEY, true, tx),
+            ]);
             // return true if all promises resolve
-            return { status: 'success', msg: `${clientInfo.client_name} has been duplicated successfully.` };
+            return true;
         }
         catch (err) {
             const { AppError } = await import('../../../core/errors/models/AppError.js');
@@ -344,11 +339,11 @@ export default class ManageClient {
         }
     }
 
-    async deleteDuplicateClient(userData) {
+    async deleteDuplicateClient(primaryKey) {
         try {
             if (!primaryKey) throw new Error('No primary key provided.');
 
-            userData.primaryKey = parseInt(primaryKey, 10);
+            if(typeof primaryKey === 'string') primaryKey = parseInt(primaryKey, 10);
 
             const db = await this.#indexed.openDBPromise();
             const tx = db.transaction([
@@ -357,17 +352,16 @@ export default class ManageClient {
             ], 'readwrite');
 
             const backupData = {
-                ...userData,
+                'delete_duplicate_client': true,
+                primaryKey,
             };
 
-            const promises = [];
+            await Promise.all([
+                this.#indexed.deleteRecordPromise(primaryKey, this.#indexed.stores.CLIENTLIST, tx),
+                this.#indexed.putStorePromise(db, backupData, this.#indexed.stores.DELETEDUPLICATECLIENT, false, tx),
+            ]);
 
-            promises.push(this.#indexed.deleteRecordPromise(userData.primaryKey, this.#indexed.stores.CLIENTLIST, tx));
-            promises.push(this.#indexed.putStorePromise(db, backupData, this.#indexed.stores.DELETEDUPLICATECLIENT, false, tx));
-
-            await Promise.all(promises);
-
-            return { status: true, msg: 'Duplicate client has been removed.' };
+            return true;
         }
         catch (err) {
             const { AppError } = await import('../../../core/errors/models/AppError.js');

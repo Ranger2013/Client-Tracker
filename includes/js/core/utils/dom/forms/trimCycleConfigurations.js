@@ -13,3 +13,5 @@ export function trimCycleConfigurations(fieldValues = null) {
 		{ value: '70', text: 'Ten Weeks', selected: (fieldValues?.trim_cycle === '70') ? 'selected' : null },
 	];
 } 
+
+export const trimCycleRange = [7,21,28,35,42,49,56,63,70];

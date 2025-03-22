@@ -1,8 +1,8 @@
-import getBlockOfTime from './getBlockOfTime.js';
-import predictNextSessionNumberHorses from './predictNextSessionNumberHorses.js';
+import { trimCycleRange } from '../../../utils/dom/forms/trimCycleConfigurations.min.js';
+import predictNextSessionNumberHorses from './predictNextSessionNumberHorses.min.js';
 
 const COMPONENT = 'Get Projected Appointments';
-const DEBUG = true;
+const DEBUG = false;
 
 const debugLog = (...args) => {
 	if(DEBUG) {
@@ -41,7 +41,7 @@ export default async function getProjectedAppointments({ appointmentDate, trimCy
 		const projectedBookingsData = [];
 		const processedClients = new Set();
 
-		for (const cycleDays of [7, 14, 21, 28, 35, 42, 49, 56, 63, 70]) {
+		for (const cycleDays of trimCycleRange) {
 			const pastDate = new Date(nextTrim);
 			pastDate.setDate(nextTrim.getDate() - cycleDays);
 

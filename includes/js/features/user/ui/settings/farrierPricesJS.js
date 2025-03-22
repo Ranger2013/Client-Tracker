@@ -1,11 +1,11 @@
-import { addListener } from "../../../../core/utils/dom/listeners.js";
-import { safeDisplayMessage } from "../../../../core/utils/dom/messages.js";
-import { top } from "../../../../core/utils/window/scroll.js";
-import ManageUser from "../../models/ManageUser.js";
-import displayMultipleInputs from "./components/farrier-prices/displayMultipleInputs.js";
-import makeInputsGreen from "./components/farrier-prices/makeInputsGreen.js";
-import populateFarrierPricesForm from "./components/farrier-prices/populateFarrierPricesForm.js";
-import seperateFarrierPricesFromAccessories from "./components/farrier-prices/seperateFarrierPricesFromAccessories.js";
+import { addListener } from "../../../../core/utils/dom/listeners.min.js";
+import { safeDisplayMessage } from "../../../../core/utils/dom/messages.min.js";
+import { top } from "../../../../core/utils/window/scroll.min.js";
+import ManageUser from "../../models/ManageUser.min.js";
+import displayMultipleInputs from "./components/farrier-prices/displayMultipleInputs.min.js";
+import makeInputsGreen from "./components/farrier-prices/makeInputsGreen.min.js";
+import populateFarrierPricesForm from "./components/farrier-prices/populateFarrierPricesForm.min.js";
+import seperateFarrierPricesFromAccessories from "./components/farrier-prices/seperateFarrierPricesFromAccessories.min.js";
 
 const COMPONENT_ID = 'farrier-prices';
 const manageUser = new ManageUser();

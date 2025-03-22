@@ -1,8 +1,8 @@
-import { buildEle } from '../../../../../utils/dom/elements.js';
-import buildPersonalNotesSection from './buildPersonaNotesSection.js';
-import buildAppointmentTitleSection from './buildAppointmentTitleSection.js';
-import buildAppointmentList from './buildAppointmentList.js';
-import buildSearchBlockSection from '../../../../components/buildSearchBlockSection.js';
+import { buildEle } from '../../../../../utils/dom/elements.min.js';
+import buildPersonalNotesSection from './buildPersonaNotesSection.min.js';
+import buildAppointmentTitleSection from './buildAppointmentTitleSection.min.js';
+import buildAppointmentList from './buildAppointmentList.min.js';
+import buildSearchBlockSection from '../../../../components/buildSearchBlockSection.min.js';
 
 /**
  * Configuration for schedule list page elements

@@ -1,7 +1,7 @@
-import { clearMsg } from '../../../../utils/dom/messages.js';
-import { top } from '../../../../utils/window/scroll.js';
-import { removeListeners } from '../../../../utils/dom/listeners.js';
-import buildPageElements from './components/buildPageElements.js';
+import { clearMsg } from '../../../../utils/dom/messages.min.js';
+import { top } from '../../../../utils/window/scroll.min.js';
+import { removeListeners } from '../../../../utils/dom/listeners.min.js';
+import buildPageElements from './components/buildPageElements.min.js';
 
 const COMPONENT_ID = 'schedule-list';
 
@@ -17,7 +17,7 @@ export default async function buildAppointmentListPage({ active, cID = null, pri
         mainContainer.innerHTML = '';
         mainContainer.appendChild(pageElements);
 
-        const { default: appointmentList } = await import("../../../../../features/client/ui/schedule-list/appointmentListJS.js");
+        const { default: appointmentList } = await import("../../../../../features/client/ui/schedule-list/appointmentListJS.min.js");
         await appointmentList({active, cID, primaryKey, manageClient, manageUser, mainContainer, componentId: COMPONENT_ID});
 
         return () => removeListeners(COMPONENT_ID);

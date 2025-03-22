@@ -1,19 +1,15 @@
-import { buildEle, buildElementsFromConfig } from '../../../../../utils/dom/elements.js';
-import { trimCycleConfigurations } from '../../../../../utils/dom/forms/trimCycleConfigurations.js';
-import { removeListeners } from '../../../../../utils/dom/listeners.js';
-import { clearMsg } from '../../../../../utils/dom/messages.js';
-import { cleanUserOutput } from '../../../../../utils/string/stringUtils.js';
-import buildPageContainer from '../../../../components/buildPageContainer.js';
-import buildSubmitButtonSection from '../../../../components/buildSubmitButtonSection.js';
-import buildTwoColumnInputSection from '../../../../components/buildTwoColumnInputSection.js';
-import buildTwoColumnRadioButtonSection from '../../../../components/buildTwoColumnRadioButtonSection.js';
-import buildTwoColumnSelectElementSection from '../../../../components/buildTwoColumnSelectElementSection.js';
+import { buildEle, buildElementsFromConfig } from '../../../../../utils/dom/elements.min.js';
+import { buildPageContainer, buildSubmitButtonSection, buildTwoColumnInputSection, buildTwoColumnRadioButtonSection, buildTwoColumnSelectElementSection } from '../../../../../utils/dom/forms/buildUtils.min.js';
+import { trimCycleConfigurations } from '../../../../../utils/dom/forms/trimCycleConfigurations.min.js';
+import { removeListeners } from '../../../../../utils/dom/listeners.min.js';
+import { clearMsg } from '../../../../../utils/dom/messages.min.js';
+import { cleanUserOutput } from '../../../../../utils/string/stringUtils.min.js';
 
 const COMPONENT_ID = 'add-horse';
 
 // Error Logging
 const COMPONENT = 'Add Horse Page';
-const DEBUG = true;
+const DEBUG = false;
 
 const debugLog = (...args) => {
 	if (DEBUG) {

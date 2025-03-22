@@ -12,29 +12,43 @@ const debugLog = (...args) => {
  * @property {string} type - The type of the element to create
  * @property {Object.<string, string>} [attributes] - The attributes to set on the element. Object pairs.
  * @property {string[]} [myClass] - The classes to add to the element. Array of class names.
- * @property {string} [text] - The text content of the element.
+ * @property {string} [text] - The text or HTML content of the element.
  * @param {BuildEleArgs} args - The arguments to build the element
  */
 export function buildEle({ type, attributes, myClass, text }) {
 	const ele = document.createElement(type);
-
+	
+	// Optimization 1: Use direct property assignment for common attributes
 	if (attributes) {
-		for (const key in attributes) {
-			ele.setAttribute(key, attributes[key]);
-		}
+		 for (const key in attributes) {
+			  if (key === 'id' || key === 'src' || key === 'href' || 
+					key === 'value' || key === 'type' || key === 'name') {
+					ele[key] = attributes[key];
+			  } else if (key.startsWith('data-')) {
+					// Handle dataset properties efficiently
+					const dataKey = key.slice(5).replace(/-([a-z])/g, (_, p1) => p1.toUpperCase());
+					ele.dataset[dataKey] = attributes[key];
+			  } else {
+					ele.setAttribute(key, attributes[key]);
+			  }
+		 }
 	}
-	if (myClass) {
-		ele.classList.add(...myClass);
+	
+	// Optimization 2: Use className direct assignment for arrays
+	if (myClass && myClass.length > 0) {
+		 ele.className = myClass.join(' ');
 	}
-
-	if (text) {
-		if (typeof text === 'string' || typeof text === 'number') {
-			ele.innerHTML = text;
-		}
-		else if (text instanceof Node) {
-			ele.appendChild(text);
-		}
+	
+	// Keep innerHTML for HTML content support
+	if (text !== undefined && text !== null) {
+		 if (typeof text === 'string' || typeof text === 'number') {
+			  ele.innerHTML = text;
+		 }
+		 else if (text instanceof Node) {
+			  ele.appendChild(text);
+		 }
 	}
+	
 	return ele;
 }
 
@@ -90,6 +104,28 @@ export function buildElementsFromConfig(config) {
 		return acc;
 	}, {});
 }
+
+export function buildElementTree(config) {
+	debugLog('Building element tree with config:', config);
+	const element = buildEle({
+		type: config.type,
+		attributes: config.attributes,
+		myClass: config.myClass,
+		text: config.text,
+	});
+
+	debugLog('Buid element Tree: element: ', element);
+
+	if (config.children) {
+		Object.values(config.children).forEach(childConfig => {
+			element.appendChild(buildElementTree(childConfig));
+		});
+	}
+
+	return element;
+};
+
+
 
 /**
  * Generates an array of option elements based on the provided configuration.

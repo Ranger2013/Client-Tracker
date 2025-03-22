@@ -1,8 +1,9 @@
-import displayFormValidationErrors from '../../../../core/utils/dom/forms/displayFormValidationErrors.js';
-import { addListener } from '../../../../core/utils/dom/listeners.js';
-import { clearMsg, safeDisplayMessage } from '../../../../core/utils/dom/messages.js';
-import ManageUser from '../../models/ManageUser.js';
-import populateColorOptionsForm from './components/color-options/populateColorOptions.js';
+import displayFormValidationErrors from '../../../../core/utils/dom/forms/displayFormValidationErrors.min.js';
+import { addListener } from '../../../../core/utils/dom/listeners.min.js';
+import { clearMsg, safeDisplayMessage } from '../../../../core/utils/dom/messages.min.js';
+import { top } from '../../../../core/utils/window/scroll.min.js';
+import ManageUser from '../../models/ManageUser.min.js';
+import populateColorOptionsForm from './components/color-options/populateColorOptions.min.js';
 
 const COMPONENT_ID = 'color-options';
 
@@ -70,6 +71,7 @@ async function handleColorOptionFormSubmission(evt) {
                 message: 'Color Options have been saved',
                 isSuccess: true,
             });
+            top();
             return;
         }
 
@@ -77,6 +79,8 @@ async function handleColorOptionFormSubmission(evt) {
             elementId: 'form-msg',
             message: 'Unable to save color options at this time.',
         });
+
+        top();
     }
     catch (err) {
         const { AppError } = await import("../../../../core/errors/models/AppError.js");

@@ -1,7 +1,5 @@
-// import { matchesDateSearch } from './dateSearch.js';
-
-import { clearMsg } from '../../../../../core/utils/dom/messages.js';
-import { matchesDateSearch } from './dateSearch.js';
+import { clearMsg } from '../../../../../core/utils/dom/messages.min.js';
+import { matchesDateSearch } from './dateSearch.min.js';
 
 export async function handleSearch({evt, manageUser}) {
     try {

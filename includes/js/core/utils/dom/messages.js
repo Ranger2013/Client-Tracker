@@ -59,7 +59,7 @@ export function myError(ele, msg, target = null) {
                 throw new AppError('Display error failed', {
                     originalError: err,
                     errorCode: AppError.Types.RENDER_ERROR,
-                    userMessage: AppError.Messages.system.generic,
+                    userMessage: AppError.BaseMessages.system.generic,
                     displayTarget: 'page-msg'
                 });
             });
@@ -93,7 +93,7 @@ export function mySuccess(ele, msg, color = 'w3-text-green') {
                 throw new AppError('Success message display failed', {
                     originalError: err,
                     errorCode: AppError.Types.RENDER_ERROR,
-                    userMessage: AppError.Messages.system.generic,
+                    userMessage: AppError.BaseMessages.system.generic,
                     displayTarget: 'page-msg',
                     shouldLog: false  // Don't log UI feedback issues
                 });
@@ -156,7 +156,7 @@ export function clearMsg({ container, hide = false, input = null }) {
                 throw new AppError('Failed to clear message', {
                     originalError: err,
                     errorCode: AppError.Types.RENDER_ERROR,
-                    userMessage: AppError.Messages.system.generic,
+                    userMessage: AppError.BaseMessages.system.generic,
                     displayTarget: 'page-msg',
                     shouldLog: true
                 });

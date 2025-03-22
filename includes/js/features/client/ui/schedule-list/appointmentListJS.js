@@ -1,9 +1,9 @@
-import { dropDownClientMenu } from '../../../../core/navigation/services/dropDownClientMenu';
-import selectClientMenuPage from '../../../../core/navigation/services/selectClientMenuPage';
-import { createDebouncedHandler, getOptimalDelay } from '../../../../core/utils/dom/eventUtils';
-import { addListener, removeListeners } from '../../../../core/utils/dom/listeners';
-import { safeDisplayMessage } from '../../../../core/utils/dom/messages';
-import { handleSearch } from './components/searchHandlers';
+import { dropDownClientMenu } from '../../../../core/navigation/services/dropDownClientMenu.min.js';
+import selectClientMenuPage from '../../../../core/navigation/services/selectClientMenuPage.min.js';
+import { createDebouncedHandler, getOptimalDelay } from '../../../../core/utils/dom/eventUtils.min.js';
+import { addListener, removeListeners } from '../../../../core/utils/dom/listeners.min.js';
+import { safeDisplayMessage } from '../../../../core/utils/dom/messages.min.js';
+import { handleSearch } from './components/searchHandlers.min.js';
 
 const COMPONENT_ID = 'schedule-list';
 

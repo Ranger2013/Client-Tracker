@@ -1,4 +1,4 @@
-import { sortByTrimDateAndAppTime } from '../../../../../utils/date/dateUtils.js';
+import { sortByTrimDateAndAppTime } from '../../../../../utils/date/dateUtils.min.js';
 import { buildEle } from '../../../../../utils/dom/elements.js';
 import buildClientListRow from './buildClientListRow.js';
 

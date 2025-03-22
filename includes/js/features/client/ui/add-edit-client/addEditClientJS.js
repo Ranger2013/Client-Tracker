@@ -1,11 +1,12 @@
-import checkAppointment from '../../../../core/services/appointment-block/checkAppointment.js';
-import { disableEnableSubmitButton } from '../../../../core/utils/dom/elements.js';
-import { createDebouncedHandler, getOptimalDelay } from '../../../../core/utils/dom/eventUtils.js';
-import getAllFormIdElements from '../../../../core/utils/dom/forms/getAllFormIDElements.js';
-import { addListener, removeListeners } from '../../../../core/utils/dom/listeners.js';
-import { clearMsg, safeDisplayMessage } from '../../../../core/utils/dom/messages.js';
-import { hyphenToSpaces, hyphenToUnderscore, ucwords } from '../../../../core/utils/string/stringUtils.js';
-import { top } from '../../../../core/utils/window/scroll.js';
+import checkAppointment from '../../../../core/services/appointment-block/checkAppointment.min.js';
+import { disableEnableSubmitButton } from '../../../../core/utils/dom/elements.min.js';
+import { createDebouncedHandler, getOptimalDelay } from '../../../../core/utils/dom/eventUtils.min.js';
+import getAllFormIdElements from '../../../../core/utils/dom/forms/getAllFormIDElements.min.js';
+import { trimCycleRange } from '../../../../core/utils/dom/forms/trimCycleConfigurations.min.js';
+import { addListener, removeListeners } from '../../../../core/utils/dom/listeners.min.js';
+import { clearMsg, safeDisplayMessage } from '../../../../core/utils/dom/messages.min.js';
+import { hyphenToSpaces, hyphenToUnderscore, ucwords } from '../../../../core/utils/string/stringUtils.min.js';
+import { top } from '../../../../core/utils/window/scroll.min.js';
 
 const FORM_FIELDS = [
 	'client-name', 'street', 'city', 'state',
@@ -291,8 +292,8 @@ async function handleFormSubmission({evt, cID, primaryKey, clientInfo, manageCli
 				manageUser,
 			});
 			
-			// Reset the form
-			evt.target.reset();
+			// Reset the form if we are adding a client
+			if(!cID && !primaryKey) evt.target.reset();
 			return;
 		}
 	}
@@ -309,7 +310,7 @@ async function handleFormSubmission({evt, cID, primaryKey, clientInfo, manageCli
 
 async function handleTrimCycleCheck({userData, componentId}) {
 	try {
-		if (userData.trim_cycle === 'null') {
+		if(trimCycleRange.includes(parseInt(userData?.trim_cycle), 10)){
 			top();
 
 			// Show the error message

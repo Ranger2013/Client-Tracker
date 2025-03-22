@@ -7,7 +7,7 @@ import { buildEle } from '../../../../../../../core/utils/dom/elements.js';
  * @param {DocumentFragment} params.objectStoreRows - The object store rows fragment.
  * @returns {HTMLElement} The container element with the page components.
  */
-export default function buildPageComponents({manageUser, objectStoreRows}){
+export default function buildBackupDataPageComponents({manageUser, objectStoreRows}){
 	try{
 		const elements = pageElements();
 

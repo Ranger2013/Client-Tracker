@@ -1,6 +1,6 @@
-import { clearMsg } from '../../../../../core/utils/dom/messages.js';
+import { clearMsg } from '../../../../../core/utils/dom/messages.min.js';
 
-export default async function validateEmail({ evt, primaryKey, manageClient }) {
+export default async function validateEmail({ evt, cID, primaryKey, manageClient }) {
 	try {
 		// No email, clear message as email is optional
 		if (!evt.target.value) {
@@ -12,7 +12,7 @@ export default async function validateEmail({ evt, primaryKey, manageClient }) {
 
 		if (!evt.target.value.match(emailPattern)) return 'Please provide a valid email.';
 
-		if (evt.target.value && await checkForDuplicateEmail({ email: evt.target.value, primaryKey, manageClient })) return 'Email is already in use.';
+		if (evt.target.value && await checkForDuplicateEmail({ email: evt.target.value, cID, primaryKey, manageClient })) return 'Email is already in use.';
 
 		clearMsg({ container: `${evt.target.id}-error`, hide: true, input: evt.target });
 		return;
@@ -22,11 +22,11 @@ export default async function validateEmail({ evt, primaryKey, manageClient }) {
 	}
 }
 
-async function checkForDuplicateEmail({ email, primaryKey, manageClient }) {
+async function checkForDuplicateEmail({ email, cID, primaryKey, manageClient }) {
 	try {
 		const clientList = await manageClient.getClientScheduleList();
 		const duplicate = clientList?.some(client => {
-			if (client.primaryKey === parseInt(primaryKey, 10)) return false;
+			if (client.cID === parseInt(cID, 10)) return false;
 			return client.email === email
 		});
 		return duplicate;

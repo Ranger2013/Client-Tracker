@@ -1,16 +1,13 @@
-import buildSubmitDeleteButtonSection from '../../../../core/layout/components/buildSubmitDeleteButtonSection.js';
-import buildTwoColumnInputSection from '../../../../core/layout/components/buildTwoColumnInputSection.js';
-import { buildEle, buildElementsFromConfig, disableEnableSubmitButton } from '../../../../core/utils/dom/elements.js';
-import { addListener } from '../../../../core/utils/dom/listeners.js';
-import { cleanUserOutput } from '../../../../core/utils/string/stringUtils.js';
-import clientAnchorNav from '../../../../core/navigation/components/setupClientAnchorListener.js';
-import { clearMsg, safeDisplayMessage } from '../../../../core/utils/dom/messages.js';
-import { createDebouncedHandler, getOptimalDelay } from '../../../../core/utils/dom/eventUtils.js';
-import { handleHorseNameInput } from '../add-horse/components/handleHorseNameInput.js';
-import handleEditHorseFormSubmission from './components/handleEditHorseFormSubmission.js';
-import buildTwoColumnRadioButtonSection from '../../../../core/layout/components/buildTwoColumnRadioButtonSection.js';
-import buildTwoColumnSelectElementSection from '../../../../core/layout/components/buildTwoColumnSelectElementSection.js';
-import { trimCycleConfigurations } from '../../../../core/utils/dom/forms/trimCycleConfigurations.js';
+import { buildEle, buildElementsFromConfig, disableEnableSubmitButton } from '../../../../core/utils/dom/elements.min.js';
+import { addListener } from '../../../../core/utils/dom/listeners.min.js';
+import { cleanUserOutput } from '../../../../core/utils/string/stringUtils.min.js';
+import clientAnchorNav from '../../../../core/navigation/components/setupClientAnchorListener.min.js';
+import { clearMsg, safeDisplayMessage } from '../../../../core/utils/dom/messages.min.js';
+import { createDebouncedHandler, getOptimalDelay } from '../../../../core/utils/dom/eventUtils.min.js';
+import { handleHorseNameInput } from '../add-horse/components/handleHorseNameInput.min.js';
+import handleEditHorseFormSubmission from './components/handleEditHorseFormSubmission.min.js';
+import { trimCycleConfigurations } from '../../../../core/utils/dom/forms/trimCycleConfigurations.min.js';
+import { buildSubmitDeleteButtonSection, buildTwoColumnInputSection, buildTwoColumnRadioButtonSection, buildTwoColumnSelectElementSection } from '../../../../core/utils/dom/forms/buildUtils.min.js';
 
 export default async function editClientHorse({ cID, primaryKey, mainContainer, manageClient, manageUser, componentId }) {
 	try {

@@ -1,11 +1,10 @@
-import { buildGenericSelectOptions, disableEnableSubmitButton, getValidElement } from '../../../../../core/utils/dom/elements.js';
-import { clearMsg } from '../../../../../core/utils/dom/messages.js';
-import { cleanUserOutput, ucwords, underscoreToSpaces } from '../../../../../core/utils/string/stringUtils.js';
-import ManageUser from '../../../../user/models/ManageUser.js';
-import autoFillHorseList from './autoFillHorseList.js';
-import calculateTotalCost from './calculateTotalCost.js';
-import { updateTrimCost } from './updateTrimCost.js';
-import { prevOptions } from '../addTrimmingJS.js';
+import { buildGenericSelectOptions, disableEnableSubmitButton, getValidElement } from '../../../../../core/utils/dom/elements.min.js';
+import { clearMsg } from '../../../../../core/utils/dom/messages.min.js';
+import { cleanUserOutput, ucwords, underscoreToSpaces } from '../../../../../core/utils/string/stringUtils.min.js';
+import autoFillHorseList from './autoFillHorseList.min.js';
+import calculateTotalCost from './calculateTotalCost.min.js';
+import { updateTrimCost } from './updateTrimCost.min.js';
+import { prevOptions } from '../addTrimmingJS.min.js';
 
 const COMPONENT = 'BuildListOfHorsesSection';
 const DEBUG = false;
@@ -27,7 +26,19 @@ export default async function buildListOfHorsesSection({ evt, horseListContainer
 
 		// Get the clients information to extrapolate the horse list and total horses
 		const clientInfo = await manageClient.getClientInfo({ primaryKey });
-		const clientHorses = clientInfo?.horses || [];
+		const clientTrimCycle = clientInfo?.trim_cycle;
+		const clientHorses = clientInfo?.horses.sort((a, b) => {
+			// First check if either matches the client's trim cycle
+			const aMatchesClientCycle = a.trim_cycle === clientTrimCycle;
+			const bMatchesClientCycle = b.trim_cycle === clientTrimCycle;
+
+			// If one matches and the other doesn't, prioritize the match
+			if (aMatchesClientCycle && !bMatchesClientCycle) return -1;
+			if (!aMatchesClientCycle && bMatchesClientCycle) return 1;
+
+			// If both match or both don't match, sort alphabetically
+			return a.horse_name.localeCompare(b.horse_name);
+		}) || [];
 		const totalHorses = clientHorses.length;
 
 		// Get the user's farrier prices
@@ -252,15 +263,15 @@ function autoUpdateServiceCost(horseListContainer) {
 			const serviceCostOption = Array.from(serviceCostSelect.options).find(option => {
 				return option.value.includes(serviceTypeMapping[horseListSelectedIndex.dataset.serviceType]);
 			});
-			
-			if(serviceCostOption) {
+
+			if (serviceCostOption) {
 				serviceCostOption.selected = true;
 				const changeEvent = new Event('change', {
 					bubbles: true,
 					cancelable: true
-			  });
-			  Object.defineProperty(changeEvent, 'target', {value: serviceCostSelect});
-			  serviceCostSelect.dispatchEvent(changeEvent);
+				});
+				Object.defineProperty(changeEvent, 'target', { value: serviceCostSelect });
+				serviceCostSelect.dispatchEvent(changeEvent);
 			}
 		});
 	}

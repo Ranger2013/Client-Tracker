@@ -1,4 +1,4 @@
-import { displayErrorMessage, safeDisplayMessage } from '../../utils/dom/messages.js';
+import { displayErrorMessage, safeDisplayMessage } from '../../utils/dom/messages.min.js';
 
 /**
  * @typedef {Object} AppErrorConfig

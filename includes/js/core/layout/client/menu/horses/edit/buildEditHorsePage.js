@@ -1,9 +1,8 @@
-import { buildEle } from '../../../../../utils/dom/elements.js';
-import { removeListeners } from '../../../../../utils/dom/listeners.js';
-import { clearMsg } from '../../../../../utils/dom/messages.js';
-import { cleanUserOutput } from '../../../../../utils/string/stringUtils.js';
-import buildPageContainer from '../../../../components/buildPageContainer.js';
-import buildTwoColumnSelectElementSection from '../../../../components/buildTwoColumnSelectElementSection.js';
+import { buildEle } from '../../../../../utils/dom/elements.min.js';
+import { buildPageContainer, buildTwoColumnSelectElementSection } from '../../../../../utils/dom/forms/buildUtils.min.js';
+import { removeListeners } from '../../../../../utils/dom/listeners.min.js';
+import { clearMsg } from '../../../../../utils/dom/messages.min.js';
+import { cleanUserOutput } from '../../../../../utils/string/stringUtils.min.js';
 
 const COMPONENT_ID = 'edit-horse';
 

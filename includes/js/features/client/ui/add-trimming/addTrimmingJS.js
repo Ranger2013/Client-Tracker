@@ -1,12 +1,13 @@
-import setupClientAnchorListener from '../../../../core/navigation/components/setupClientAnchorListener.js';
-import checkAppointment from '../../../../core/services/appointment-block/checkAppointment.js';
-import { disableEnableSubmitButton } from '../../../../core/utils/dom/elements.js';
-import { addListener } from '../../../../core/utils/dom/listeners.js';
-import { clearMsg, safeDisplayMessage } from '../../../../core/utils/dom/messages.js';
-import buildListOfHorsesSection from './components/buildListOfHorsesSection.js';
-import calculateTotalCost from './components/calculateTotalCost.js';
-import { handleShowingAccessoriesSelectBox, handleShowingCostChangeInput, updateCostChangeInput, updateServiceCostSelectedIndex } from './handlers/costHandlers.js';
-import handleAddTrimmingFormSubmission from './handlers/formSubmission.js';
+import setupClientAnchorListener from '../../../../core/navigation/components/setupClientAnchorListener.min.js';
+import checkAppointment from '../../../../core/services/appointment-block/checkAppointment.min.js';
+import { disableEnableSubmitButton } from '../../../../core/utils/dom/elements.min.js';
+import { addListener } from '../../../../core/utils/dom/listeners.min.js';
+import { clearMsg, safeDisplayMessage } from '../../../../core/utils/dom/messages.min.js';
+import { ucwords, underscoreToSpaces } from '../../../../core/utils/string/stringUtils.min.js';
+import buildListOfHorsesSection from './components/buildListOfHorsesSection.min.js';
+import calculateTotalCost from './components/calculateTotalCost.min.js';
+import { handleShowingAccessoriesSelectBox, handleShowingCostChangeInput, updateCostChangeInput, updateServiceCostSelectedIndex } from './handlers/costHandlers.min.js';
+import handleAddTrimmingFormSubmission from './handlers/formSubmission.min.js';
 
 const COMPONENT = 'Add Trimming JS';
 const DEBUG = false;
@@ -18,6 +19,7 @@ const debugLog = (...args) => {
 };
 
 export const prevOptions = new Map();
+
 export default async function addTrimming({ cID, primaryKey, mainContainer, manageClient, manageUser, componentId }) {
 	try {
 		// Handle the client navigation anchor
@@ -85,6 +87,7 @@ export default async function addTrimming({ cID, primaryKey, mainContainer, mana
 					debugLog(`Horse list ${index} changed:`, evt.target.value);
 					await updateAllHorseListSelectElements(evt);
 					await changeServiceCostToMatchHorseService({evt, primaryKey, manageClient});
+					updateHorseListLabel({evt});
 				}
 			},
 			'service-cost-': {
@@ -159,6 +162,7 @@ export default async function addTrimming({ cID, primaryKey, mainContainer, mana
 
 async function numberOfHorsesServiced({ evt, primaryKey, manageClient, manageUser }) {
 	try {
+		debugLog('number of horses serviced: user input value: ', evt.target.value);
 		if (evt.target.value === '0' || evt.target.value === '') {
 			safeDisplayMessage({
 				elementId: `${evt.target.id}-error`,
@@ -169,6 +173,9 @@ async function numberOfHorsesServiced({ evt, primaryKey, manageClient, manageUse
 			disableEnableSubmitButton('submit-button');
 			return;
 		}
+
+		// Clear any previous messages
+		clearMsg({ container: `${evt.target.id}-error`, hide: true, input: evt.target });
 
 		// Show the list of horses
 		await buildListOfHorsesSection({ evt, horseListContainer: 'number-horse-container', primaryKey, manageClient, manageUser });
@@ -284,16 +291,14 @@ async function changeServiceCostToMatchHorseService({ evt, primaryKey, manageCli
         if (!selectedHorse) return;
 
         const mappedService = shoeMapping[selectedHorse.service_type];
-        console.log('selectedHorse.service_type: ', selectedHorse.service_type);
-		  console.log('Mapped Service: ', mappedService);
-        // Check if current selection already matches the horse's service type
+
+		  // Check if current selection already matches the horse's service type
         if (!serviceCost.includes(mappedService)) {
             // Find the first option that matches the mapped service type
             const options = serviceCostElement.options;
             let matchFound = false;
 
             for (let i = 0; i < options.length; i++) {
-					console.log('options value: ', options[i].value);
                 if (options[i].value.includes(mappedService)) {
                     serviceCostElement.selectedIndex = i;
                     matchFound = true;
@@ -327,4 +332,22 @@ async function changeServiceCostToMatchHorseService({ evt, primaryKey, manageCli
             userMessage: 'We encountered an error trying to update the service cost to match the horse service.'
         });
     }
+}
+
+async function updateHorseListLabel({evt}){
+	try{
+		const selectedOption = evt.target.options[evt.target.selectedIndex];
+		const serviceType = selectedOption.dataset.serviceType;
+		const serviceTime = selectedOption.dataset.trimCycle;
+
+		const horseNameLabel = document.querySelector(`label[for="${evt.target.id}"]`);
+		horseNameLabel.innerHTML = `Horse's Name: <span class="w3-small">${ucwords(underscoreToSpaces(serviceType))} Cycle: ${serviceTime / 7} weeks</span>`;
+	}
+	catch(err){
+		const { AppError } = await import("../../../../core/errors/models/AppError.js");
+		AppError.handleError(err, {
+			errorCode: AppError.Types.RENDER_ERROR,
+			userMessage: null,
+		});
+	}
 }

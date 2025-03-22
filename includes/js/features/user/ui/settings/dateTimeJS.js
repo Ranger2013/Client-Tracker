@@ -12,11 +12,11 @@
  * @requires mySuccess
  */
 
-import { addListener, removeListeners } from "../../../../core/utils/dom/listeners.js";
-import { clearMsg, safeDisplayMessage } from "../../../../core/utils/dom/messages.js";
-import { disableEnableSubmitButton } from "../../../../core/utils/dom/elements.js";
-import ManageUser from "../../models/ManageUser.js";
-import populateDateTimeForm from "./components/date-time/populateDateTimeForm.js";
+import { addListener, removeListeners } from "../../../../core/utils/dom/listeners.min.js";
+import { clearMsg, safeDisplayMessage } from "../../../../core/utils/dom/messages.min.js";
+import { disableEnableSubmitButton } from "../../../../core/utils/dom/elements.min.js";
+import ManageUser from "../../models/ManageUser.min.js";
+import populateDateTimeForm from "./components/date-time/populateDateTimeForm.min.js";
 
 /**
  * Component ID for event listener tracking

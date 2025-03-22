@@ -1,6 +1,6 @@
-import { addListener } from "../../../../../../core/utils/dom/listeners.js";
-import buildInputBlocks from "./buildInputBlocks.js";
-import makeInputsGreen from "./makeInputsGreen.js";
+import { addListener } from "../../../../../../core/utils/dom/listeners.min.js";
+import buildInputBlocks from "./buildInputBlocks.min.js";
+import makeInputsGreen from "./makeInputsGreen.min.js";
 
 // Configuration for accessory inputs that can have multiple values
 const ACCESSORY_INPUTS = {

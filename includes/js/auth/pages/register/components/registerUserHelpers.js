@@ -1,7 +1,7 @@
-import { authAPI } from "../../../../core/network/api/apiEndpoints.js";
-import { fetchData } from "../../../../core/network/services/network.js";
-import { clearMsg, safeDisplayMessage } from "../../../../core/utils/dom/messages.js";
-import { top } from "../../../../core/utils/window/scroll.js";
+import { authAPI } from "../../../../core/network/api/apiEndpoints.min.js";
+import { fetchData } from "../../../../core/network/services/network.min.js";
+import { clearMsg, safeDisplayMessage } from "../../../../core/utils/dom/messages.min.js";
+import { top } from "../../../../core/utils/window/scroll.min.js";
 
 export async function getTerms(type) {
     try {
@@ -84,26 +84,11 @@ export async function handleUserRegistration(evt) {
         }
     }
     catch (err) {
-        // Only load error modules if an error occurs
-        const [processError, commonErrors] = await Promise.all([
-            import("../../../../core/errors/services/errorProcessor.js"),
-            import("../../../../core/errors/constants/errorMessages.js")
-        ]);
-
-        await processError(err, {
-            context: 'registration',
-            defaultMessage: 'Unable to complete registration. Please try again later.',
-            errorElement: 'form-msg',
-            handlers: {
-                NetworkError: () => safeDisplayMessage({
-                    elementId: 'form-msg',
-                    message: commonErrors.networkError
-                }),
-                AppError: (error) => safeDisplayMessage({
-                    elementId: 'form-msg',
-                    message: error.userMessage
-                })
-            }
+        const { AppError } = await import("../../../../core/errors/models/AppError.js");
+        AppError.handleError(err, {
+            errorCode: AppError.Types.FORM_SUBMISSION_ERROR,
+            userMessage: 'Unable to complete registration. Please try again later.',
+            displayTarget: 'form-msg',
         });
     }
 }

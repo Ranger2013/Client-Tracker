@@ -1,6 +1,6 @@
 // Set up debugging
 const COMPONENT = 'Predict Next Session Number Horses';
-const DEBUG = true;
+const DEBUG = false;
 
 const debugLog = (...args) => {
     if (DEBUG) {

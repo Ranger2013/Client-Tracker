@@ -1,6 +1,6 @@
-import { buildEle } from "../../../../../../core/utils/dom/elements.js";
-import { addListener } from "../../../../../../core/utils/dom/listeners.js";
-import { clearMsg } from "../../../../../../core/utils/dom/messages.js";
+import { buildEle } from "../../../../../../core/utils/dom/elements.min.js";
+import { addListener } from "../../../../../../core/utils/dom/listeners.min.js";
+import { clearMsg } from "../../../../../../core/utils/dom/messages.min.js";
 
 /**
  * Builds a fuel range section with inputs for mileage range and cost

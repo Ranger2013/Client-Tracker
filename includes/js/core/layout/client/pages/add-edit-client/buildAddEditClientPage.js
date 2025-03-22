@@ -1,15 +1,11 @@
-import { buildEle } from '../../../../utils/dom/elements.js';
-import { trimCycleConfigurations } from '../../../../utils/dom/forms/trimCycleConfigurations.js';
-import { removeListeners } from '../../../../utils/dom/listeners.js';
-import { clearMsg } from '../../../../utils/dom/messages.js';
-import buildPageContainer from '../../../components/buildPageContainer.js';
-import buildTwoColumnAddressSection from '../../../components/buildTwoColumnAddressSection.js';
-import buildTwoColumnInputSection from '../../../components/buildTwoColumnInputSection.js';
-import buildTwoColumnRadioButtonSection from '../../../components/buildTwoColumnRadioButtonSection.js';
-import buildTwoColumnSelectElementSection from '../../../components/buildTwoColumnSelectElementSection.js';
+import { buildEle } from '../../../../utils/dom/elements.min.js';
+import { buildPageContainer, buildTwoColumnInputSection, buildTwoColumnRadioButtonSection, buildTwoColumnSelectElementSection } from '../../../../utils/dom/forms/buildUtils.min.js';
+import { trimCycleConfigurations } from '../../../../utils/dom/forms/trimCycleConfigurations.min.js';
+import { removeListeners } from '../../../../utils/dom/listeners.min.js';
+import { clearMsg } from '../../../../utils/dom/messages.min.js';
+import buildTwoColumnAddressSection from '../../../components/buildTwoColumnAddressSection.min.js';
 
 export const COMPONENT_ID = 'add-edit-client';
-
 
 /**
  * Builds the Add/Edit Client page with form and handlers
@@ -70,26 +66,19 @@ export default async function buildAddEditClientPage({ cID = null, primaryKey = 
                     fieldValues[key] = clientInfo[key];
                 }
             });
-            
-            const { default: buildSubmitDeleteButtonSection } = await import('../../../components/buildSubmitDeleteButtonSection.js');
+
+            const { buildSubmitDeleteButtonSection } = await import('../../../../../core/utils/dom/forms/buildUtils.js');
             submitButton = await buildSubmitDeleteButtonSection({
                 submitButtonText: 'Edit Client',
                 deleteButtonText: 'Delete Client'
             });
         }
         else {
-            const { default: buildSubmitButtonSection } = await import('../../../components/buildSubmitButtonSection.js');
+            const { buildSubmitButtonSection } = await import('../../../../../core/utils/dom/forms/buildUtils.js');
             submitButton = await buildSubmitButtonSection('Add Client');
         }
 
         const pageTitle = !clientInfo ? 'Add a new Client' : 'Edit ';
-        const [container, card] = await buildPageContainer({
-            pageTitle,
-            clientAnchor,
-            clientName,
-            cID,
-            primaryKey
-        });
 
         // Build form
         const form = buildEle({
@@ -98,7 +87,14 @@ export default async function buildAddEditClientPage({ cID = null, primaryKey = 
         });
 
         // Build all form sections concurrently
-        const sections = await Promise.all([
+        const [[container, card], ...sections] = await Promise.all([
+            buildPageContainer({
+                pageTitle,
+                clientAnchor,
+                clientName,
+                cID,
+                primaryKey
+            }),
             buildTwoColumnInputSection({
                 labelText: 'Client Name:',
                 inputID: 'client-name',

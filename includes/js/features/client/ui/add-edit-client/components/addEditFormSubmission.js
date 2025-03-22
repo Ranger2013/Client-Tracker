@@ -1,5 +1,5 @@
 const COMPONENT = 'Add Edit Form Submission';
-const DEBUG = true;
+const DEBUG = false;
 
 const debugLog = (...args) => {
 	if (DEBUG) {

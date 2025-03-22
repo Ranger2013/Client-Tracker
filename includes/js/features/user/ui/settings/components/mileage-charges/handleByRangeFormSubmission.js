@@ -1,6 +1,6 @@
-import { clearMsg, safeDisplayMessage } from "../../../../../../core/utils/dom/messages.js";
-import { isNumeric } from "../../../../../../core/utils/validation/validators.js";
-import { top } from "../../../../../../core/utils/window/scroll.js";
+import { clearMsg, safeDisplayMessage } from "../../../../../../core/utils/dom/messages.min.js";
+import { isNumeric } from "../../../../../../core/utils/validation/validators.min.js";
+import { top } from "../../../../../../core/utils/window/scroll.min.js";
 
 /**
  * Handles submission of fuel range form

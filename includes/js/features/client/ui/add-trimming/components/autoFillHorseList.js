@@ -1,4 +1,5 @@
 import { buildGenericSelectOptions } from '../../../../../core/utils/dom/elements.js';
+import { ucwords, underscoreToSpaces } from '../../../../../core/utils/string/stringUtils.js';
 import buildServiceBlocks from './buildServiceBlocks.js';
 
 // Set up debugging const and arrow function
@@ -54,11 +55,20 @@ export default async function autoFillHorseList({ totalHorses, optionsConfig }) 
 				debugLog('Block: ', block);
 				// Get and configure elements
 				const horseList = block.querySelector(`#horse-list-${iterator}`);
+				debugLog('Horse List Element: ', horseList);
 				const servicesContainer = block.querySelector(`#services-container-${iterator}`);
 				const checkboxContainer = block.querySelector(`#checkbox-container-${iterator}`);
-				debugLog('Horse List Element: ', horseList);
+
 				// Set selected index to i (0-based) instead of iterator (1-based)
 				horseList.selectedIndex = i;
+
+				const horseNameLabel = block.querySelector(`label[for="horse-list-${iterator}"]`);
+				const selectOption = horseList.options[horseList.selectedIndex];
+				const serviceType = selectOption.dataset.serviceType;
+				const serviceTime = selectOption.dataset.trimCycle;
+				horseNameLabel.innerHTML = `Horse's Name: <span class="w3-small">${ucwords(underscoreToSpaces(serviceType))} Cycle: ${serviceTime / 7} weeks</span>`;
+
+				// Show the containers
 				[servicesContainer, checkboxContainer].forEach(
 					container => container?.classList.remove('w3-hide')
 				);

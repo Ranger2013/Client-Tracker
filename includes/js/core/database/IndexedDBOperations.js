@@ -634,7 +634,7 @@ export default class IndexedDBOperations {
     * Deletes a record from a store in the IndexedDB database and returns a promise that resolves when the operation is complete.
     *
     * @param {string} store - The name of the store.
-    * @param {string} key - The key of the record to delete.
+    * @param {number} key - The key of the record to delete.
     * @returns {Promise<void>} A promise that resolves when the operation is complete.
     */
     async deleteRecordPromise(key, store, transaction = null) {

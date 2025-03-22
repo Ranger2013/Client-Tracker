@@ -1,10 +1,10 @@
-import { disableEnableSubmitButton } from '../../../../core/utils/dom/elements.js';
-import { addListener, removeListeners } from "../../../../core/utils/dom/listeners.js";
-import { clearMsg, safeDisplayMessage } from "../../../../core/utils/dom/messages.js";
-import { underscoreToHyphen, underscoreToHyphenPlusError } from "../../../../core/utils/string/stringUtils.js";
-import { isNumeric } from "../../../../core/utils/validation/validators.js";
-import ManageUser from "../../models/ManageUser.js";
-import populateScheduleOptionsForm from "./components/schedule-options/populateScheduleOptionsForm.js";
+import { disableEnableSubmitButton } from '../../../../core/utils/dom/elements.min.js';
+import { addListener, removeListeners } from "../../../../core/utils/dom/listeners.min.js";
+import { clearMsg, safeDisplayMessage } from "../../../../core/utils/dom/messages.min.js";
+import { underscoreToHyphen, underscoreToHyphenPlusError } from "../../../../core/utils/string/stringUtils.min.js";
+import { isNumeric } from "../../../../core/utils/validation/validators.min.js";
+import ManageUser from "../../models/ManageUser.min.js";
+import populateScheduleOptionsForm from "./components/schedule-options/populateScheduleOptionsForm.min.js";
 
 const manageUser = new ManageUser();
 const COMPONENT_ID = 'schedule-options';

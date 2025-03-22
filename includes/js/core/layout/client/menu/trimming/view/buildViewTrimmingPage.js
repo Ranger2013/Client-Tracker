@@ -1,7 +1,10 @@
-import { formatDate, getWeeksAndDaysSinceLastTrim, sortByDateOnly } from '../../../../../utils/date/dateUtils';
-import { buildEle } from '../../../../../utils/dom/elements';
-import { cleanUserOutput, ucwords, underscoreToSpaces } from '../../../../../utils/string/stringUtils';
-import buildPageContainer from '../../../../components/buildPageContainer';
+import { formatDate, getWeeksAndDaysSinceLastTrim, sortByDateOnly } from '../../../../../utils/date/dateUtils.min.js';
+import { buildEle, buildElementTree } from '../../../../../utils/dom/elements.min.js';
+import { buildPageContainer } from '../../../../../utils/dom/forms/buildUtils.min.js';
+import { removeListeners } from '../../../../../utils/dom/listeners.min.js';
+import { cleanUserOutput, ucwords, underscoreToSpaces } from '../../../../../utils/string/stringUtils.min.js';
+
+const COMPONENT_ID = 'buildViewTrimmingPage';
 
 // Set up logging.
 const COMPONENT = 'Build View Trimming Page';
@@ -25,22 +28,22 @@ export default async function buildViewTrimmingPage({ cID, primaryKey, mainConta
 		const clientTrimInfo = await manageClient.getClientTrimmingInfo(cID);
 		const lastThreeTrims = clientTrimInfo.slice(-3);
 
-		// Build DOM tree recursively - add this before the TITLEBLOCK_LAYOUT
-		const buildElementTree = (config) => {
-			const element = buildEle({
-				type: config.type,
-				myClass: config.myClass,
-				text: config.text
-			});
+		// // Build DOM tree recursively - add this before the TITLEBLOCK_LAYOUT
+		// const buildElementTree = (config) => {
+		// 	const element = buildEle({
+		// 		type: config.type,
+		// 		myClass: config.myClass,
+		// 		text: config.text
+		// 	});
 
-			if (config.children) {
-				Object.values(config.children).forEach(childConfig => {
-					element.appendChild(buildElementTree(childConfig));
-				});
-			}
+		// 	if (config.children) {
+		// 		Object.values(config.children).forEach(childConfig => {
+		// 			element.appendChild(buildElementTree(childConfig));
+		// 		});
+		// 	}
 
-			return element;
-		};
+		// 	return element;
+		// };
 
 		// Restructure the layout object to reflect DOM hierarchy
 		const TITLEBLOCK_LAYOUT = {
@@ -265,6 +268,11 @@ export default async function buildViewTrimmingPage({ cID, primaryKey, mainConta
 		// Clear the main container
 		mainContainer.innerHTML = '';
 		mainContainer.appendChild(container);
+
+		const { default: viewTrimming } = await import("../../../../../../features/client/ui/view-trimming/viewTrimmingJS");
+		viewTrimming({ cID, primaryKey, mainContainer, manageClient, manageUser, componentId: COMPONENT_ID});
+
+		return () => removeListeners(COMPONENT_ID);
 	} catch (err) {
 		throw err;		// Let the selectClientMenuPage handle the error.
 	}

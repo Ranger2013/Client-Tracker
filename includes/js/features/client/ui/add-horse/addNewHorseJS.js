@@ -1,8 +1,8 @@
-import { createDebouncedHandler, getOptimalDelay } from '../../../../core/utils/dom/eventUtils.js';
-import { addListener } from '../../../../core/utils/dom/listeners.js';
-import { clearMsg, safeDisplayMessage } from '../../../../core/utils/dom/messages.js';
-import { handleAddHorseFormSubmission, handleHorseNameInput } from './components/handleHorseNameInput.js';
-import clientAnchorNav from '../../../../core/navigation/components/setupClientAnchorListener.js';
+import { createDebouncedHandler, getOptimalDelay } from '../../../../core/utils/dom/eventUtils.min.js';
+import { addListener } from '../../../../core/utils/dom/listeners.min.js';
+import { clearMsg, safeDisplayMessage } from '../../../../core/utils/dom/messages.min.js';
+import { handleAddHorseFormSubmission, handleHorseNameInput } from './components/handleHorseNameInput.min.js';
+import clientAnchorNav from '../../../../core/navigation/components/setupClientAnchorListener.min.js';
 
 export default async function addNewHorse({ cID, primaryKey, mainContainer, manageClient, manageUser, componentId }) {
 	try {

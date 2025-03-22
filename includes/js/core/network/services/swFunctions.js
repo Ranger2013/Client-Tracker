@@ -1,5 +1,5 @@
-export const staticCacheName = 'static-cache-v4';
-export const dynamicCacheName = 'dynamic-cache-v4';
+export const staticCacheName = 'static-cache-v2';
+export const dynamicCacheName = 'dynamic-cache-v2';
 
 // Do not cache these pages. Some are api pages, but most are the generated offline pages.
 const noCache = [
@@ -7,10 +7,21 @@ const noCache = [
 	'sw',
 	'API',
 	'online',
+    'login',
+    'logout',
 ];
 
 export async function cacheFirst(evt){
     try{
+        // Special case for navigation requests
+        if(evt.request.mode === 'navigate'){
+            const response = await fetch(evt.request, { redirect: 'follow', credentials: 'include'});
+            if(response.redirected){
+                return Response.redirect(response.url, 303);
+            }
+            return response;
+        }
+
         const cachedResponse = await caches.match(evt.request);
         if(cachedResponse) {
             return cachedResponse;
@@ -47,7 +58,24 @@ export async function cacheFirst(evt){
  */
 export async function networkFirst(evt) {
     try {
+        // Special handling for server page navigation requests
+        if(evt.request.mode === "navigate"){
+            // Use redirect: 'follow' for navigation requests
+            const response = await fetch(evt.request, { redirect: 'follow', credentials: 'include'});
+
+            // If the response was redirected, creae a NEW redirect response
+            if(response.redirected){
+                return Response.redirect(response.url, 303);
+            }
+            return response;
+        }
+
         const response = await fetch(evt.request);
+
+        // Check for redirects
+        if(response.redirected || response.status >= 300 && response.status < 400) {
+            return Response.redirect(response.url, 303);
+        }
 
         if (response.ok) {
             if (noCache.some(page => evt.request.url.includes(page))) {

@@ -1,6 +1,5 @@
-import dropDownMenu from './dropDownMenu.js';
-import selectPage from './selectPage.js';
-import sideBarNavigation from './sideBarNavigation.js';
+import dropDownMenu from './dropDownMenu.min.js';
+import selectPage from './selectPage.min.js';
 
 // Remove ErrorTypes import since it's now part of AppError class
 
@@ -167,4 +166,10 @@ async function setupRouteListeners({ manageUser, manageClient }) {
             displayTarget: PAGE_MSG,
         });
     }
+}
+
+function sideBarNavigation() {
+	const sideBar = document.getElementById('mySidebar');
+
+	sideBar.classList.toggle('w3-hide');
 }

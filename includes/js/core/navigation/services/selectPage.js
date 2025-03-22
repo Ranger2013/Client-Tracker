@@ -1,6 +1,4 @@
-import closeNavigationMenu from "./closeNavigationMenu.js";
-import { removeListeners } from "../../utils/dom/listeners.js";
-// import buildAddEditClientPage from '../../layout/client/pages/add-edit-client/buildAddEditClientPage.js';
+import { removeListeners } from "../../utils/dom/listeners.min.js";
 
 /** @type {Function|null} */
 let cleanup = null;
@@ -47,25 +45,25 @@ export default async function selectPage({ evt, page, cID = null, closeMenu = nu
                 },
                 add: {
                     module: "../../layout/client/pages/add-edit-client/buildAddEditClientPage.min.js",
-                    getState: () => "/tracker/clients/add/",
+                    getState: () => "/tracker/clients/add-client/",
                     getArgs: (cID, primaryKey) => [{ cID, primaryKey, mainContainer: main, manageClient, manageUser }]
                 },
                 duplicate: {
-                    module: "../page-builders/pages/clients/add-duplicate/buildDuplicateClientPage.js",
+                    module: "../../layout/client/pages/duplicate-client/buildDuplicateClientPage.js",
                     getState: () => "/tracker/clients/duplicate/",
-                    getArgs: () => [{ mainContainer: main }]
+                    getArgs: () => [{ mainContainer: main, manageClient, manageUser }]
                 },
                 deleteDuplicate: {
-                    module: "../page-builders/pages/clients/delete-duplicate/buildDeleteDuplicateClientPage.js",
+                    module: "../../layout/client/pages/delete-duplicate/buildDeleteDuplicateClientPage.js",
                     getState: () => "/tracker/clients/delete-duplicate/",
-                    getArgs: () => [{ mainContainer: main }]
+                    getArgs: () => [{ mainContainer: main, manageClient, manageUser }]
                 }
             },
             management: {
                 mileage: {
-                    module: "../page-builders/pages/mileage/buildAddMileagePage.js",
+                    module: "../../layout/user/pages/mileage/add/buildAddMileagePage.min.js",
                     getState: () => "/tracker/mileage/add/",
-                    getArgs: () => [{ mainContainer: main }]
+                    getArgs: () => [{ mainContainer: main, manageClient, manageUser }]
                 },
                 expenses: {
                     add: {
@@ -213,4 +211,32 @@ function cleanupServerRenderedListeners() {
     removeListeners('mileage-charges');     // From mileageCharges.js
     removeListeners('schedule-options');     // From scheduleOptionsJS.js
     // We'll add more as we work through other server-rendered pages
+}
+
+/**
+ * Closes all navigation menus and resets their states
+ * Used during page transitions to ensure clean navigation state
+ * 
+ * @returns {void}
+ */
+function closeNavigationMenu() {
+    const closeNav = document.querySelectorAll('.drop-menu');
+    const sideBar = document.getElementById('mySidebar');
+
+    // Close sidebar if open
+    if (sideBar?.classList.contains('w3-show')) {
+        sideBar.classList.remove('w3-show');
+        sideBar.classList.add('w3-hide');
+    }
+
+    // Close all dropdown menus and reset their icons
+    closeNav?.forEach(nav => {
+        // Close the navigation
+        nav.nextElementSibling?.classList.remove('w3-show');
+
+        const img = nav.firstElementChild;
+        if (img?.classList.contains('up')) {
+            img.classList.remove('up');
+        }
+    });
 }

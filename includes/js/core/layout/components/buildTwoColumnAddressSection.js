@@ -1,6 +1,6 @@
-import { buildEle } from '../../utils/dom/elements.js';
-import { cleanUserOutput } from '../../utils/string/stringUtils.js';
-import buildErrorDiv from './buildErrorDiv.js';
+import { buildEle } from '../../utils/dom/elements.min.js';
+import { buildErrorDiv } from '../../utils/dom/forms/buildUtils.min.js';
+import { cleanUserOutput } from '../../utils/string/stringUtils.min.js';
 
 /**
  * Builds an HTML address section with specified fields.

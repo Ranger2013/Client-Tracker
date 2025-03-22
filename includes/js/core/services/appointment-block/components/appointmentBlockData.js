@@ -1,4 +1,4 @@
-import { formatTime } from '../../../utils/date/dateUtils.js';
+import { formatTime } from '../../../utils/date/dateUtils.min.js';
 import { cleanUserOutput } from '../../../utils/string/stringUtils.js';
 
 /**

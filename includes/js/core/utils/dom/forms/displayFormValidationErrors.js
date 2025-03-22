@@ -1,6 +1,6 @@
-import { top } from "../../window/scroll.js";
-import { safeDisplayMessage } from "../messages.js";
-import { underscoreToHyphen, underscoreToHyphenPlusError } from "../../string/stringUtils.js";
+import { top } from "../../window/scroll.min.js";
+import { safeDisplayMessage } from "../messages.min.js";
+import { underscoreToHyphen, underscoreToHyphenPlusError } from "../../string/stringUtils.min.js";
 
 /**
  * Displays validation errors for form fields

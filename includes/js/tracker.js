@@ -17,13 +17,13 @@
  * @requires ./core/navigation/services/selectPage
  */
 
-import { userAuthorization } from './core/auth/services/userAuthorization.js';
-import selectPage from './core/navigation/services/selectPage.js';
-import mainTrackerNavigation from './core/navigation/services/trackerAppMainNavigation.js';
-import setupBackupNotice from './core/services/backup-notice/backupNotice.js';
-import { setValidationToken, getValidationToken } from './core/auth/services/tokenUtils.js';
-import ManageUser from './features/user/models/ManageUser.js';
-import ManageClient from './features/client/models/ManageClient.js';
+import { userAuthorization } from './core/auth/services/userAuthorization.min.js';
+import selectPage from './core/navigation/services/selectPage.min.js';
+import mainTrackerNavigation from './core/navigation/services/trackerAppMainNavigation.min.js';
+import setupBackupNotice from './core/services/backup-notice/backupNotice.min.js';
+import { setValidationToken, getValidationToken } from './core/auth/services/tokenUtils.min.js';
+import ManageUser from './features/user/models/ManageUser.min.js';
+import ManageClient from './features/client/models/ManageClient.min.js';
 
 /** 
  * @typedef {string} ValidationToken - User's authentication token

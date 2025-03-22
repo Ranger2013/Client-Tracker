@@ -1,11 +1,12 @@
 import { disableEnableSubmitButton } from '../../../../../core/utils/dom/elements';
+import { trimCycleRange } from '../../../../../core/utils/dom/forms/trimCycleConfigurations';
 import { addListener } from '../../../../../core/utils/dom/listeners';
 import { clearMsg, safeDisplayMessage } from '../../../../../core/utils/dom/messages';
 import { ucwords, underscoreToHyphen, underscoreToHyphenPlusError } from '../../../../../core/utils/string/stringUtils';
 
 // Set up debugging log
 const COMPONENT = 'Add Horse Page';
-const DEBUG = true;
+const DEBUG = false;
 
 const debugLog = (...args) => {
 	if (DEBUG) {
@@ -127,7 +128,7 @@ async function validateAddHorseForm(userData) {
 				}
 			},
 			{
-				test: () => ['7','14','21','28','35','42','49','56','63','70'].includes(userData.trim_cycle),
+				test: () => trimCycleRange.includes(parseInt(userData.trim_cycle, 10)),
 				error: {
 					message: 'Please select a valid trim cycle.',
 					targetError: 'trim-cycle-error',

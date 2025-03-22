@@ -1,6 +1,6 @@
-import { clearMsg, getValidElement, safeDisplayMessage } from '../../core/utils/dom/messages.js';
-import { disableEnableSubmitButton } from '../../core/utils/dom/elements.js';
-import deepFreeze from '../../core/utils/deepFreeze.js';
+import { clearMsg, getValidElement, safeDisplayMessage } from '../../core/utils/dom/messages.min.js';
+import { disableEnableSubmitButton } from '../../core/utils/dom/elements.min.js';
+import deepFreeze from '../../core/utils/deepFreeze.min.js';
 
 const PASSWORD_VALIDATION = deepFreeze({
 	MIN_LENGTH: 8,

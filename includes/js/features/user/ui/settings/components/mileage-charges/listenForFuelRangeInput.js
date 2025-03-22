@@ -1,5 +1,5 @@
-import { addListener, removeListeners } from "../../../../../../core/utils/dom/listeners.js";
-import buildMileageRangeInputs from "./buildMileageRangeInputs.js";
+import { addListener, removeListeners } from "../../../../../../core/utils/dom/listeners.min.js";
+import buildMileageRangeInputs from "./buildMileageRangeInputs.min.js";
 
 export default async function listenForFuelRangeInput({ userClass, rangeContainer, rangeInputId }) {
     const rangeInput = document.getElementById('fuel-ranges');

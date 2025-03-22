@@ -1,5 +1,5 @@
-import { addListener } from '../../utils/dom/listeners.js';
-import selectPage from '../services/selectPage.js';
+import { addListener } from '../../utils/dom/listeners.min.js';
+import selectPage from '../services/selectPage.min.js';
 
 export default async function setupClientAnchorListener({ manageUser, manageClient, componentId }) {
 	try{

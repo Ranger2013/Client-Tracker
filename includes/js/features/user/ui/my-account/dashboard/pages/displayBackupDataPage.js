@@ -1,7 +1,7 @@
 import { addListener } from '../../../../../../core/utils/dom/listeners.js';
 import { clearMsg } from '../../../../../../core/utils/dom/messages.js';
 import buildObjectStoreRows from '../components/backup-data/buildObjectStoreRows.js';
-import buildPageComponents from '../components/backup-data/buildPageComponents.js';
+import buildBackupDataPageComponents from '../components/backup-data/buildPageComponents.js';
 
 const COMPONENT_ID = 'backup-data-tab';
 
@@ -25,7 +25,7 @@ export default async function displayBackupDataPage({evt, messageContainer, tabC
 		const objectStoreRows = await buildObjectStoreRows({manageUser});
 		
 		// 3. Build the Object store rows and indicators
-		const pageComponents = buildPageComponents({manageUser, objectStoreRows});
+		const pageComponents = buildBackupDataPageComponents({manageUser, objectStoreRows});
 		
 		// 4. Append the object store rows to the display container
 		const displayContainer = pageComponents.querySelector('#display-container');

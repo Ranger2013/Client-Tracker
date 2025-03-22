@@ -1,7 +1,7 @@
-import { authAPI } from "../../../core/network/api/apiEndpoints.js";
-import { fetchData } from "../../../core/network/services/network.js";
-import { safeDisplayMessage } from "../../../core/utils/dom/messages.js";
-import ManageUser from "../../../features/user/models/ManageUser.js";
+import { authAPI } from "../../../core/network/api/apiEndpoints.min.js";
+import { fetchData } from "../../../core/network/services/network.min.js";
+import { safeDisplayMessage } from "../../../core/utils/dom/messages.min.js";
+import ManageUser from "../../../features/user/models/ManageUser.min.js";
 
 async function handleLogIn(evt) {
     evt.preventDefault();

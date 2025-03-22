@@ -1,10 +1,10 @@
-import { disableEnableSubmitButton } from '../../../../../core/utils/dom/elements.js';
-import { clearMsg, safeDisplayMessage } from '../../../../../core/utils/dom/messages.js';
-import { top } from '../../../../../core/utils/window/scroll.js';
-import ManageTrimming from '../../../models/ManageTrimming.js';
+import { disableEnableSubmitButton } from '../../../../../core/utils/dom/elements.min.js';
+import { clearMsg, safeDisplayMessage } from '../../../../../core/utils/dom/messages.min.js';
+import { top } from '../../../../../core/utils/window/scroll.min.js';
+import ManageTrimming from '../../../models/ManageTrimming.min.js';
 
 const COMPONENT = 'Form Submission';
-const DEBUG = true;
+const DEBUG = false;
 
 const debugLog = (...args) => {
 	if (DEBUG) {

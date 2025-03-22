@@ -1,5 +1,5 @@
 import { cacheFirst, dynamicCacheName, networkFirst, staticCacheName } from "../includes/js/core/network/services/swFunctions.js";
- 
+  
 // Our app shell assets to cache
 const assets = [
 	'/includes/css/w3-css.css',
@@ -50,7 +50,7 @@ self.addEventListener('fetch', async (evt) => {
 		// Do not intercept the following pages
 		const noCatch = [
 			'/login/',
-			'/logout/',
+			'/logout/', 
 			'/tracker/online.php',
 			'123checkout.io',
 		];
@@ -60,6 +60,9 @@ self.addEventListener('fetch', async (evt) => {
 			try {
 				evt.respondWith(
 					fetch(evt.request).then(response => {
+						if(response.redirected){
+							return Response.redirect(response.url, 303);
+						}
 						return response;
 					}).catch(err => {
 						console.warn('Native fetch request error in sw: ', err);

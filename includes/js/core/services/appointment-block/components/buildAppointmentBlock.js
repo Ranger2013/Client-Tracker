@@ -1,6 +1,6 @@
-import selectPage from '../../../navigation/services/selectPage.js';
-import { buildEle } from '../../../utils/dom/elements.js';
-import { addListener } from '../../../utils/dom/listeners.js';
+import selectPage from '../../../navigation/services/selectPage.min.js';
+import { buildEle } from '../../../utils/dom/elements.min.js';
+import { addListener } from '../../../utils/dom/listeners.min.js';
 
 /**
  * Builds and displays the appointment block in the provided container.
@@ -37,7 +37,7 @@ export default async function buildAppointmentBlock({appointmentContainer, appoi
 		const reminder = buildEle({
 			type: 'div',
 			myClass: ['w3-center', 'w3-small'],
-			text: 'Appointment block times are a prediction based on your clients service history plus your drive time.'
+			text: 'Appointment block times use a prediction algorithm based on your clients service history plus your drive time. Predictions could be inaccurate.'
 		});
 
 		parent.appendChild(header);

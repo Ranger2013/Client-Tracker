@@ -1,4 +1,4 @@
-import { formatDate, formatTime, getSMSWeekday } from '../../../../../utils/date/dateUtils.js';
+import { formatDate, formatTime, getSMSWeekday } from '../../../../../utils/date/dateUtils.min.js';
 import { buildEle, buildElementsFromConfig } from '../../../../../utils/dom/elements.js';
 import { cleanUserOutput } from '../../../../../utils/string/stringUtils.js';
 

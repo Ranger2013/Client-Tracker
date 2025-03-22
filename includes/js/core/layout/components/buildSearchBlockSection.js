@@ -1,59 +1,4 @@
-import { buildEle, buildElementsFromConfig, buildGenericSelectOptions } from '../../utils/dom/elements.js';
-
-/**
- * Configuration for search block UI elements
- * @typedef {Object} SearchBlockConfig
- * @property {Object} searchBlock - Main container configuration
- * @property {Object} searchMsg - Message display container
- * @property {Object} searchRow - Row container for inputs
- * @property {Object} filterCol - Column for filter select
- * @property {Object} filterSelect - Filter dropdown configuration
- * @property {Object} searchCol - Column for search input
- * @property {Object} searchInput - Search input configuration
- */
-const PAGE_CONFIG = {
-	searchBlock: {
-		type: 'div',
-		attributes: { id: 'search-block' },
-		myClass: ['w3-padding'],
-	},
-	searchMsg: {
-		type: 'div',
-		attributes: { id: 'search-msg' },
-		myClass: ['w3-center']
-	},
-	searchRow: {
-		type: 'div',
-		myClass: ['w3-row']
-	},
-	filterCol: {
-		type: 'div',
-		myClass: ['w3-col', 'm6', 'w3-padding-small'],
-	},
-	filterSelect: {
-		type: 'select',
-		attributes: {
-			id: 'filter',
-			name: 'filter',
-			title: 'Filter Search'
-		},
-		myClass: ['w3-input', 'w3-border']
-	},
-	searchCol: {
-		type: 'div',
-		myClass: ['w3-col', 'm6', 'w3-padding-small'],
-	},
-	searchInput: {
-		type: 'input',
-		attributes: {
-			id: 'search',
-			type: 'search',
-			name: 'search',
-			placeholder: 'Search'
-		},
-		myClass: ['w3-input', 'w3-border']
-	},
-};
+import { buildEle, buildElementsFromConfig, buildGenericSelectOptions } from '../../utils/dom/elements.min.js';
 
 /**
  * Builds the search block with filter options and search input
@@ -66,6 +11,61 @@ const PAGE_CONFIG = {
  */
 export default async function buildSearchBlockSection(filterOptions) {
 	try {
+		/**
+		 * Configuration for search block UI elements
+		 * @typedef {Object} SearchBlockConfig
+		 * @property {Object} searchBlock - Main container configuration
+		 * @property {Object} searchMsg - Message display container
+		 * @property {Object} searchRow - Row container for inputs
+		 * @property {Object} filterCol - Column for filter select
+		 * @property {Object} filterSelect - Filter dropdown configuration
+		 * @property {Object} searchCol - Column for search input
+		 * @property {Object} searchInput - Search input configuration
+		 */
+		const PAGE_CONFIG = {
+			searchBlock: {
+				type: 'div',
+				attributes: { id: 'search-block' },
+				myClass: ['w3-padding'],
+			},
+			searchMsg: {
+				type: 'div',
+				attributes: { id: 'search-msg' },
+				myClass: ['w3-center']
+			},
+			searchRow: {
+				type: 'div',
+				myClass: ['w3-row']
+			},
+			filterCol: {
+				type: 'div',
+				myClass: ['w3-col', 'm6', 'w3-padding-small'],
+			},
+			filterSelect: {
+				type: 'select',
+				attributes: {
+					id: 'filter',
+					name: 'filter',
+					title: 'Filter Search'
+				},
+				myClass: ['w3-input', 'w3-border']
+			},
+			searchCol: {
+				type: 'div',
+				myClass: ['w3-col', 'm6', 'w3-padding-small'],
+			},
+			searchInput: {
+				type: 'input',
+				attributes: {
+					id: 'search',
+					type: 'search',
+					name: 'search',
+					placeholder: 'Search'
+				},
+				myClass: ['w3-input', 'w3-border']
+			},
+		};
+
 		const elements = buildElementsFromConfig(PAGE_CONFIG);
 
 		// Build options separately

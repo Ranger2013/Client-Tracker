@@ -1,6 +1,14 @@
 import { clearMsg } from '../../../../../core/utils/dom/messages';
 
-export default async function validatePhone({ evt, primaryKey, manageClient }) {
+const COMPONENT = 'Validate Phone';
+const DEBUG = false;
+const debugLog = (...args) => {
+	if (DEBUG) {
+		console.log(`[${COMPONENT}]`, ...args);
+	}
+};
+
+export default async function validatePhone({ evt, cID, primaryKey, manageClient }) {
 	try {
 		// No phone, show message
 		if (!evt.target.value) return 'Phone number is required.';
@@ -13,7 +21,7 @@ export default async function validatePhone({ evt, primaryKey, manageClient }) {
 		evt.target.value = formattedPhone;
 
 		// duplicate phone, show message
-		if (formattedPhone && await checkForDuplicateNumbers({phone: evt.target.value, primaryKey, manageClient})) return 'Phone number is not available.'
+		if (formattedPhone && await checkForDuplicateNumbers({phone: evt.target.value, cID, primaryKey, manageClient})) return 'Phone number is not available.'
 
 		// Clear any messages, everything passed.
 		clearMsg({ container: `${evt.target.id}-error`, hide: true, input: evt.target });
@@ -44,12 +52,11 @@ function formatPhone(phone) {
 	return null;
 }
 
-async function checkForDuplicateNumbers({phone, primaryKey, manageClient}) {
+async function checkForDuplicateNumbers({phone, cID, primaryKey, manageClient}) {
 	try {
 		const clientList = await manageClient.getClientScheduleList();
 		const duplicate = clientList.some(client => {
-			if(client.primaryKey === parseInt(primaryKey, 10)) return false;
-
+			if(client.cID === parseInt(cID, 10)) return false;
 			return client.phone === phone;
 		});
 		return duplicate;
