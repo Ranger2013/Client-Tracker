@@ -179,8 +179,8 @@ async function handleShowingNumberOfHorses({ evt, horseListContainer, clientTota
 			let removedOptions = [];
 
 			const [removeLastOption, addNewOption] = await Promise.all([
-				import("./removeLastChildAndGetOptions.js"),
-				import("./addOptionToRemainingHorseListSelectElements.js"),
+				import("./removeLastChildAndGetOptions.min.js"),
+				import("./addOptionToRemainingHorseListSelectElements.min.js"),
 			]);
 			const { default: removeLastChildAndGetOptions } = removeLastOption;
 			const { default: addOptionToRemainingHorseListSelectElements } = addNewOption;

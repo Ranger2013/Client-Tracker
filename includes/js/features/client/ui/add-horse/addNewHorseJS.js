@@ -30,6 +30,7 @@ export default async function addNewHorse({ cID, primaryKey, mainContainer, mana
 			},
 			'focusin:horse-name': (evt) => clearMsg({ container: `${evt.target.id}-error`, hide: true, input: evt.target }),
 			'focusin:trim-cycle': (evt) => clearMsg({ container: `${evt.target.id}-error`, hide: true, input: evt.target }),
+			'focusin:horse-type': (evt) => clearMsg({ container: `${evt.target.id}-error`, hide: true, input: evt.target }),
 			'submit:add-horse-form': async (evt) => {
 				evt.preventDefault();
 				await handleAddHorseFormSubmission({ evt, cID, primaryKey, manageClient, componentId });
@@ -50,7 +51,7 @@ export default async function addNewHorse({ cID, primaryKey, mainContainer, mana
 		});
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../core/errors/models/AppError.js");
+		const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.INITIALIZATION_ERROR,
 			userMessage: 'An error occurred while initializing the add new horse page.',

@@ -233,7 +233,7 @@ export default async function buildAddEditClientPage({ cID = null, primaryKey = 
         return () => removeListeners(COMPONENT_ID);
     }
     catch (err) {
-        const { AppError } = await import("../../../../errors/models/AppError.js");
+        const { AppError } = await import("../../../../errors/models/AppError.min.js");
         AppError.process(err, {
             errorCode: AppError.Types.RENDER_ERROR,
             userMessage: AppError.BaseMessages.system.render,

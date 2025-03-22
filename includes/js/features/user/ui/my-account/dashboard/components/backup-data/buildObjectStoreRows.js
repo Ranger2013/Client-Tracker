@@ -1,6 +1,6 @@
-import IndexedDBOperations from '../../../../../../../core/database/IndexedDBOperations.js';
-import { buildEle } from '../../../../../../../core/utils/dom/elements.js';
-import { ucwords, underscoreToHyphen, underscoreToSpaces } from '../../../../../../../core/utils/string/stringUtils.js';
+import IndexedDBOperations from '../../../../../../../core/database/IndexedDBOperations.min.js';
+import { buildEle } from '../../../../../../../core/utils/dom/elements.min.js';
+import { ucwords, underscoreToHyphen, underscoreToSpaces } from '../../../../../../../core/utils/string/stringUtils.min.js';
 
 /**
  * Builds the object store rows for the backup data page.

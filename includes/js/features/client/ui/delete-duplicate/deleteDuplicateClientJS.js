@@ -26,7 +26,7 @@ export default async function deleteDuplicateClient({ mainContainer, duplicateCl
 		initializeEventHandlers({ mainContainer, manageClient, manageUser, componentId });
 	}
 	catch (err) {
-		const { AppError } = await import('../../../../core/errors/models/AppError.js');
+		const { AppError } = await import('../../../../core/errors/models/AppError.min.js');
 		AppError.handleError(err, {
 			errorCode: AppError.Types.INITIALIZATION_ERROR,
 			userMessage: 'An error occurred while initializing the Delete Duplicate Client page.'

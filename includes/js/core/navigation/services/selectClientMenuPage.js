@@ -34,7 +34,7 @@ export default async function selectClientMenuPage({ evt, page, cID, primaryKey,
     try {
         const PAGE_BUILDERS = {
             'add-trimming': {
-                importPath: "../../layout/client/menu/trimming/add/buildAddTrimmingPage.js",
+                importPath: "../../layout/client/menu/trimming/add/buildAddTrimmingPage.min.js",
                 importFunction: "default",
                 historyState: `/tracker/trimming/add/?cID=${cID}&key=${primaryKey}`,
                 args: [{ cID, primaryKey, mainContainer: main, manageClient, manageUser }],
@@ -87,7 +87,7 @@ export default async function selectClientMenuPage({ evt, page, cID, primaryKey,
             errorType: err.name === 'ImportError' ? 'load' : 'build'
         });
 
-        const { AppError } = await import("../../errors/models/AppError.js");
+        const { AppError } = await import("../../errors/models/AppError.min.js");
         AppError.handleError(err, {
             errorCode: AppError.Types.RENDER_ERROR,
             userMessage: `Unable to load ${PAGE_MAPPINGS[page]?.displayName || 'requested'} page.`,

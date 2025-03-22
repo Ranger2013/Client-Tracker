@@ -1,4 +1,4 @@
-import processClientList from './processClientList.js';
+import processClientList from './processClientList.min.js';
 
 export default async function buildAppointmentList({ active, clientId, primaryKey, manageClient, manageUser }) {
     try {

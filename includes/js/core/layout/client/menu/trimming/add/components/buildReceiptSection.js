@@ -1,4 +1,4 @@
-import { buildElementsFromConfig } from '../../../../../../utils/dom/elements.js';
+import { buildElementsFromConfig } from '../../../../../../utils/dom/elements.min.js';
 
 const PAGE_MAPPING = {
 	receiptSection: {
@@ -44,7 +44,7 @@ export default async function buildReceiptSection() {
 		return pageElements.receiptSection;
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../../../errors/models/AppError.js");
+		const { AppError } = await import("../../../../../../errors/models/AppError.min.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.RENDER_ERROR,
 			userMessage: null,

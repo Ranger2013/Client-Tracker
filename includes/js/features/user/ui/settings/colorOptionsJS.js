@@ -83,7 +83,7 @@ async function handleColorOptionFormSubmission(evt) {
         top();
     }
     catch (err) {
-        const { AppError } = await import("../../../../core/errors/models/AppError.js");
+        const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
         AppError.handleError(err, {
             errorCode: AppError.Types.FORM_SUBMISSION_ERROR,
             userMessage: AppError.BaseMessages.forms.submissionFailed,

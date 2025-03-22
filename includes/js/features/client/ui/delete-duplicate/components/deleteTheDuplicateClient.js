@@ -1,5 +1,5 @@
-import { getValidElement } from '../../../../../core/utils/dom/elements.js';
-import { cleanUserOutput } from '../../../../../core/utils/string/stringUtils.js';
+import { getValidElement } from '../../../../../core/utils/dom/elements.min.js';
+import { cleanUserOutput } from '../../../../../core/utils/string/stringUtils.min.js';
 
 // Set up debug mode
 const COMPONENT = 'Delete Duplicate Client';
@@ -47,7 +47,7 @@ export default async function deleteTheDuplicate({ evt, duplicateClients, manage
 		}
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../../core/errors/models/AppError.js");
+		const { AppError } = await import("../../../../../core/errors/models/AppError.min.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.FORM_SUBMISSION_ERROR,
 			userMessage: "An error occurred while deleting the duplicate client.",
@@ -139,7 +139,7 @@ async function updateClientListSelect({ clientList, selectElement }) {
 		});
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../../core/errors/models/AppError.js");
+		const { AppError } = await import("../../../../../core/errors/models/AppError.min.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.RENDER_ERROR,
 			userMessage: "An error occurred while updating the client list.",

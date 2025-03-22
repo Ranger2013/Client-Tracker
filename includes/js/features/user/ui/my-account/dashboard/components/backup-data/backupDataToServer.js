@@ -59,7 +59,7 @@ export default async function backupDataToServer({tabContainer}){
 			} catch (err) {
 				// Change the indicator to red if there is an error
 				element.src = '/public/siteImages/indicator_red_light.png';
-				const { AppError } = await import("../../../../../../../core/errors/models/AppError.js");
+				const { AppError } = await import("../../../../../../../core/errors/models/AppError.min.js");
 				AppError.handleError(err, {
 					errorCode: AppError.Types.API_ERROR,
 					userMessage: AppError.BaseMessages.system.network,
@@ -69,7 +69,7 @@ export default async function backupDataToServer({tabContainer}){
 	}
 	catch(err){
 		// Handle the error
-		const { AppError } = await import("../../../../../../../core/errors/models/AppError.js");
+		const { AppError } = await import("../../../../../../../core/errors/models/AppError.min.js");
 		AppError.process(err, {
 			errorCode: AppError.Types.BACKUP_ERROR,
 			userMessage: AppError.BaseMessages.system.backup,

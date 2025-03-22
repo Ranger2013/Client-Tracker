@@ -1,4 +1,4 @@
-import { buildEle } from '../elements';
+import { buildEle } from '../elements.min.js';
 
 // Set up debugging
 const COMPONENT = 'Create Select Element';

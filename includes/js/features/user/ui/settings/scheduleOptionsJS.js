@@ -65,7 +65,7 @@ async function initializeEventHandlers() {
         });
     }
     catch(err) {
-        const { AppError } = await import("../../../../core/errors/models/AppError.js");
+        const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
         AppError.handleError(err, {
             errorCode: AppError.Types.INITIALIZATION_ERROR,
             userMessage: AppError.BaseMessages.system.initialization,
@@ -107,7 +107,7 @@ async function handleScheduleFormSubmission(evt) {
         throw new Error('Failed to save schedule options');
     }
     catch (err) {
-        const { AppError} = await import("../../../../core/errors/models/AppError.js");
+        const { AppError} = await import("../../../../core/errors/models/AppError.min.js");
         AppError.handleError(err, {
             errorCode: AppError.Types.FORM_SUBMISSION_ERROR,
             userMessage: AppError.BaseMessages.system.formSubmission,

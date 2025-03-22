@@ -21,7 +21,7 @@ export default async function handleClearingStore({indexed, db, response, store}
 		}
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../../../../core/errors/models/AppError.js");
+		const { AppError } = await import("../../../../../../../core/errors/models/AppError.min.js");
 		AppError.process(err, {
 			errorCode: AppError.Types.DATABASE_ERROR,
 			userMessage: AppError.BaseMessages.system.generic,

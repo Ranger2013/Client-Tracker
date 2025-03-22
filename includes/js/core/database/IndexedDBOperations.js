@@ -164,7 +164,7 @@ export default class IndexedDBOperations {
      * @returns {Promise<void>}
      */
     async #handleError({ consoleMsg, err, userMsg }) {
-        const { AppError } = await import('../errors/models/AppError.js');
+        const { AppError } = await import('../errors/models/AppError.min.js');
         await AppError.process(err, {
             errorCode: AppError.Types.DATABASE_ERROR,
             userMessage: userMsg,

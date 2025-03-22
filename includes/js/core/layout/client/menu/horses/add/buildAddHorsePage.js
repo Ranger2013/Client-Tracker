@@ -53,7 +53,7 @@ export default async function buildAddHorsePage({ cID, primaryKey, mainContainer
 		mainContainer.append(container);
 
 		// Initialize UI handler file
-		const { default: addNewHorse } = await import("../../../../../../features/client/ui/add-horse/addNewHorseJS.js");
+		const { default: addNewHorse } = await import("../../../../../../features/client/ui/add-horse/addNewHorseJS.min.js");
 		await addNewHorse({ cID, primaryKey, mainContainer, manageClient, manageUser, componentId: COMPONENT_ID });
 
 		return () => removeListeners(COMPONENT_ID);
@@ -72,7 +72,7 @@ async function buildHorseForm() {
 		});
 
 		// Build the form elements
-		const [horseInput, serviceType, trimCycle, buttons] = await Promise.all([
+		const [horseInput, horseType, serviceType, trimCycle, buttons] = await Promise.all([
 			buildTwoColumnInputSection({
 				labelText: 'Name of Horse: ',
 				inputID: 'horse-name',
@@ -80,6 +80,14 @@ async function buildHorseForm() {
 				inputName: 'horse_name',
 				inputTitle: "Horse's Name",
 				required: true
+			}),
+			buildTwoColumnSelectElementSection({
+				labelText: 'Type of Horse: ',
+				selectID: 'horse-type',
+				selectName: 'horse_type',
+				selectTitle: 'Type of Horse',
+				required: true,
+				options: typeHorseOptions(),
 			}),
 			buildTwoColumnRadioButtonSection({
 				labelText: 'Service Type: ',
@@ -101,14 +109,27 @@ async function buildHorseForm() {
 		]);
 
 		// Append the form elements
-		form.append(horseInput, serviceType, trimCycle, buttons);
+		form.append(horseInput, horseType, serviceType, trimCycle, buttons);
 		return form;
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../../errors/models/AppError.js");
+		const { AppError } = await import("../../../../../errors/models/AppError.min.js");
 		AppError.process(err, {
 			errorCode: AppError.Types.RENDER_ERROR,
 			userMessage: AppError.BaseMessages.system.render,
 		}, true);
 	}
+}
+
+function typeHorseOptions() {
+	return [
+		{ value: 'null', 'text': '-- Select Horse Type --' },
+		{ value: 'draft', 'text': 'Draft' },
+		{ value: 'horse', 'text': 'Horse' },
+		{ value: 'mule', 'text': 'Mule' },
+		{ value: 'donkey', 'text': 'Donkey' },
+		{ value: 'mini_donkey', 'text': 'Mini Donkey' },
+		{ value: 'pony', 'text': 'Pony' },
+		{ value: 'mini_pony', 'text': 'Mini Pony' },
+	];
 }

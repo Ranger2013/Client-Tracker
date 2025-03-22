@@ -65,7 +65,7 @@ export default async function handleAddTrimmingFormSubmission({ evt, cID, primar
 	}
 	catch (err) {
 		console.warn('Error submitting form:', err);
-		const { AppError } = await import("../../../../../core/errors/models/AppError.js");
+		const { AppError } = await import("../../../../../core/errors/models/AppError.min.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.FORM_SUBMISSION_ERROR,
 			userMessage: AppError.BaseMessages.forms.submissionFailed,

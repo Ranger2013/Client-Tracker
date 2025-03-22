@@ -1,4 +1,4 @@
-import IndexedDBOperations from "../../../core/database/IndexedDBOperations.js";
+import IndexedDBOperations from "../../../core/database/IndexedDBOperations.min.js";
 
 /**
  * Manages user-related operations and settings using IndexedDB
@@ -70,7 +70,7 @@ export default class ManageUser {
             this.#log('In #initializeSettings: #settings set: ', this.#settings);
         }
         catch (error) {
-            const { AppError } = await import('../../../core/errors/models/AppError.js');
+            const { AppError } = await import('../../../core/errors/models/AppError.min.js');
             // Process because this is a worker, let parent handle display
             await AppError.process(error, {
                 errorCode: AppError.Types.INITIALIZATION_ERROR,
@@ -101,7 +101,7 @@ export default class ManageUser {
                     .reduce((acc, key) => ({ ...acc, [key]: this.#settings[key] }), {});
         }
         catch (error) {
-            const { AppError } = await import('../../../core/errors/models/AppError.js');
+            const { AppError } = await import('../../../core/errors/models/AppError.min.js');
             // Process - let caller handle display
             await AppError.process(error, {
                 errorCode: AppError.Types.SETTINGS_ERROR,
@@ -281,7 +281,7 @@ export default class ManageUser {
             return true;
         }
         catch (error) {
-            const { AppError } = await import('../../../core/errors/models/AppError.js');
+            const { AppError } = await import('../../../core/errors/models/AppError.min.js');
             // Process because private method, let public method handle
             await AppError.process(error, {
                 errorCode: AppError.Types.DATABASE_ERROR,
@@ -331,7 +331,7 @@ export default class ManageUser {
             await this.#indexed.putStorePromise(db, data, backupStore, true);
         }
         catch (error) {
-            const { AppError } = await import('../../../core/errors/models/AppError.js');
+            const { AppError } = await import('../../../core/errors/models/AppError.min.js');
             // Process because it's a worker
             await AppError.process(error, {
                 errorCode: AppError.Types.BACKUP_ERROR,
@@ -361,7 +361,7 @@ export default class ManageUser {
             return false;
         }
         catch (error) {
-            const { AppError } = await import('../../../core/errors/models/AppError.js');
+            const { AppError } = await import('../../../core/errors/models/AppError.min.js');
             // handleError because this is a terminal operation
             await AppError.handleError(error, {
                 errorCode: AppError.Types.DATABASE_ERROR,

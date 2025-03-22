@@ -1,6 +1,6 @@
 import { formatDate, formatTime, getSMSWeekday } from '../../../../../utils/date/dateUtils.min.js';
-import { buildEle, buildElementsFromConfig } from '../../../../../utils/dom/elements.js';
-import { cleanUserOutput } from '../../../../../utils/string/stringUtils.js';
+import { buildEle, buildElementsFromConfig } from '../../../../../utils/dom/elements.min.js';
+import { cleanUserOutput } from '../../../../../utils/string/stringUtils.min.js';
 
 /**
  * Calculates the difference in days between the current date and a target date.
@@ -118,7 +118,7 @@ export default async function buildClientListRow({
 
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../../errors/models/AppError.js");
+		const { AppError } = await import("../../../../../errors/models/AppError.min.js");
 		AppError.process(err, {
 			errorCode: AppError.Types.RENDER_ERROR,
 			userMessage: AppError.BaseMessages.system.render,

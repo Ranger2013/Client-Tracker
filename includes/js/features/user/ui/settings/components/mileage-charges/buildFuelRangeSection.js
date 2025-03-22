@@ -135,7 +135,7 @@ function buildMileageRangeInput(iteration, value, componentId) {
         return p1;
     }
     catch (err) {
-        import("../../../../../../core/errors/models/AppError.js")
+        import("../../../../../../core/errors/models/AppError.min.js")
             .then(({ AppError }) => {
                 throw new AppError('Error building mileage range inputs: ', {
                     originalError: err,
@@ -202,7 +202,7 @@ function buildCostInput(iteration, value, componentId) {
         return p1;
     }
     catch (err) {
-        import("../../../../../../core/errors/models/AppError.js")
+        import("../../../../../../core/errors/models/AppError.min.js")
             .then(({ AppError }) => {
                 throw new AppError('Error building cost inputs: ', {
                     originalError: err,

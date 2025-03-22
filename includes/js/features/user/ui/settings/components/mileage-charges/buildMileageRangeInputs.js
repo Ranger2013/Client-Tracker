@@ -36,7 +36,7 @@ export default function buildMileageRangeInputs({ evt, rangeContainer, fuelRange
         }
     }
     catch (err) {
-        import("../../../../../../core/errors/models/AppError.js")
+        import("../../../../../../core/errors/models/AppError.min.js")
             .then(({ AppError }) => {
                 AppError.handleError(err, {
                     errorCode: AppError.Types.RENDER_ERROR,

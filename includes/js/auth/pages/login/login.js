@@ -50,7 +50,7 @@ async function handleLogIn(evt) {
 
     }
     catch (err) {
-        const { AppError } = await import("../../../core/errors/models/AppError.js");
+        const { AppError } = await import("../../../core/errors/models/AppError.min.js");
         AppError.handleError(err, {
             errorCode: AppError.Types.AUTHORIZATION_ERROR,
             userMessage: AppError.BaseMessages.system.authorization,

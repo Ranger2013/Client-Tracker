@@ -80,7 +80,7 @@ export async function comparePasswords(evt, passwordFieldId, errorContainer, sub
 		}
 	}
 	catch (error) {
-		const { AppError } = await import('../../core/errors/models/AppError.js');
+		const { AppError } = await import('../../core/errors/models/AppError.min.js');
 
 		AppError.handleError(error, {
 			errorCode: ErrorTypes.INPUT_ERROR,
@@ -119,7 +119,7 @@ export async function checkPasswordStrength(evt, strengthBadge, errorContainer, 
 	}
 	catch (error) {
 		console.warn('Error in checkPasswordStrength:', error);
-		const { AppError } = await import('../../core/errors/models/AppError.js');
+		const { AppError } = await import('../../core/errors/models/AppError.min.js');
 
 		AppError.handleError(error, {
 			errorCode: ErrorTypes.INPUT_ERROR,

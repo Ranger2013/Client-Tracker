@@ -1,4 +1,4 @@
-import { buildEle } from '../../../../../../../core/utils/dom/elements.js';
+import { buildEle } from '../../../../../../../core/utils/dom/elements.min.js';
 
 /**
  * Builds the page components for the backup data page.

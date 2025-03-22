@@ -1,5 +1,5 @@
-import { getValidElement } from "../../../../../../core/utils/dom/elements.js";
-import getAllFormIdElements from "../../../../../../core/utils/dom/forms/getAllFormIDElements.js";
+import { getValidElement } from "../../../../../../core/utils/dom/elements.min.js";
+import getAllFormIdElements from "../../../../../../core/utils/dom/forms/getAllFormIDElements.min.js";
 
 /**
  * Populates schedule options form with existing user settings
@@ -26,7 +26,7 @@ export default async function populateScheduleOptionsForm({ form, manageUser }) 
     }
     catch (err) {
         // Die silently
-        const { AppError } = await import("../../../../../../core/errors/models/AppError.js");
+        const { AppError } = await import("../../../../../../core/errors/models/AppError.min.js");
         AppError.handleError(err, {
             errorCode: AppError.Types.FORM_POPULATION_ERROR,
             userMessage: null,

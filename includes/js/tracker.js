@@ -16,7 +16,6 @@
  * @requires ./core/auth/services/userAuthorization
  * @requires ./core/navigation/services/selectPage
  */
-
 import { userAuthorization } from './core/auth/services/userAuthorization.min.js';
 import selectPage from './core/navigation/services/selectPage.min.js';
 import mainTrackerNavigation from './core/navigation/services/trackerAppMainNavigation.min.js';
@@ -66,7 +65,7 @@ const initializeApp = async () => {
         setupErrorBoundaries();
     }
     catch (err) {
-        const { AppError } = await import("./core/errors/models/AppError.js");
+        const { AppError } = await import("./core/errors/models/AppError.min.js");
         // Here we finally handle the error, regardless of type
         await AppError.handleError(err, {
             errorCode: AppError.Types.INITIALIZATION_ERROR,
@@ -93,7 +92,7 @@ async function initializeTracker({ manageUser, manageClient }) {
         await setupBackupNotice({ errorEleID: 'backup-data-notice', manageUser });
     } 
     catch (error) {
-        const { AppError } = await import("./core/errors/models/AppError.js");
+        const { AppError } = await import("./core/errors/models/AppError.min.js");
         await AppError.process(error, {
             errorCode: AppError.Types.INITIALIZATION_ERROR,
             userMessage: 'Failed to initialize the application.'
@@ -113,7 +112,7 @@ async function handlePageNavigation(evt) {
         await selectPage({ evt, page });
     }
     catch (err) {
-        const { AppError } = await import("./core/errors/models/AppError.js");
+        const { AppError } = await import("./core/errors/models/AppError.min.js");
 
         // This function shouldn't throw any errors. selectPage handles its own errors.
         await AppError.handleError(err, {
@@ -145,7 +144,7 @@ async function handleGlobalError(error) {
     if (error.isBeingHandled) return;
 
     try {
-        const { AppError } = await import("./core/errors/models/AppError.js");
+        const { AppError } = await import("./core/errors/models/AppError.min.js");
         await AppError.handleError(error, {
             errorCode: AppError.Types.INITIALIZATION_ERROR,
             userMessage: 'An unexpected error occurred',
@@ -168,7 +167,7 @@ async function handleGlobalPromiseError(event) {
     if (event.reason?.isBeingHandled) return;
 
     try {
-        const { AppError } = await import("./core/errors/models/AppError.js");
+        const { AppError } = await import("./core/errors/models/AppError.min.js");
         await AppError.handleError(event.reason, {
             errorCode: AppError.Types.INITIALIZATION_ERROR,
             userMessage: 'An unexpected error occurred',

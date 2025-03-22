@@ -35,7 +35,7 @@ export default async function addEditClient({ cID, primaryKey, clientInfo, manag
 		initializeForm({ cID, primaryKey, clientInfo, manageClient, manageUser, componentId });
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../core/errors/models/AppError.js");
+		const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.INITIALIZATION_ERROR,
 			userMessage: AppError.BaseMessages.system.initialization,
@@ -150,7 +150,7 @@ async function handleFormValidation({ evt, field, cID, primaryKey, clientInfo, m
 		await disableEnableSubmitButton('submit-button');
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../core/errors/models/AppError.js");
+		const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
 		AppError.process(err, {
 			errorCode: AppError.Types.FORM_VALIDATION_ERROR,
 			userMessage: AppError.BaseMessages.forms.validationFailed,
@@ -187,7 +187,7 @@ async function checkClientFormValidity({ evt, cID, primaryKey, manageClient }) {
 		}
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../core/errors/models/AppError.js");
+		const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
 		AppError.process(err, {
 			errorCode: AppError.Types.FORM_VALIDATION_ERROR,
 			userMessage: AppError.BaseMessages.forms.validationFailed,
@@ -299,7 +299,7 @@ async function handleFormSubmission({evt, cID, primaryKey, clientInfo, manageCli
 	}
 	catch (err) {
 		top();
-		const { AppError } = await import("../../../../core/errors/models/AppError.js");
+		const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.FORM_SUBMISSION_ERROR,
 			userMessage: AppError.BaseMessages.forms.submissionFailed,
@@ -335,7 +335,7 @@ async function handleTrimCycleCheck({userData, componentId}) {
 		return true;
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../core/errors/models/AppError.js");
+		const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
 		AppError.process(err, {
 			errorCode: AppError.Types.FORM_VALIDATION_ERROR,
 			userMessage: AppError.BaseMessages.forms.validationFailed,

@@ -1,4 +1,4 @@
-import { AppError } from './AppError.js';
+import { AppError } from './AppError.min.js';
 import { ErrorTypes } from '../constants/errorTypes.js';
 
 export class AuthorizationError extends AppError {

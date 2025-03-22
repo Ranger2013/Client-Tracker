@@ -1,6 +1,6 @@
 import { sortByDateOnly } from '../../../../../utils/date/dateUtils.min.js';
-import { buildEle, buildElementsFromConfig } from '../../../../../utils/dom/elements.js';
-import { cleanUserOutput } from '../../../../../utils/string/stringUtils.js';
+import { buildEle, buildElementsFromConfig } from '../../../../../utils/dom/elements.min.js';
+import { cleanUserOutput } from '../../../../../utils/string/stringUtils.min.js';
 
 const PAGE_CONFIG = {
 	infoBlock: {
@@ -56,7 +56,7 @@ export default async function buildPersonalNotesSection({manageUser}) {
 	}
 	catch(err){
 		// Log the error
-		const { AppError } = await import("../../../../../errors/models/AppError.js");
+		const { AppError } = await import("../../../../../errors/models/AppError.min.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.RENDER_ERROR,
 			userMessage: null,

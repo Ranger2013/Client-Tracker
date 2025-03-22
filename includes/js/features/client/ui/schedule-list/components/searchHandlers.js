@@ -37,7 +37,7 @@ export async function handleSearch({evt, manageUser}) {
 
     }
 	 catch (err) {
-		const { AppError } = await import("../../../../../core/errors/models/AppError.js");
+		const { AppError } = await import("../../../../../core/errors/models/AppError.min.js");
 		AppError.process(err, {
 			errorCode: AppError.Types.INITIALIZATION_ERROR,
 			userMessage: 'Search functionality not available at the moment.'

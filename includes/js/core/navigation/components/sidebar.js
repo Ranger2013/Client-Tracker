@@ -14,7 +14,7 @@ export async function toggleSidebar(sidebarId = 'mySidebar') {
         }
     }
     catch (error) {
-        const { AppError } = await import("../../errors/models/AppError.js");
+        const { AppError } = await import("../../errors/models/AppError.min.js");
         AppError.handleError(error, {
             errorCode: AppError.Types.NAVIGATION_ERROR,
             userMessage: 'Navigation menu not available'

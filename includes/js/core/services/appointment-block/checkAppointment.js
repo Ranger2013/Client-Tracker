@@ -60,7 +60,7 @@ export default async function checkAppointment({
 
 		// Check if the user has schedule options or date time formats
 		if (Object.keys(scheduleOptions).length === 0 || Object.keys(dateTimeFormats).length === 0) {
-			const { AppError } = await import("../../errors/models/AppError.js");
+			const { AppError } = await import("../../errors/models/AppError.min.js");
 			AppError.process(new Error('User settings are missing for the checkAppointments system.'), {
 				errorCode: AppError.Types.SETTINGS_ERROR,
 				userMessage: 'Scheduling options or date time options are not set in your settings.',
@@ -112,7 +112,7 @@ export default async function checkAppointment({
 		}
 	}
 	catch (err) {
-		const { AppError } = await import("../../errors/models/AppError.js");
+		const { AppError } = await import("../../errors/models/AppError.min.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.RENDER_ERROR,
 			userMessage: 'Unable to check appointment availability.',

@@ -109,7 +109,7 @@ export default async function mainTrackerNavigation({ manageUser, manageClient }
         await setupRouteListeners({ manageUser, manageClient });
     }
     catch (error) {
-        const { AppError } = await import('../../errors/models/AppError.js');
+        const { AppError } = await import('../../errors/models/AppError.min.js');
         await AppError.process(error, {
             errorCode: AppError.Types.NAVIGATION_ERROR,
             userMessage: 'Failed to initialize navigation. Please contact support.',
@@ -159,7 +159,7 @@ async function setupRouteListeners({ manageUser, manageClient }) {
         });
     }
     catch (error) {
-        const { AppError } = await import('../../errors/models/AppError.js');
+        const { AppError } = await import('../../errors/models/AppError.min.js');
         await AppError.process(error, {
             errorCode: AppError.Types.INITIALIZATION_ERROR,
             userMessage: 'Failed to setup page navigation. Please refresh the page.',

@@ -1,4 +1,4 @@
-import { buildEle } from "../../../../../../core/utils/dom/elements.js";
+import { buildEle } from "../../../../../../core/utils/dom/elements.min.js";
 
 export default function buildInputBlocks(numBlocks, inputName, form, display, value = null) {
     try {
@@ -31,7 +31,7 @@ export default function buildInputBlocks(numBlocks, inputName, form, display, va
         }
     }
     catch (err) {
-        import("../../../../../../core/errors/models/AppError.js")
+        import("../../../../../../core/errors/models/AppError.min.js")
             .then(({ AppError }) => {
                 AppError.handleError(err, {
                     errorCode: AppError.Types.RENDER_ERROR,

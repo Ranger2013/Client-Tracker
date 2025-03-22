@@ -29,7 +29,7 @@ export default function displayMultipleInputs(form, componentId) {
                     makeInputsGreen(form, componentId);
                 }
                 catch (err) {
-                    const { AppError } = await import("../../../../../../core/errors/models/AppError.js");
+                    const { AppError } = await import("../../../../../../core/errors/models/AppError.min.js");
                     // Handle error terminally here because:
                     // 1. It's isolated to this input section
                     // 2. Rest of form can still work

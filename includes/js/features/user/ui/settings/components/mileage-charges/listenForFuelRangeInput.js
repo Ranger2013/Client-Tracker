@@ -14,7 +14,7 @@ export default async function listenForFuelRangeInput({ userClass, rangeContaine
             mileageCharges = await userClass.getMileageCharges();
         }
         catch(err) {
-            const { AppError } = await import("../../../../../../core/errors/models/AppError.js");
+            const { AppError } = await import("../../../../../../core/errors/models/AppError.min.js");
             await AppError.handleError(err, {
                 errorCode: AppError.Types.FORM_POPULATION_ERROR,
                 userMessage: null,

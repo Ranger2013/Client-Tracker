@@ -6,13 +6,13 @@ import { cleanUserOutput } from '../../../../../utils/string/stringUtils.min.js'
 
 const COMPONENT_ID = 'edit-horse';
 
-export default async function buildEditHorsePage({ cID, primaryKey, mainContainer, manageClient, manageUser }){
-	try{
+export default async function buildEditHorsePage({ cID, primaryKey, mainContainer, manageClient, manageUser }) {
+	try {
 		// Clear any previous page messages
 		clearMsg({ container: 'page-msg' });
 
 		// Make sure we have a cID and primaryKey
-		if(!(cID || primaryKey)) throw new Error('Unable to build the edit horse page. Certain parameters are missing.');
+		if (!(cID || primaryKey)) throw new Error('Unable to build the edit horse page. Certain parameters are missing.');
 
 		// Get the client's information
 		const clientInfo = await manageClient.getClientInfo({ primaryKey });
@@ -20,7 +20,13 @@ export default async function buildEditHorsePage({ cID, primaryKey, mainContaine
 		const clientHorses = clientInfo?.horses || [];
 
 		// Setup the select options for the horse list
-		const selectOptionArray = clientHorses.map(horse => ({ value: horse.hID, text: cleanUserOutput(horse.horse_name), 'data-service-type': horse.service_type, 'data-trim-cycle': horse.trim_cycle }));
+		const selectOptionArray = clientHorses.map(horse => ({
+			value: horse.hID,
+			text: cleanUserOutput(horse.horse_name),
+			'data-service-type': horse.service_type,
+			'data-trim-cycle': horse.trim_cycle,
+			'data-horse-type': horse.horse_type,
+		}));
 		selectOptionArray.unshift({ value: 'null', text: '-- Select a horse --' });
 
 		const [[container, card], selectHorse] = await Promise.all([
@@ -54,14 +60,14 @@ export default async function buildEditHorsePage({ cID, primaryKey, mainContaine
 		mainContainer.appendChild(container);
 
 		// Initialize the UI handler file
-		const { default: editClientHorse } = await import('../../../../../../features/client/ui/edit-horse/editClientHorse.js');
+		const { default: editClientHorse } = await import('../../../../../../features/client/ui/edit-horse/editClientHorse.min.js');
 		editClientHorse({ cID, primaryKey, mainContainer, manageClient, manageUser, componentId: COMPONENT_ID });
 
 		// Remove event listeners
 		return () => removeListeners(COMPONENT_ID);
 	}
-	catch(err){
-		const { AppError } = await import("../../../../../errors/models/AppError.js");
+	catch (err) {
+		const { AppError } = await import("../../../../../errors/models/AppError.min.js");
 		AppError.process(err, {
 			errorCode: AppError.Types.RENDER_ERROR,
 			userMessage: null,

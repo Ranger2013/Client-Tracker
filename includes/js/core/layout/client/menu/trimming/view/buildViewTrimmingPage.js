@@ -28,23 +28,6 @@ export default async function buildViewTrimmingPage({ cID, primaryKey, mainConta
 		const clientTrimInfo = await manageClient.getClientTrimmingInfo(cID);
 		const lastThreeTrims = clientTrimInfo.slice(-3);
 
-		// // Build DOM tree recursively - add this before the TITLEBLOCK_LAYOUT
-		// const buildElementTree = (config) => {
-		// 	const element = buildEle({
-		// 		type: config.type,
-		// 		myClass: config.myClass,
-		// 		text: config.text
-		// 	});
-
-		// 	if (config.children) {
-		// 		Object.values(config.children).forEach(childConfig => {
-		// 			element.appendChild(buildElementTree(childConfig));
-		// 		});
-		// 	}
-
-		// 	return element;
-		// };
-
 		// Restructure the layout object to reflect DOM hierarchy
 		const TITLEBLOCK_LAYOUT = {
 			root: {
@@ -269,7 +252,7 @@ export default async function buildViewTrimmingPage({ cID, primaryKey, mainConta
 		mainContainer.innerHTML = '';
 		mainContainer.appendChild(container);
 
-		const { default: viewTrimming } = await import("../../../../../../features/client/ui/view-trimming/viewTrimmingJS");
+		const { default: viewTrimming } = await import("../../../../../../features/client/ui/view-trimming/viewTrimmingJS.min.js");
 		viewTrimming({ cID, primaryKey, mainContainer, manageClient, manageUser, componentId: COMPONENT_ID});
 
 		return () => removeListeners(COMPONENT_ID);

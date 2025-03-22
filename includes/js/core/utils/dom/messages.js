@@ -1,4 +1,4 @@
-import { getValidElement } from './elements.js';
+import { getValidElement } from './elements.min.js';
 
 /**
  * Safely displays a message with fallback handling
@@ -54,7 +54,7 @@ export function myError(ele, msg, target = null) {
         }
     }
     catch (err) {
-        import('../../errors/models/AppError.js')
+        import('../../errors/models/AppError.min.js')
             .then(({ AppError }) => {
                 throw new AppError('Display error failed', {
                     originalError: err,
@@ -88,7 +88,7 @@ export function mySuccess(ele, msg, color = 'w3-text-green') {
         element.classList.remove('w3-hide');
     }
     catch (err) {
-        import('../../errors/models/AppError.js')
+        import('../../errors/models/AppError.min.js')
             .then(({ AppError }) => {
                 throw new AppError('Success message display failed', {
                     originalError: err,
@@ -151,7 +151,7 @@ export function clearMsg({ container, hide = false, input = null }) {
         }
     }
     catch (err) {
-        import('../../errors/models/AppError.js')
+        import('../../errors/models/AppError.min.js')
             .then(({ AppError }) => {
                 throw new AppError('Failed to clear message', {
                     originalError: err,

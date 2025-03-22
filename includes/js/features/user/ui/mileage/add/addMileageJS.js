@@ -51,7 +51,7 @@ export default async function addMileage({ manageClient, manageUser, componentId
 		})
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../../core/errors/models/AppError.js");
+		const { AppError } = await import("../../../../../core/errors/models/AppError.min.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.INITIALIZATION_ERROR,
 			message: AppError.BaseMessages.system.initialization,

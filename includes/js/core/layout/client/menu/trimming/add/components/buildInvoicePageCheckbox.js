@@ -1,4 +1,4 @@
-import { buildElementsFromConfig } from '../../../../../../utils/dom/elements.js';
+import { buildElementsFromConfig } from '../../../../../../utils/dom/elements.min.js';
 
 export default async function buildInvoicePaidCheckbox() {
 	try {

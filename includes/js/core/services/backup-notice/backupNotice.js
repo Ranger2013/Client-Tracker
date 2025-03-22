@@ -29,7 +29,7 @@ export default async function setupBackupNotice({ errorEleID, manageUser }) {
         });
     }
     catch (error) {
-        const { AppError } = await import("../../errors/models/AppError.js");
+        const { AppError } = await import("../../errors/models/AppError.min.js");
         AppError.handleError(error, {
             originalError: error,
             errorCode: AppError.Types.BACKUP_ERROR,
@@ -60,7 +60,7 @@ async function initializeBackupNotice({ reminders, displayElement, manageUser })
         }
     }
     catch (err) {
-        const { AppError } = await import("../../errors/models/AppError.js");
+        const { AppError } = await import("../../errors/models/AppError.min.js");
         throw new AppError('Failed to initialize backup notice: ', {
             originalError: err,
             errorCode: AppError.Types.BACKUP_ERROR,
@@ -150,7 +150,7 @@ async function closeBackupNotice({noticeEle, manageUser}) {
         removeListeners(BACKUP_NOTICE_ID);
     }
     catch (err) {
-        const { AppError } = await import("../../errors/models/AppError.js");
+        const { AppError } = await import("../../errors/models/AppError.min.js");
         AppError.handleError(err, {
             errorCode: AppError.Types.DATABASE_ERROR,
             userMessage: AppError.BaseMessages.system.server,

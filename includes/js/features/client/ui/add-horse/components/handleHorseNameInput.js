@@ -1,8 +1,8 @@
-import { disableEnableSubmitButton } from '../../../../../core/utils/dom/elements';
-import { trimCycleRange } from '../../../../../core/utils/dom/forms/trimCycleConfigurations';
-import { addListener } from '../../../../../core/utils/dom/listeners';
-import { clearMsg, safeDisplayMessage } from '../../../../../core/utils/dom/messages';
-import { ucwords, underscoreToHyphen, underscoreToHyphenPlusError } from '../../../../../core/utils/string/stringUtils';
+import { disableEnableSubmitButton } from '../../../../../core/utils/dom/elements.min.js';
+import { trimCycleRange } from '../../../../../core/utils/dom/forms/trimCycleConfigurations.min.js';
+import { addListener } from '../../../../../core/utils/dom/listeners.min.js';
+import { clearMsg, safeDisplayMessage } from '../../../../../core/utils/dom/messages.min.js';
+import { ucwords, underscoreToHyphen, underscoreToHyphenPlusError } from '../../../../../core/utils/string/stringUtils.min.js';
 
 // Set up debugging log
 const COMPONENT = 'Add Horse Page';
@@ -54,7 +54,7 @@ export async function handleHorseNameInput({ evt, cID, primaryKey, manageClient,
 	}
 	catch (err) {
 		// Handles it's own errors
-		const { AppError } = await import("../../../../../core/errors/models/AppError.js");
+		const { AppError } = await import("../../../../../core/errors/models/AppError.min.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.INITIALIZATION_ERROR,
 			userMessage: AppError.BaseMessages.system.initialization,
@@ -107,7 +107,7 @@ export async function handleAddHorseFormSubmission({ evt, cID, primaryKey, manag
 		}
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../../core/errors/models/AppError.js");
+		const { AppError } = await import("../../../../../core/errors/models/AppError.min.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.FORM_SUBMISSION_ERROR,
 			userMessage: AppError.BaseMessages.forms.submissionFailed,
@@ -134,7 +134,15 @@ async function validateAddHorseForm(userData) {
 					targetError: 'trim-cycle-error',
 					target: 'trim-cycle'
 				}
-			}
+			},
+			{
+				test: () => userData.horse_type !== 'null',
+				error: {
+					message: 'Please select a horse type.',
+					targetError: 'horse-type-error',
+					target: 'horse-type'
+				}
+			},
 		];
 
 		const errors = validations.filter(validation => !validation.test()).map(validation => validation.error);
@@ -153,7 +161,7 @@ async function validateAddHorseForm(userData) {
 		return true;
 	}
 	catch(err){
-		const { AppError } = await import("../../../../../core/errors/models/AppError.js");
+		const { AppError } = await import("../../../../../core/errors/models/AppError.min.js");
 		AppError.process(err, {
 			errorCode: AppError.Types.VALIDATION_ERROR,
 			userMessage: AppError.BaseMessages.forms.validationFailed,

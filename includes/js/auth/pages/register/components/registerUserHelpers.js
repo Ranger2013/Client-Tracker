@@ -19,7 +19,7 @@ export async function getTerms(type) {
     catch (err) {
         const [{default: openModal}, { AppError }] = await Promise.all([
             import("../../../../core/services/modal/openModal.js"),
-            import("../../../../core/errors/models/AppError.js")
+            import("../../../../core/errors/models/AppError.min.js")
         ]);
 
         openModal({ 
@@ -84,7 +84,7 @@ export async function handleUserRegistration(evt) {
         }
     }
     catch (err) {
-        const { AppError } = await import("../../../../core/errors/models/AppError.js");
+        const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
         AppError.handleError(err, {
             errorCode: AppError.Types.FORM_SUBMISSION_ERROR,
             userMessage: 'Unable to complete registration. Please try again later.',

@@ -1,5 +1,5 @@
-import getAllFormIdElements from "../../../../../../core/utils/dom/forms/getAllFormIDElements.js";
-import buildInputBlocks from "./buildInputBlocks.js";
+import getAllFormIdElements from "../../../../../../core/utils/dom/forms/getAllFormIDElements.min.js";
+import buildInputBlocks from "./buildInputBlocks.min.js";
 
 /**
  * Populates the farrier prices form with saved pricing data
@@ -24,7 +24,7 @@ export default async function populateFarrierPricesForm({formEle, manageUser}) {
     }
     catch (err) {
         // Terminal - fails silently
-        const { AppError } = await import("../../../../../../core/errors/models/AppError.js");
+        const { AppError } = await import("../../../../../../core/errors/models/AppError.min.js");
         AppError.handleError(err, {
             errorCode: AppError.Types.FORM_POPULATION_ERROR,
             userMessage: null,

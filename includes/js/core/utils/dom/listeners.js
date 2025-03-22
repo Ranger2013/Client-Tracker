@@ -1,4 +1,4 @@
-import { getValidElement } from './elements.js';
+import { getValidElement } from './elements.min.js';
 
 /**
  * Tracks event listeners by component for cleanup
@@ -51,7 +51,7 @@ export function addListener({elementOrId, eventType, handler, componentId}) {
         });
 
         // Handle error asynchronously
-        import('../../errors/models/AppError.js')
+        import('../../errors/models/AppError.min.js')
             .then(({ AppError }) => {
                 return AppError.handleError(error, {
                     errorCode: AppError.Types.INITIALIZATION_ERROR,

@@ -1,4 +1,4 @@
-import { buildEle } from '../../../../../utils/dom/elements';
+import { buildEle } from '../../../../../utils/dom/elements.min.js';
 
 /**
 * Builds schedule title block with column headers

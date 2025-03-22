@@ -204,7 +204,7 @@ async function initializeEventHandlers({ mainContainer, manageClient, manageUser
 		return () => removeListeners(COMPONENT_ID);
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../errors/models/AppError.js");
+		const { AppError } = await import("../../../../errors/models/AppError.min.js");
 		AppError.process(err, {
 			errorCode: AppError.Types.INITIALIZATION_ERROR,
 			userMessage: AppError.BaseMessages.system.initialization,

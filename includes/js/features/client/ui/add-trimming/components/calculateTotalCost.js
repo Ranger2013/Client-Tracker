@@ -42,7 +42,7 @@ export default async function calculateTotalCost() {
 		paymentInput.value = grandTotal;
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../../core/errors/models/AppError.js");
+		const { AppError } = await import("../../../../../core/errors/models/AppError.min.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.INITIALIZATION_ERROR,
 			userMessage: 'We encountered an error while calculating the total cost. You can enter it manually.',

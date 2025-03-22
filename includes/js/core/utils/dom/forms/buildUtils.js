@@ -1,4 +1,4 @@
-import { buildEle } from '../elements';
+import { buildEle } from '../elements.min.js';
 
 const COMPONENT = 'Build DOM Form Utils';
 const DEBUG = false;
@@ -96,7 +96,7 @@ export async function buildPageContainer({ pageTitle, clientName = null, cID = n
 		  return [container, card];
 	 }
 	 catch (err) {
-		  const { AppError } = await import("../../../errors/models/AppError.js");
+		  const { AppError } = await import("../../../errors/models/AppError.min.js");
 		  AppError.process(err, {
 				errorCode: AppError.Types.RENDER_ERROR,
 				userMessage: AppError.BaseMessages.system.render,
@@ -138,7 +138,7 @@ export async function buildSubmitButtonSection(buttonText, buttonColor = null, i
 
 	 }
 	 catch (err) {
-		  const { AppError } = await import("../../../errors/models/AppError.js");
+		  const { AppError } = await import("../../../errors/models/AppError.min.js");
 		AppError.process(err, {
 			errorCode: AppError.Types.RENDER_ERROR,
 			userMessage: AppError.BaseMessages.system.render,
@@ -194,7 +194,7 @@ export async function buildSubmitDeleteButtonSection({ submitButtonText, deleteB
 		  return row;
 	 }
 	 catch (err) {
-		  const { AppError } = await import("../../../errors/models/AppError.js");
+		  const { AppError } = await import("../../../errors/models/AppError.min.js");
 		AppError.process(err, {
 			errorCode: AppError.Types.RENDER_ERROR,
 			userMessage: AppError.BaseMessages.system.render,
@@ -227,7 +227,7 @@ export async function buildTwoColumnInputSection({
 	 try {
 		// Lazy load for this function
 		const { getCurrentTime, getReadableCurrentFutureDate } = await import('../../date/dateUtils.min.js');
-		const { cleanUserOutput } = await import('../../string/stringUtils.js');
+		const { cleanUserOutput } = await import('../../string/stringUtils.min.js');
 
 		  const INPUT_TYPES = {
 				date: {
@@ -300,7 +300,7 @@ export async function buildTwoColumnInputSection({
 
 	 }
 	 catch (err) {
-		  const { AppError } = await import("../../../errors/models/AppError.js");
+		  const { AppError } = await import("../../../errors/models/AppError.min.js");
 		  AppError.process(err, {
 				errorCode: AppError.Types.RENDER_ERROR,
 				userMessage: AppError.BaseMessages.system.render,
@@ -357,7 +357,7 @@ export async function buildTwoColumnRadioButtonSection({ labelText, required = u
 
     }
     catch (err) {
-        const { AppError } = await import("../../../errors/models/AppError.js");
+        const { AppError } = await import("../../../errors/models/AppError.min.js");
 		AppError.process(err, {
 			errorCode: AppError.Types.RENDER_ERROR,
 			userMessage: AppError.BaseMessages.system.render,
@@ -442,7 +442,7 @@ export async function buildTwoColumnSelectElementSection({
 
 	 }
 	 catch (err) {
-		  const { AppError } = await import("../../../errors/models/AppError.js");
+		  const { AppError } = await import("../../../errors/models/AppError.min.js");
 		AppError.process(err, {
 			errorCode: AppError.Types.RENDER_ERROR,
 			userMessage: AppError.BaseMessages.system.render,
@@ -491,7 +491,7 @@ export async function buildTwoColumnTextareaSection({
 		return row;
 	}
 	catch (err) {
-		const { AppError } = await import("../../../errors/models/AppError.js");
+		const { AppError } = await import("../../../errors/models/AppError.min.js");
 		AppError.process(err, {
 			errorCode: AppError.Types.RENDER_ERROR,
 			userMessage: AppError.BaseMessages.system.render,

@@ -1,5 +1,6 @@
-import { disableEnableSubmitButton, updateSelectOptions } from '../../../../../core/utils/dom/elements';
-import { safeDisplayMessage } from '../../../../../core/utils/dom/messages';
+import { disableEnableSubmitButton, updateSelectOptions } from '../../../../../core/utils/dom/elements.min.js';
+import { trimCycleRange } from '../../../../../core/utils/dom/forms/trimCycleConfigurations.min.js';
+import { safeDisplayMessage } from '../../../../../core/utils/dom/messages.min.js';
 
 export default async function handleEditHorseFormSubmission({ evt, cID, primaryKey, horseContainer, manageClient, componentId }) {
 	try {
@@ -15,14 +16,11 @@ export default async function handleEditHorseFormSubmission({ evt, cID, primaryK
 		// Get the form data
 		const userData = Object.fromEntries(new FormData(evt.target));
 
-		// Make sure that the horse-name is not empty
-		if (userData.horse_name === '') {
-			safeDisplayMessage({
-				elementId: `${evt.target.elements['horse_name'].id}-error`,
-				message: 'Horse name cannot be empty.',
-				targetId: evt.target.elements['horse_name'].id,
-			});
+		const errors = await validateEditHorseForm(userData);
 
+		if (errors.length > 0) {
+			const { default: displayFormErrors } = await import("../../../../../core/utils/dom/forms/displayFormValidationErrors.min.js");
+			displayFormErrors(errors, { formMessage: 'Please fix the following errors', scrollToTope: true });
 			disableEnableSubmitButton('submit-button');
 			return;
 		}
@@ -62,7 +60,7 @@ export default async function handleEditHorseFormSubmission({ evt, cID, primaryK
 		});
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../../core/errors/models/AppError.js");
+		const { AppError } = await import("../../../../../core/errors/models/AppError.min.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.FORM_SUBMISSION_ERROR,
 			userMessage: AppError.BaseMessages.forms.submissionFailed,
@@ -111,11 +109,55 @@ async function deleteClientHorse({ evt, manageClient, cID, primaryKey, horseCont
 		});
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../../core/errors/models/AppError.js");
+		const { AppError } = await import("../../../../../core/errors/models/AppError.min.js");
 		AppError.process(err, {
 			errorCode: AppError.Types.FORM_SUBMISSION_ERROR,
 			userMessage: AppError.BaseMessages.forms.submissionFailed,
 			displayTarget: 'form-msg',
+		}, true);
+	}
+}
+
+async function validateEditHorseForm(userData) {
+	try {
+		const errors = [];
+
+		// Validation rules
+		const validations = [
+			{
+				field: 'horse_name',
+				isValid: value => value !== '',
+				message: 'Horse name cannot be empty.'
+			},
+			{
+				field: 'horse_type',
+				isValid: value => value !== 'null',
+				message: 'Please select a horse type.'
+			},
+			{
+				field: 'trim_cycle',
+				isValid: value => trimCycleRange.includes(parseInt(value,10)),
+				message: 'Please select a trim cycle.'
+			}
+		];
+
+		// Apply each validation rule
+		validations.forEach(validation => {
+			if (!validation.isValid(userData[validation.field])) {
+				errors.push({
+					input: validation.field,
+					msg: validation.message
+				});
+			}
+		});
+
+		return errors;
+	}
+	catch (err) {
+		const { AppError } = await import("../../../../../core/errors/models/AppError.min.js");
+		AppError.process(err, {
+			errorCode: AppError.Types.FORM_VALIDATION_ERROR,
+			userMessage: AppError.BaseMessages.forms.validationFailed,
 		}, true);
 	}
 }

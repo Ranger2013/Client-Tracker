@@ -31,7 +31,7 @@ export async function updateTrimCost({ blockElementNode, numberHorses, userFarri
 		});
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../../core/errors/models/AppError.js");
+		const { AppError } = await import("../../../../../core/errors/models/AppError.min.js");
 		AppError.process(err, {
 			errorCode: AppError.Types.INITIALIZATION_ERROR,
 			userMessage: 'We encountered an error updating the trim cost.',

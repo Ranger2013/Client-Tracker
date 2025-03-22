@@ -1,6 +1,6 @@
-import { buildGenericSelectOptions } from '../../../../../core/utils/dom/elements.js';
-import { ucwords, underscoreToSpaces } from '../../../../../core/utils/string/stringUtils.js';
-import buildServiceBlocks from './buildServiceBlocks.js';
+import { buildGenericSelectOptions } from '../../../../../core/utils/dom/elements.min.js';
+import { ucwords, underscoreToSpaces } from '../../../../../core/utils/string/stringUtils.min.js';
+import buildServiceBlocks from './buildServiceBlocks.min.js';
 
 // Set up debugging const and arrow function
 const COMPONENT = 'AutoFillHorseList';
@@ -83,7 +83,7 @@ export default async function autoFillHorseList({ totalHorses, optionsConfig }) 
 
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../../core/errors/models/AppError.js");
+		const { AppError } = await import("../../../../../core/errors/models/AppError.min.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.INITIALIZATION_ERROR,
 			userMessage: 'We encountered an error auto-filling the horse list.',

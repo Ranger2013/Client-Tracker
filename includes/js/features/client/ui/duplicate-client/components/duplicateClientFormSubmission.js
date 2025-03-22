@@ -63,7 +63,7 @@ export default async function duplicateClientFormSubmission({evt, manageClient, 
 		}
 	}
 	catch(err){
-		const { AppError } = await import("../../../../../core/errors/models/AppError.js");
+		const { AppError } = await import("../../../../../core/errors/models/AppError.min.js");
 		AppError.process(err, {
 			errorCode: AppError.Types.FORM_SUBMISSION_ERROR,
 			userMessage: 'Unable to process the form submission at this time.',

@@ -152,7 +152,7 @@ export default async function addTrimming({ cID, primaryKey, mainContainer, mana
 	}
 	catch (err) {
 		debugLog('Add Trimming Error: ', err);
-		const { AppError } = await import("../../../../core/errors/models/AppError.js");
+		const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.INITIALIZATION_ERROR,
 			userMessage: AppError.BaseMessages.system.initialization,
@@ -183,7 +183,7 @@ async function numberOfHorsesServiced({ evt, primaryKey, manageClient, manageUse
 	catch (err) {
 		disableEnableSubmitButton('submit-button');
 
-		const { AppError } = await import("../../../../core/errors/models/AppError.js");
+		const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.RENDER_ERROR,
 			userMessage: AppError.BaseMessages.system.render,
@@ -205,7 +205,7 @@ async function disableMileageCharges({ evt }) {
 		await calculateTotalCost();
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../core/errors/models/AppError.js");
+		const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.INITIALIZATION_ERROR,
 			userMessage: 'We encountered an error trying to disable mileage charges.'
@@ -258,7 +258,7 @@ async function updateAllHorseListSelectElements(evt) {
 		debugLog('Previous Options Map:', prevOptions);
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../core/errors/models/AppError.js");
+		const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.INITIALIZATION_ERROR,
 			userMessage: 'We encountered an error trying to update the horse list select elements.'
@@ -326,7 +326,7 @@ async function changeServiceCostToMatchHorseService({ evt, primaryKey, manageCli
         }
     }
     catch (err) {
-        const { AppError } = await import("../../../../core/errors/models/AppError.js");
+        const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
         AppError.handleError(err, {
             errorCode: AppError.Types.INITIALIZATION_ERROR,
             userMessage: 'We encountered an error trying to update the service cost to match the horse service.'
@@ -344,7 +344,7 @@ async function updateHorseListLabel({evt}){
 		horseNameLabel.innerHTML = `Horse's Name: <span class="w3-small">${ucwords(underscoreToSpaces(serviceType))} Cycle: ${serviceTime / 7} weeks</span>`;
 	}
 	catch(err){
-		const { AppError } = await import("../../../../core/errors/models/AppError.js");
+		const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.RENDER_ERROR,
 			userMessage: null,

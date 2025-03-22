@@ -43,6 +43,10 @@ export default async function editClientHorse({ cID, primaryKey, mainContainer, 
 				clearMsg({ container: `${evt.target.id}-error`, hide: true, input: evt.target });
 				disableEnableSubmitButton('submit-button');
 			},
+			'focusin:horse-type': (evt) => {
+				clearMsg({ container: `${evt.target.id}-error`, hide: true, input: evt.target });
+				disableEnableSubmitButton('submit-button');
+			},
 			'submit:edit-horse-form': async (evt) => {
 				evt.preventDefault();
 				const horseContainer = document.getElementById('horse-container'); // Get fresh reference
@@ -66,7 +70,7 @@ export default async function editClientHorse({ cID, primaryKey, mainContainer, 
 		});
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../core/errors/models/AppError.js");
+		const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.INITIALIZATION_ERROR,
 			userMessage: AppError.BaseMessages.system.initialization,
@@ -81,15 +85,11 @@ async function showEditHorseForm({ evt, cID, primaryKey, manageClient, manageUse
 		const selectedIndex = evt.target.options[evt.target.selectedIndex];
 		const hID = evt.target.value;
 		const horseName = selectedIndex.text;
+		const horseType = selectedIndex.dataset.horseType;
 		const horseServiceType = selectedIndex.dataset.serviceType;
 		const horseTrimCycle = selectedIndex.dataset.trimCycle;
 
-		console.log('hID: ', hID);
-		console.log('horseName: ', horseName);
-		console.log('horseServiceType: ', horseServiceType);
-		console.log('horseTrimCycle: ', horseTrimCycle);
-
-		if(hID === 'null') {
+		if (hID === 'null') {
 			horseContainer.innerHTML = '';
 			return;
 		}
@@ -113,7 +113,8 @@ async function showEditHorseForm({ evt, cID, primaryKey, manageClient, manageUse
 		const elements = buildElementsFromConfig(FORM_CONFIG);
 
 		const [
-			horseNameInput, 
+			horseNameInput,
+			horseTypeSection,
 			radioButton,
 			trimCycle,
 			submitDeleteButtons,
@@ -126,6 +127,14 @@ async function showEditHorseForm({ evt, cID, primaryKey, manageClient, manageUse
 				inputValue: cleanUserOutput(horseName),
 				inputTitle: "Horse's Name",
 				required: true,
+			}),
+			buildTwoColumnSelectElementSection({
+				labelText: "Horse Type: ",
+				selectID: 'horse-type',
+				selectName: 'horse_type',
+				selectTitle: "Horse Type",
+				required: true,
+				options: typeHorse(horseType),
 			}),
 			buildTwoColumnRadioButtonSection({
 				labelText: 'Service Type: ',
@@ -141,7 +150,7 @@ async function showEditHorseForm({ evt, cID, primaryKey, manageClient, manageUse
 				selectName: 'trim_cycle',
 				selectTitle: 'Trim Cycle',
 				required: true,
-				options: trimCycleConfigurations({trim_cycle: horseTrimCycle}),
+				options: trimCycleConfigurations({ trim_cycle: horseTrimCycle }),
 			}),
 			buildSubmitDeleteButtonSection({
 				submitButtonText: 'Edit Horse',
@@ -149,16 +158,35 @@ async function showEditHorseForm({ evt, cID, primaryKey, manageClient, manageUse
 			}),
 		]);
 
-		elements.form.append(elements.hiddenHID, elements.hiddenPrimaryKey, horseNameInput, radioButton, trimCycle, submitDeleteButtons);
+		elements.form.append(elements.hiddenHID, elements.hiddenPrimaryKey, horseNameInput, horseTypeSection, radioButton, trimCycle, submitDeleteButtons);
 		horseContainer.innerHTML = '';
 		horseContainer.appendChild(elements.form);
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../core/errors/models/AppError.js");
+		const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.RENDER_ERROR,
 			userMessage: 'An error occurred while trying to show the edit horse form.',
 			displayTarget: 'horse-container',
 		});
 	}
+}
+
+function typeHorse(horseType) {
+	const TYPE_HORSE_MAPPING = [
+		{ value: 'null', text: '-- Select Horse Type --' },
+		{ value: 'draft', text: 'Draft' },
+		{ value: 'horse', text: 'Horse' },
+		{ value: 'mule', text: 'Mule' },
+		{ value: 'donkey', text: 'Donkey' },
+		{ value: 'mini_donkey', text: 'Mini Donkey' },
+		{ value: 'pony', text: 'Pony' },
+		{ value: 'mini_pony', text: 'Mini Pony' },
+	];
+
+	return TYPE_HORSE_MAPPING.map(type => ({
+		value: type.value,
+		text: type.text,
+		selected: horseType === type.value ? true : undefined,
+	}));
 }

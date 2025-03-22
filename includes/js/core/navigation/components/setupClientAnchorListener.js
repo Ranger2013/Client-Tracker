@@ -25,7 +25,7 @@ export default async function setupClientAnchorListener({ manageUser, manageClie
 		}
 	}
 	catch(err){
-		const { AppError } = await import("../../errors/models/AppError.js");
+		const { AppError } = await import("../../errors/models/AppError.min.js");
 		AppError.handle(err, {
 			errorCode: AppError.Types.INITIALIZATION_ERROR,
 			userMessage: 'Client name navigation failed to initialize.',

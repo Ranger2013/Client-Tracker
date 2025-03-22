@@ -20,7 +20,7 @@ export default async function handlePerMileFormSubmission({ evt, manageUser }) {
 			}
 		}
 		catch (err) {
-			const { AppError } = await import("../../../../../../core/errors/models/AppError.js");
+			const { AppError } = await import("../../../../../../core/errors/models/AppError.min.js");
 			AppError.handleError(err, {
 				errorCode: AppError.Types.FORM_VALIDATION_ERROR,
 				userMessage: AppError.BaseMessages.forms.validationFailed,
@@ -50,7 +50,7 @@ export default async function handlePerMileFormSubmission({ evt, manageUser }) {
 	}
 	catch (err) {
 		console.warn('Handle per mile form submission error: ', err);
-		const { AppError } = await import("../../../../../../core/errors/models/AppError.js");
+		const { AppError } = await import("../../../../../../core/errors/models/AppError.min.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.FORM_SUBMISSION_ERROR,
 			userMessage: AppError.BaseMessages.forms.submissionFailed,

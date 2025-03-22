@@ -44,7 +44,7 @@ export default async function appointmentBlockData(data) {
 		};
 	}
 	catch (err) {
-		const { AppError } = await import("../../../errors/models/AppError.js");
+		const { AppError } = await import("../../../errors/models/AppError.min.js");
 		AppError.process(err, {
 			errorCode: AppError.Types.PROCESSING_ERROR,
 			userMessage: 'Unable to process the appointment data.',

@@ -72,7 +72,7 @@ export async function userAuthorization() {
         return userToken;
     }
     catch (error) {
-        const { AppError } = await import('../../errors/models/AppError.js');
+        const { AppError } = await import('../../errors/models/AppError.min.js');
         AppError.handleError(error, {
             errorCode: AppError.Types.AUTHORIZATION_ERROR,
             userMessage: null,
@@ -115,7 +115,7 @@ async function verifyTokenWithServer(token){
         // })
     }
     catch(err){
-        const { AppError } = await import('../../errors/models/AppError.js');
+        const { AppError } = await import('../../errors/models/AppError.min.js');
         AppError.handleError(err,{
             errorCode: AppError.Types.AUTHORIZATION_ERROR,
             userMessage: null,

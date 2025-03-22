@@ -66,7 +66,7 @@ async function setupPageTabListeners({tabs, fm, tabContentContainer}) {
 						cleanup = await tabAction({evt, messageContainer: fm, tabContainer: tabContentContainer, manageUser});
 					}
 					catch(err){
-						const { AppError } = await import("../../../../../core/errors/models/AppError.js");
+						const { AppError } = await import("../../../../../core/errors/models/AppError.min.js");
 						AppError.handleError(err, {
 							errorCode: AppError.Types.RENDER_ERROR,
 							userMessage: AppError.BaseMessages.system.render,
@@ -78,7 +78,7 @@ async function setupPageTabListeners({tabs, fm, tabContentContainer}) {
 		}
 	}
 	catch(err){
-		const { AppError } = await import("../../../../../core/errors/models/AppError.js");
+		const { AppError } = await import("../../../../../core/errors/models/AppError.min.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.INITIALIZATION_ERROR,
 			userMessage: AppError.BaseMessages.system.initialization,

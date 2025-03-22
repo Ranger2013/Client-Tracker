@@ -1,6 +1,6 @@
 import { formatDate, formatTime } from '../../../../../core/utils/date/dateUtils.min.js';
-import { buildEle, getValidElement } from '../../../../../core/utils/dom/elements.js';
-import { cleanUserOutput } from '../../../../../core/utils/string/stringUtils.js';
+import { buildEle, getValidElement } from '../../../../../core/utils/dom/elements.min.js';
+import { cleanUserOutput } from '../../../../../core/utils/string/stringUtils.min.js';
 
 // Handle debug logging
 const COMPONENT = 'Show Client Selection';
@@ -25,7 +25,7 @@ export default async function showClientSelection({ evt, duplicateClients, manag
 		renderPage(pageComponents);
 	}
 	catch(err){
-		const { AppError } = await import("../../../../../core/errors/models/AppError.js");
+		const { AppError } = await import("../../../../../core/errors/models/AppError.min.js");
 		AppError.process(err,{
 			errorCode: AppError.Types.RENDER_ERROR,
 			userMessage: AppError.BaseMessages.system.render,

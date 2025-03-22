@@ -27,7 +27,7 @@ export default async function populateDateTimeForm(manageUser, domElements) {
 
     } 
     catch (err) {
-        const { AppError } = await import("../../../../../../core/errors/models/AppError.js");
+        const { AppError } = await import("../../../../../../core/errors/models/AppError.min.js");
         await AppError.handleError(err, {
             errorCode: AppError.Types.SETTINGS_ERROR,
             userMessage: 'Failed to get the local date/time options.',

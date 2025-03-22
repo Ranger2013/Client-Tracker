@@ -81,7 +81,7 @@ export default async function buildSearchBlockSection(filterOptions) {
 		return elements.searchBlock;
 	}
 	catch (err) {
-		const { AppError } = await import("../../errors/models/AppError.js");
+		const { AppError } = await import("../../errors/models/AppError.min.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.RENDER_ERROR,
 			userMessage: AppError.BaseMessages.system.render,

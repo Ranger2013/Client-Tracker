@@ -47,7 +47,7 @@ export default async function handleByRangeFormSubmission({evt, manageUser}) {
     }
     catch (err) {
         top();
-        const { AppError } = await import("../../../../../../core/errors/models/AppError.js");
+        const { AppError } = await import("../../../../../../core/errors/models/AppError.min.js");
         AppError.handleError(err, {
             errorCode: AppError.Types.FORM_SUBMISSION_ERROR,
             userMessage: 'Unable to add mileage charges at this time',

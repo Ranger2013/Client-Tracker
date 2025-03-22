@@ -19,7 +19,7 @@ export default async function removeLastChildAndGetOptions(container) {
 		return { option: selectedOptions, index };
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../../core/errors/models/AppError.js");
+		const { AppError } = await import("../../../../../core/errors/models/AppError.min.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.RENDER_ERROR,
 			userMessage: 'We encountered an error, could not get the last option value that was removed. Please refresh the page and start over.',

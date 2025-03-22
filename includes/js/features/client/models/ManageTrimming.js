@@ -3,8 +3,8 @@
 // import IndexedDBOperations from "./IndexedDBOperations.js";
 // import ManageClient from "./ManageClient.js";
 
-import IndexedDBOperations from '../../../core/database/IndexedDBOperations.js';
-import ManageClient from './ManageClient.js';
+import IndexedDBOperations from '../../../core/database/IndexedDBOperations.min.js';
+import ManageClient from './ManageClient.min.js';
 
 /**
  * Manages trimming session operations and related data using IndexedDB
@@ -131,7 +131,7 @@ export default class ManageTrimming {
 			return { status: 'ok', message: `Trimming/Shoeing session added successfully.${receiptMsg}` };
 		}
 		catch (err) {
-			const { AppError } = await import("../../../core/errors/models/AppError.js");
+			const { AppError } = await import("../../../core/errors/models/AppError.min.js");
 			AppError.process(err, {
 				errorCode: AppError.Types.PROCESSING_ERROR,
 				userMessage: 'Failed to add trimming session',
@@ -243,7 +243,7 @@ export default class ManageTrimming {
 				.map(({ index, ...horse }) => horse);
 		}
 		catch (err) {
-			const { AppError } = await import("../../../core/errors/models/AppError.js");
+			const { AppError } = await import("../../../core/errors/models/AppError.min.js");
 			await AppError.process(err, {
 				errorCode: AppError.Types.PROCESSING_ERROR,
 				userMessage: 'Failed to process horse data',
@@ -300,7 +300,7 @@ export default class ManageTrimming {
 			return true;
 		}
 		catch (err) {
-			const { AppError } = await import("../../../core/errors/models/AppError.js");
+			const { AppError } = await import("../../../core/errors/models/AppError.min.js");
 			AppError.process(err, {
 				errorCode: AppError.Types.DATABASE_ERROR,
 				userMessage: 'Failed to add trimming session',

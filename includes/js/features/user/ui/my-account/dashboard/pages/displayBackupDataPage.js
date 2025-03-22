@@ -51,7 +51,7 @@ export default async function displayBackupDataPage({evt, messageContainer, tabC
 					await backupDataToServer({tabContainer});
 				}
 				catch(err){
-					const { AppError } = await import("../../../../../../core/errors/models/AppError.js");
+					const { AppError } = await import("../../../../../../core/errors/models/AppError.min.js");
 					AppError.handleError(err, {
 						errorCode: AppError.Types.DATABASE_ERROR,
 						userMessage: AppError.BaseMessages.system.network,
@@ -73,7 +73,7 @@ export default async function displayBackupDataPage({evt, messageContainer, tabC
 		
 	}
 	catch(err){
-		const { AppError } = await import("../../../../../../core/errors/models/AppError.js");
+		const { AppError } = await import("../../../../../../core/errors/models/AppError.min.js");
 		AppError.process(err, {
 			errorCode: AppError.Types.RENDER_ERROR,
 			userMessage: AppError.BaseMessages.system.render,

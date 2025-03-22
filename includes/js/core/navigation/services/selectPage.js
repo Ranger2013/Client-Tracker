@@ -145,7 +145,7 @@ export default async function selectPage({ evt, page, cID = null, closeMenu = nu
             errorType: err.name === 'ImportError' ? 'load' : 'build'
         });
 
-        const { AppError } = await import("../../errors/models/AppError.js");
+        const { AppError } = await import("../../errors/models/AppError.min.js");
         AppError.handleError(err, {
             errorCode: AppError.Types.RENDER_ERROR,
             userMessage: null,

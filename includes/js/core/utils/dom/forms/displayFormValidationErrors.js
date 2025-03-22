@@ -3,12 +3,44 @@ import { safeDisplayMessage } from "../messages.min.js";
 import { underscoreToHyphen, underscoreToHyphenPlusError } from "../../string/stringUtils.min.js";
 
 /**
- * Displays validation errors for form fields
- * @param {Array<{input: string, msg: string}>} errors - Array of validation errors
- * @param {Object} [options] - Display options
- * @param {string} [options.formMessage='Please fix the following errors'] - General form message
- * @param {boolean} [options.scrollToTop=true] - Whether to scroll to top after showing errors
- * @returns {Promise<void>}
+ * Displays form validation errors on the page by finding and populating error elements.
+ * 
+ * @async
+ * @param {Array<Object>} errors - Array of validation error objects
+ * @param {string} errors[].input - Field identifier matching the form input name
+ *                                  (e.g., 'horse_name' for an input with name="horse_name")
+ * @param {string} errors[].message - Error message to display for this field
+ * 
+ * @param {Object} [options={}] - Optional configuration
+ * @param {string} [options.formMessage='Please fix the following errors'] - General error message 
+ *                                                                          displayed at the top of the form
+ * @param {boolean} [options.scrollToTop=true] - Whether to automatically scroll to the top of the form
+ * 
+ * @returns {Promise<void>} - Resolves when errors are displayed
+ * 
+ * @throws {Error} When errors array is invalid or empty
+ * 
+ * @example
+ * // Basic usage
+ * await displayFormValidationErrors([
+ *   { input: 'horse_name', message: 'Horse name cannot be empty' },
+ *   { input: 'trim_cycle', message: 'Please select a valid trim cycle' }
+ * ]);
+ * 
+ * @example
+ * // With custom options
+ * await displayFormValidationErrors(
+ *   [{ input: 'email', message: 'Invalid email format' }],
+ *   { 
+ *     formMessage: 'Please correct these issues before continuing',
+ *     scrollToTop: false 
+ *   }
+ * );
+ * 
+ * @description
+ * For each error, the function will find an element with ID matching '{input}-error'
+ * (e.g., 'horse-name-error' for input='horse_name') and display the error message.
+ * The function also highlights the corresponding input fields and shows a summary message.
  */
 export default async function displayFormValidationErrors(errors, options = {}) {
     const {
@@ -55,7 +87,7 @@ export default async function displayFormValidationErrors(errors, options = {}) 
         if (scrollToTop) top();
     }
     catch (err) {
-        const { AppError } = await import("../../../errors/models/AppError.js");
+        const { AppError } = await import("../../../errors/models/AppError.min.js");
         AppError.handleError(err, {
             errorCode: AppError.Types.FORM_VALIDATION_ERROR,
             userMessage: null,

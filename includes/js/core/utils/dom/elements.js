@@ -1,4 +1,4 @@
-const COMPONENT = 'Elements.js';
+const COMPONENT = 'Elements';
 const DEBUG = false;
 
 const debugLog = (...args) => {
@@ -64,7 +64,7 @@ export function disableEnableSubmitButton(button) {
 	}
 	catch (error) {
 		// Let AppError handle all logging
-		import('../../errors/models/AppError.js')
+		import('../../errors/models/AppError.min.js')
 			.then(({ AppError }) => {
 				return new AppError('Submit button state update failed', {
 					originalError: error,

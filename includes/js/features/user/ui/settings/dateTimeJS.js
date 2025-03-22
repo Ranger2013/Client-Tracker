@@ -82,7 +82,7 @@ async function handleFormSubmission(evt) {
 			});
 		}
 	} catch (err) {
-		const { AppError } = await import("../../../../core/errors/models/AppError.js");
+		const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
 		await AppError.handleError(err, {
 			errorCode: AppError.Types.FORM_SUBMISSION_ERROR,
 			userMessage: AppError.BaseMessages.forms.submissionFailed,
@@ -119,7 +119,7 @@ async function validateFormFields(form) {
 		return dateFormatValid && timeZoneValid;
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../core/errors/models/AppError.js");
+		const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
 		await AppError.process(err, {
 			errorCode: AppError.Types.FORM_VALIDATION_ERROR,
 			userMessage: AppError.BaseMessages.forms.validationFailed,

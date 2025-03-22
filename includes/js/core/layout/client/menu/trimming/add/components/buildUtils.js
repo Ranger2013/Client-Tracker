@@ -1,4 +1,4 @@
-import { buildElementsFromConfig } from '../../../../../../utils/dom/elements.js';
+import { buildElementsFromConfig } from '../../../../../../utils/dom/elements.min.js';
 
 export async function buildSessionNotesSection() {
 	try {
@@ -48,7 +48,7 @@ export async function buildInvoicePaidCheckbox() {
 		return container;
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../../../errors/models/AppError.js");
+		const { AppError } = await import("../../../../../../errors/models/AppError.min.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.RENDER_ERROR,
 			userMessage: null,
@@ -96,7 +96,7 @@ export async function buildFuelChargeCheckboxSection(cost) {
 		return container;
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../../../errors/models/AppError.js");
+		const { AppError } = await import("../../../../../../errors/models/AppError.min.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.RENDER_ERROR,
 			userMessage: null,

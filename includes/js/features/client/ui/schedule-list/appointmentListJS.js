@@ -19,7 +19,7 @@ export default async function appointmentList({ active, cID, primaryKey, manageC
             await initializeSearchHandlers({ manageUser });
         }
         catch (err) {
-            const { AppError } = await import("../../../../core/errors/models/AppError.js");
+            const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
             AppError.handleError(err, {
                 errorCode: AppError.Types.INITIALIZATION_ERROR,
                 userMessage: AppError.BaseMessages.system.initialization,
@@ -30,7 +30,7 @@ export default async function appointmentList({ active, cID, primaryKey, manageC
             await initializeMenuHandlers({ cID, primaryKey, manageClient, manageUser, mainContainer });
         }
         catch (err) {
-            const { AppError } = await import("../../../../core/errors/models/AppError.js");
+            const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
             AppError.handleError(err, {
                 errorCode: AppError.Types.INITIALIZATION_ERROR,
                 userMessage: AppError.BaseMessages.system.initialization,
@@ -38,7 +38,7 @@ export default async function appointmentList({ active, cID, primaryKey, manageC
         }
     }
     catch (err) {
-        const { AppError } = await import("../../../../core/errors/models/AppError.js");
+        const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
         AppError.handleError(err, {
             errorCode: AppError.Types.INITIALIZATION_ERROR,
             userMessage: AppError.BaseMessages.system.initialization,
@@ -102,7 +102,7 @@ async function initializeSearchHandlers({ manageUser }) {
         });
     }
     catch (err) {
-        const { AppError } = await import("../../../../core/errors/models/AppError.js");
+        const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
         AppError.process(err, {
             errorCode: AppError.Types.INITIALIZATION_ERROR,
             userMessage: 'Search functionality not available at the moment.',
@@ -157,7 +157,7 @@ function initializeMenuHandlers({ cID, primaryKey, manageClient, manageUser, mai
                 }
             }
             catch (err) {
-                const { AppError } = await import("../../../../core/errors/models/AppError.js");
+                const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
                 AppError.handleError(err, {
                     errorCode: AppError.Types.INITIALIZATION_ERROR,
                     userMessage: 'Manage client menu not available at the moment.',

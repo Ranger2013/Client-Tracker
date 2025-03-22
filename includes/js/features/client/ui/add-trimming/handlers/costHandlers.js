@@ -1,4 +1,4 @@
-import calculateTotalCost from '../components/calculateTotalCost.js';
+import calculateTotalCost from '../components/calculateTotalCost.min.js';
 
 const COMPONENT = 'costHandlers';
 const DEBUG = false;
@@ -28,7 +28,7 @@ export async function handleShowingAccessoriesSelectBox({ evt, index }) {
 		accSelect.disabled = evt.target.value.includes('trim');
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../core/errors/models/AppError.js");
+		const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.INITIALIZATION_ERROR,
 			userMessage: 'We encountered an error trying to display the accessories.'
@@ -58,7 +58,7 @@ export async function updateCostChangeInput({ evt, index }) {
 		debugLog('final cost change input: ', costChangeInput);
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../core/errors/models/AppError.js");
+		const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.INITIALIZATION_ERROR,
 			userMessage: 'We encountered an error trying to update the change service cost.'
@@ -84,7 +84,7 @@ export async function handleShowingCostChangeInput({ evt, index }) {
 		costChangeInput.disabled = !evt.target.checked;
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../core/errors/models/AppError.js");
+		const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.INITIALIZATION_ERROR,
 			userMessage: 'We encountered an error trying to display change service cost input.'
@@ -116,7 +116,7 @@ export async function updateServiceCostSelectedIndex({ evt, index }) {
 		await calculateTotalCost();
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../core/errors/models/AppError.js");
+		const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.INITIALIZATION_ERROR,
 			userMessage: 'We encountered an error trying to update the service cost selected index.'
