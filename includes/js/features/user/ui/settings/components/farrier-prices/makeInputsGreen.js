@@ -1,5 +1,14 @@
-import getAllFormIdElements from "../../../../../../core/utils/dom/forms/getAllFormIDElements.min.js";
-import { addListener } from "../../../../../../core/utils/dom/listeners.min.js";
+import getAllFormIdElements from "../../../../../../core/utils/dom/forms/getAllFormIDElements.js";
+import { addListener } from "../../../../../../core/utils/dom/listeners.js";
+
+// Set up debug mode
+const COMPONENT = 'Make Inputs Green';
+const DEBUG = false;
+const debugLog = (...args) => {
+    if (DEBUG) {
+        console.log(`[${COMPONENT}]`, ...args);
+    }
+};
 
 const GREEN_CLASS = 'w3-light-green';
 
@@ -7,42 +16,44 @@ const GREEN_CLASS = 'w3-light-green';
  * Adds green highlighting to form inputs when they contain values
  * @param {HTMLFormElement} form - The form containing inputs to monitor
  */
-export default function makeInputsGreen(form, componentId) {
+export default async function makeInputsGreen({form, componentId}) {
     try {
+        debugLog('makeInputsGreen', {form, componentId});
         const elements = getAllFormIdElements(form);
         
-        Object.entries(elements).forEach(([_, input]) => {
-            if (input instanceof HTMLInputElement) {
-                // Add listeners with component tracking
-                addListener({
-                    elementOrId: input,
-                    eventType: 'blur',
-                    handler: handleInputBlur,
-                    componentId
-                });
-
-                addListener({
-                    elementOrId: input,
-                    eventType: 'focus',
-                    handler: handleInputFocus,
-                    componentId
-                });
-
-                // Set initial state
-                if (input.value) {
-                    input.classList.add(GREEN_CLASS);
-                }
+        // Set the initial state of the form inputs
+        Object.values(elements).forEach(input => {
+            debugLog('input.value: ', input.value);
+            if (input instanceof HTMLInputElement && input.value !== '') {
+                input.classList.add(GREEN_CLASS);
+            }
+            else {
+                input.classList.remove(GREEN_CLASS);
             }
         });
+        console.log('makeInputsGreen');
+
+        addListener({
+            elementOrId: form,
+            eventType: ['focusout'],
+            handler: (evt) => handleInputBlur(evt),
+            componentId
+        });
+
+        addListener({
+            elementOrId: 'farrier-prices-form',
+            eventType: 'focusin',
+            handler: (evt) => handleInputFocus(evt),
+            componentId
+        });
+
     }
     catch (err) {
-        import("../../../../../../core/errors/models/AppError.min.js")
-        .then(({AppError}) => {
-           AppError.handleError(err, {
-               errorCode: AppError.Types.RENDER_ERROR,
-               userMessage: null,
-           });
-        })
+        const { AppError } = await import("../../../../../../core/errors/models/AppError.js");
+        AppError.handleError(err, {
+            errorCode: AppError.Types.RENDER_ERROR,
+            userMessage: null,
+        });
     }
 }
 
@@ -51,11 +62,14 @@ export default function makeInputsGreen(form, componentId) {
  * @param {Event} evt - The blur event
  */
 function handleInputBlur(evt) {
-    const input = evt.target;
-    if (input.value) {
-        input.classList.add(GREEN_CLASS);
-    } else {
-        input.classList.remove(GREEN_CLASS);
+    if (evt.target instanceof HTMLInputElement) {
+        const input = evt.target;
+
+        if (input.value) {
+            input.classList.add(GREEN_CLASS);
+        } else {
+            input.classList.remove(GREEN_CLASS);
+        }
     }
 }
 
@@ -64,5 +78,7 @@ function handleInputBlur(evt) {
  * @param {Event} evt - The focus event
  */
 function handleInputFocus(evt) {
-    evt.target.classList.remove(GREEN_CLASS);
+    if (evt.target instanceof HTMLInputElement) {
+        evt.target.classList.remove(GREEN_CLASS);
+    }
 }

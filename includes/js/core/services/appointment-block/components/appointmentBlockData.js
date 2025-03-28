@@ -1,4 +1,4 @@
-import { formatTime } from '../../../utils/date/dateUtils.min.js';
+import { formatTime } from '../../../utils/date/dateUtils.js';
 import { cleanUserOutput } from '../../../utils/string/stringUtils.js';
 
 /**
@@ -44,7 +44,7 @@ export default async function appointmentBlockData(data) {
 		};
 	}
 	catch (err) {
-		const { AppError } = await import("../../../errors/models/AppError.min.js");
+		const { AppError } = await import("../../../errors/models/AppError.js");
 		AppError.process(err, {
 			errorCode: AppError.Types.PROCESSING_ERROR,
 			userMessage: 'Unable to process the appointment data.',

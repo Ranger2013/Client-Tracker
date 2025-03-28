@@ -1,11 +1,9 @@
-import { buildEle } from "../../../../../../core/utils/dom/elements.min.js";
+import { buildEle, buildElementsFromConfig, getValidElement } from "../../../../../../core/utils/dom/elements.js";
 
-export default function buildInputBlocks(numBlocks, inputName, form, display, value = null) {
+export default function buildInputBlocks({ numBlocks, inputName, display, value = null }) {
     try {
         // Resolve display element
-        const displayEle = typeof display === 'string'
-            ? document.getElementById(display)
-            : display;
+        const displayEle = getValidElement(display);
 
         if (!displayEle) {
             throw new Error(`Display element not found: ${display}`);
@@ -31,15 +29,7 @@ export default function buildInputBlocks(numBlocks, inputName, form, display, va
         }
     }
     catch (err) {
-        import("../../../../../../core/errors/models/AppError.min.js")
-            .then(({ AppError }) => {
-                AppError.handleError(err, {
-                    errorCode: AppError.Types.RENDER_ERROR,
-                    userMessage: 'Error building accessory inputs',
-                    displayTarget: display
-                });
-            })
-            .catch(err => console.error('Error handler failed:', err));
+        throw err;
     }
 }
 
@@ -87,8 +77,7 @@ function buildBlock(index, name, value = null) {
     };
 
     // Build all elements in one go using map
-    const [block, nameLabel, nameInput, costLabel, costInput] =
-        Object.entries(blockConfig).map(([_, config]) => buildEle(config));
+    const { container, nameLabel, nameInput, costLabel, costInput } = buildElementsFromConfig(blockConfig);
 
     // Set values and build structure
     if (value) {
@@ -99,7 +88,7 @@ function buildBlock(index, name, value = null) {
     // Append in correct order
     nameLabel.appendChild(nameInput);
     costLabel.appendChild(costInput);
-    block.append(nameLabel, costLabel);
+    container.append(nameLabel, costLabel);
 
-    return block;
+    return container;
 }

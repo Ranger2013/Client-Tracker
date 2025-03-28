@@ -17,8 +17,8 @@
  * 5. Handle failures with redirect
  */
 
-import ManageUser from '../../../features/user/models/ManageUser.min.js';
-import { fetchData } from '../../network/services/network.min.js';
+import ManageUser from '../../../features/user/models/ManageUser.js';
+import { fetchData } from '../../network/services/network.js';
 
 const SECURITY_MESSAGES = {
     systemError: 'System error validating credentials. Please contact support.',
@@ -38,7 +38,7 @@ const SECURITY_MESSAGES = {
  * }
  * // If no token, user has already been redirected to login
  */
-export async function userAuthorization() {
+export async function userAuthorization() { 
     try {
         const manageUser = new ManageUser();
         const userSettings = await manageUser.getSettings('user_status');
@@ -49,13 +49,6 @@ export async function userAuthorization() {
             redirectToLogin(SECURITY_MESSAGES.tokenMissing);
             return null;
         }
-
-        // Check with the server to ensure the tokens match up.
-        // const isValidServerToken = await verifyTokenWithServer(userToken);
-        // if(!isValidServerToken) {
-        //     redirectToLogin(SECURITY_MESSAGES.tokenMissing);
-        //     return null;
-        // }
 
         // Admin bypass expiry check
         if (userStatus === 'admin') {
@@ -72,7 +65,7 @@ export async function userAuthorization() {
         return userToken;
     }
     catch (error) {
-        const { AppError } = await import('../../errors/models/AppError.min.js');
+        const { AppError } = await import('../../errors/models/AppError.js');
         AppError.handleError(error, {
             errorCode: AppError.Types.AUTHORIZATION_ERROR,
             userMessage: null,
@@ -115,7 +108,7 @@ async function verifyTokenWithServer(token){
         // })
     }
     catch(err){
-        const { AppError } = await import('../../errors/models/AppError.min.js');
+        const { AppError } = await import('../../errors/models/AppError.js');
         AppError.handleError(err,{
             errorCode: AppError.Types.AUTHORIZATION_ERROR,
             userMessage: null,

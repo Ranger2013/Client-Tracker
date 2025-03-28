@@ -1,8 +1,8 @@
-import { buildEle, buildElementsFromConfig } from '../../../../../core/utils/dom/elements.min.js';
-import createSelectElement from '../../../../../core/utils/dom/forms/createSelectElement.min.js';
+import { buildEle, buildElementsFromConfig } from '../../../../../core/utils/dom/elements.js';
+import createSelectElement from '../../../../../core/utils/dom/forms/createSelectElement.js';
 
 const COMPONENT = 'buildServiceBlocks';
-const DEBUG = true;
+const DEBUG = false;
 const debugLog = (...args) => {
 	if (DEBUG) {
 		console.log(`[${COMPONENT}]`, ...args);
@@ -155,7 +155,7 @@ export default async function buildServiceBlocks({ iterator, clientTrimCycle, ho
 		return row;
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../../core/errors/models/AppError.min.js");
+		const { AppError } = await import("../../../../../core/errors/models/AppError.js");
 		AppError.process(err, {
 			errorCode: AppError.Types.RENDER_ERROR,
 			userMessage: null,

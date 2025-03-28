@@ -1,10 +1,10 @@
-import { disableEnableSubmitButton } from '../../../../core/utils/dom/elements.min.js';
-import { addListener, removeListeners } from "../../../../core/utils/dom/listeners.min.js";
-import { clearMsg, safeDisplayMessage } from "../../../../core/utils/dom/messages.min.js";
-import { underscoreToHyphen, underscoreToHyphenPlusError } from "../../../../core/utils/string/stringUtils.min.js";
-import { isNumeric } from "../../../../core/utils/validation/validators.min.js";
-import ManageUser from "../../models/ManageUser.min.js";
-import populateScheduleOptionsForm from "./components/schedule-options/populateScheduleOptionsForm.min.js";
+import { disableEnableSubmitButton } from '../../../../core/utils/dom/elements.js';
+import { addListener, removeListeners } from "../../../../core/utils/dom/listeners.js";
+import { clearMsg, safeDisplayMessage } from "../../../../core/utils/dom/messages.js";
+import { underscoreToHyphen, underscoreToHyphenPlusError } from "../../../../core/utils/string/stringUtils.js";
+import { isNumeric } from "../../../../core/utils/validation/validators.js";
+import ManageUser from "../../models/ManageUser.js";
+import populateScheduleOptionsForm from "./components/schedule-options/populateScheduleOptionsForm.js";
 
 const manageUser = new ManageUser();
 const COMPONENT_ID = 'schedule-options';
@@ -65,7 +65,7 @@ async function initializeEventHandlers() {
         });
     }
     catch(err) {
-        const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
+        const { AppError } = await import("../../../../core/errors/models/AppError.js");
         AppError.handleError(err, {
             errorCode: AppError.Types.INITIALIZATION_ERROR,
             userMessage: AppError.BaseMessages.system.initialization,
@@ -107,7 +107,7 @@ async function handleScheduleFormSubmission(evt) {
         throw new Error('Failed to save schedule options');
     }
     catch (err) {
-        const { AppError} = await import("../../../../core/errors/models/AppError.min.js");
+        const { AppError} = await import("../../../../core/errors/models/AppError.js");
         AppError.handleError(err, {
             errorCode: AppError.Types.FORM_SUBMISSION_ERROR,
             userMessage: AppError.BaseMessages.system.formSubmission,

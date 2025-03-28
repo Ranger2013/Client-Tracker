@@ -1,4 +1,4 @@
-import { displayErrorMessage, safeDisplayMessage } from '../../utils/dom/messages.min.js';
+import { displayErrorMessage, safeDisplayMessage } from '../../utils/dom/messages.js';
 
 /**
  * @typedef {Object} AppErrorConfig
@@ -28,7 +28,8 @@ export class AppError extends Error {
                 processing: 'An error occurred while processing your request.',
                 initialization: 'System initialization failed. Please refresh the page.',
                 render: 'An error occurred while trying to render the page.',
-                helpDesk: 'If this problem persists, please submit a new Help Desk Ticket for this issue. Thank You'
+                helpDesk: 'If this problem persists, please submit a new Help Desk Ticket for this issue. Thank You',
+                database: 'Database error occurred.',
             },
 
             // Authentication messages
@@ -237,6 +238,7 @@ export class AppError extends Error {
             ]);
 
             const token = getValidationToken();
+
             if (!token) {
                 console.warn('No validation token available');
                 return;

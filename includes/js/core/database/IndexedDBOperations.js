@@ -4,7 +4,6 @@
  * @property {boolean} [autoIncrement] - Auto increment flag
  * @property {Array<{name: string, keyPath: string, unique: boolean}>} [indexes] - Store indexes
  */
-
 export default class IndexedDBOperations {
     // Static private property to hold the singleton instance
     static #instance = null;
@@ -110,23 +109,6 @@ export default class IndexedDBOperations {
      * @readonly
      */
     stores = {
-        // Client operation stores
-        MAXCLIENTID: 'max_client_id',
-        MAXCLIENTPRIMARYKEY: 'max_client_primary_key',
-        ADDCLIENT: 'backup_add_client',
-        EDITCLIENT: 'backup_edit_client',
-        DELETECLIENT: 'backup_delete_client',
-        ADDDUPLICATECLIENT: 'backup_add_duplicate_client',
-        DELETEDUPLICATECLIENT: 'backup_delete_duplicate_client',
-        // User Settings
-        USERSETTINGS: 'user_settings', // Stores the users date/time, schedule options, color options and farrier prices and accessories
-        CLIENTLIST: 'client_list', // This will store all of the clients personal information, including their horses
-        TRIMMING: 'trimmings',
-        // Client horse operations to back up data to the server
-        MAXHORSEID: 'max_horse_id',
-        ADDHORSE: 'backup_add_horse',
-        EDITHORSE: 'backup_edit_horse',
-        DELETEHORSE: 'backup_delete_horse', // Ensure DELETEHORSE store is defined
         // Client trimming operations that need to be backed up on the server
         MAXTRIMID: 'max_trim_id',
         ADDTRIMMING: 'backup_add_trimming',
@@ -136,6 +118,19 @@ export default class IndexedDBOperations {
         ADDMILEAGE: 'backup_add_mileage',
         EDITMILEAGE: 'backup_edit_mileage',
         DELETEMILEAGE: 'backup_delete_mileage',
+        // Client operation stores
+        MAXCLIENTID: 'max_client_id',
+        MAXCLIENTPRIMARYKEY: 'max_client_primary_key',
+        ADDCLIENT: 'backup_add_client',
+        EDITCLIENT: 'backup_edit_client',
+        DELETECLIENT: 'backup_delete_client',
+        ADDDUPLICATECLIENT: 'backup_add_duplicate_client',
+        DELETEDUPLICATECLIENT: 'backup_delete_duplicate_client',
+        // Client horse operations to back up data to the server
+        MAXHORSEID: 'max_horse_id',
+        ADDHORSE: 'backup_add_horse',
+        EDITHORSE: 'backup_edit_horse',
+        DELETEHORSE: 'backup_delete_horse', // Ensure DELETEHORSE store is defined
         // Expenses
         ADDEXPENSES: 'backup_add_expenses',
         EDITEXPENSES: 'backup_edit_expenses',
@@ -152,6 +147,10 @@ export default class IndexedDBOperations {
         MILEAGECHARGES: 'backup_mileage_charges',
         SCHEDULINGOPTIONS: 'backup_scheduling_options',
         COLOROPTIONS: 'backup_color_options',
+        // User Settings
+        USERSETTINGS: 'user_settings', // Stores the users date/time, schedule options, color options and farrier prices and accessories
+        CLIENTLIST: 'client_list', // This will store all of the clients personal information, including their horses
+        TRIMMING: 'trimmings',
         ERRORQUEUE: 'error_queue', // For storing errors when offline
     };
 
@@ -164,7 +163,7 @@ export default class IndexedDBOperations {
      * @returns {Promise<void>}
      */
     async #handleError({ consoleMsg, err, userMsg }) {
-        const { AppError } = await import('../errors/models/AppError.min.js');
+        const { AppError } = await import('../errors/models/AppError.js');
         await AppError.process(err, {
             errorCode: AppError.Types.DATABASE_ERROR,
             userMessage: userMsg,

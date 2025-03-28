@@ -1,11 +1,11 @@
-import { getValidElement } from '../../utils/dom/elements.min.js';
-import { removeListeners } from '../../utils/dom/listeners.min.js';
-import { clearMsg, safeDisplayMessage } from '../../utils/dom/messages.min.js';
-import buildAppointmentBlock from './components/buildAppointmentBlock.min.js';
-import buildNoAppointmentsBlock from './components/buildNoAppointmentsBlock.min.js';
-import buildProjectedAppointmentBlock from './components/buildProjectedAppointmentBlock.min.js';
-import getCurrentAppointments from './components/getCurrentAppointments.min.js';
-import getProjectedAppointments from './components/getProjectedAppointments.min.js';
+import { getValidElement } from '../../utils/dom/elements.js';
+import { removeListeners } from '../../utils/dom/listeners.js';
+import { clearMsg, safeDisplayMessage } from '../../utils/dom/messages.js';
+import buildAppointmentBlock from './components/buildAppointmentBlock.js';
+import buildNoAppointmentsBlock from './components/buildNoAppointmentsBlock.js';
+import buildProjectedAppointmentBlock from './components/buildProjectedAppointmentBlock.js';
+import getCurrentAppointments from './components/getCurrentAppointments.js';
+import getProjectedAppointments from './components/getProjectedAppointments.js';
 
 const COMPONENT_ID = 'check-appointment';
 const COMPONENT = 'checkAppointment';
@@ -60,7 +60,7 @@ export default async function checkAppointment({
 
 		// Check if the user has schedule options or date time formats
 		if (Object.keys(scheduleOptions).length === 0 || Object.keys(dateTimeFormats).length === 0) {
-			const { AppError } = await import("../../errors/models/AppError.min.js");
+			const { AppError } = await import("../../errors/models/AppError.js");
 			AppError.process(new Error('User settings are missing for the checkAppointments system.'), {
 				errorCode: AppError.Types.SETTINGS_ERROR,
 				userMessage: 'Scheduling options or date time options are not set in your settings.',
@@ -112,7 +112,7 @@ export default async function checkAppointment({
 		}
 	}
 	catch (err) {
-		const { AppError } = await import("../../errors/models/AppError.min.js");
+		const { AppError } = await import("../../errors/models/AppError.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.RENDER_ERROR,
 			userMessage: 'Unable to check appointment availability.',

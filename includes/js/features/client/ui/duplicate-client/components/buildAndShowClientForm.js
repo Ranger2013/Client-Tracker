@@ -1,7 +1,7 @@
-import checkAppointment from '../../../../../core/services/appointment-block/checkAppointment.min.js';
-import { getValidElement } from '../../../../../core/utils/dom/elements.min.js';
-import { buildSubmitButtonSection, buildTwoColumnInputSection, buildTwoColumnSelectElementSection } from '../../../../../core/utils/dom/forms/buildUtils.min.js';
-import { trimCycleConfigurations } from '../../../../../core/utils/dom/forms/trimCycleConfigurations.min.js';
+import checkAppointment from '../../../../../core/services/appointment-block/checkAppointment.js';
+import { getValidElement } from '../../../../../core/utils/dom/elements.js';
+import { buildSubmitButtonSection, buildTwoColumnInputSection, buildTwoColumnSelectElementSection } from '../../../../../core/utils/dom/forms/buildUtils.js';
+import { trimCycleConfigurations } from '../../../../../core/utils/dom/forms/trimCycleConfigurations.js';
 
 // Set up the logging
 const COMPONENT = 'Build and Shoe Client Form';
@@ -64,7 +64,7 @@ export default async function buildAndShowClientForm({evt, manageClient, manageU
 		});
 	}
 	catch(err){
-		const { AppError } = await import("../../../../../core/errors/models/AppError.min.js");
+		const { AppError } = await import("../../../../../core/errors/models/AppError.js");
 		AppError.process(err, {
 			errorCode: AppError.Types.RENDER_ERROR,
 			userMessage: 'Unable to display the Duplicate Form at this time.',

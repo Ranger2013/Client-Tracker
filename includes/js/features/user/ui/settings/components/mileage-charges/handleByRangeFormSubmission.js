@@ -1,6 +1,6 @@
-import { clearMsg, safeDisplayMessage } from "../../../../../../core/utils/dom/messages.min.js";
-import { isNumeric } from "../../../../../../core/utils/validation/validators.min.js";
-import { top } from "../../../../../../core/utils/window/scroll.min.js";
+import { clearMsg, safeDisplayMessage } from "../../../../../../core/utils/dom/messages.js";
+import { isNumeric } from "../../../../../../core/utils/validation/validators.js";
+import { top } from "../../../../../../core/utils/window/scroll.js";
 
 /**
  * Handles submission of fuel range form
@@ -47,7 +47,7 @@ export default async function handleByRangeFormSubmission({evt, manageUser}) {
     }
     catch (err) {
         top();
-        const { AppError } = await import("../../../../../../core/errors/models/AppError.min.js");
+        const { AppError } = await import("../../../../../../core/errors/models/AppError.js");
         AppError.handleError(err, {
             errorCode: AppError.Types.FORM_SUBMISSION_ERROR,
             userMessage: 'Unable to add mileage charges at this time',

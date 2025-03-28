@@ -1,3 +1,5 @@
+import { getValidElement } from '../elements.min';
+
 /**
  * Gets all form elements with non-empty id attributes.
  * @param {string|HTMLElement} form - The form element or its id.
@@ -6,17 +8,7 @@
  */
 export default function getAllFormIdElements(form) {
     try {
-        const formElement = typeof form === 'string' 
-            ? document.getElementById(form)
-            : form instanceof HTMLElement ? form : null;
-
-        if (!formElement) {
-            throw new Error(
-                typeof form === 'string' 
-                    ? `No form found with id: ${form}`
-                    : 'Invalid form parameter'
-            );
-        }
+        const formElement = getValidElement(form);
 
         // Approach 1: Using specific selector for form elements
         return Object.fromEntries(

@@ -1,8 +1,8 @@
-import { disableEnableSubmitButton } from '../../../../../core/utils/dom/elements.min.js';
-import { trimCycleRange } from '../../../../../core/utils/dom/forms/trimCycleConfigurations.min.js';
-import { addListener } from '../../../../../core/utils/dom/listeners.min.js';
-import { clearMsg, safeDisplayMessage } from '../../../../../core/utils/dom/messages.min.js';
-import { ucwords, underscoreToHyphen, underscoreToHyphenPlusError } from '../../../../../core/utils/string/stringUtils.min.js';
+import { disableEnableSubmitButton } from '../../../../../core/utils/dom/elements.js';
+import { trimCycleRange } from '../../../../../core/utils/dom/forms/trimCycleConfigurations.js';
+import { addListener } from '../../../../../core/utils/dom/listeners.js';
+import { clearMsg, safeDisplayMessage } from '../../../../../core/utils/dom/messages.js';
+import { ucwords, underscoreToHyphen, underscoreToHyphenPlusError } from '../../../../../core/utils/string/stringUtils.js';
 
 // Set up debugging log
 const COMPONENT = 'Add Horse Page';
@@ -54,7 +54,7 @@ export async function handleHorseNameInput({ evt, cID, primaryKey, manageClient,
 	}
 	catch (err) {
 		// Handles it's own errors
-		const { AppError } = await import("../../../../../core/errors/models/AppError.min.js");
+		const { AppError } = await import("../../../../../core/errors/models/AppError.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.INITIALIZATION_ERROR,
 			userMessage: AppError.BaseMessages.system.initialization,
@@ -78,7 +78,7 @@ export async function isDuplicateHorseName({ horseName, cID, primaryKey, manageC
 	}
 }
 
-export async function handleAddHorseFormSubmission({ evt, cID, primaryKey, manageClient, componentId }) {
+export async function handleAddHorseFormSubmission({ evt, cID, primaryKey, clientName, manageClient, componentId }) {
 	try {
 		const userData = Object.fromEntries(new FormData(evt.target));
 		// Short cut to get the form element. Only a single input, no sense in using a form object
@@ -92,7 +92,7 @@ export async function handleAddHorseFormSubmission({ evt, cID, primaryKey, manag
 
 		debugLog('Validation:', isValidated);
 		// Add the new horse
-		const response = await manageClient.addNewHorse({userData, cID, primaryKey });
+		const response = await manageClient.addNewHorse({userData, cID, primaryKey, clientName });
 
 		if (response) {
 			// Clear the form
@@ -107,7 +107,7 @@ export async function handleAddHorseFormSubmission({ evt, cID, primaryKey, manag
 		}
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../../core/errors/models/AppError.min.js");
+		const { AppError } = await import("../../../../../core/errors/models/AppError.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.FORM_SUBMISSION_ERROR,
 			userMessage: AppError.BaseMessages.forms.submissionFailed,
@@ -161,7 +161,7 @@ async function validateAddHorseForm(userData) {
 		return true;
 	}
 	catch(err){
-		const { AppError } = await import("../../../../../core/errors/models/AppError.min.js");
+		const { AppError } = await import("../../../../../core/errors/models/AppError.js");
 		AppError.process(err, {
 			errorCode: AppError.Types.VALIDATION_ERROR,
 			userMessage: AppError.BaseMessages.forms.validationFailed,

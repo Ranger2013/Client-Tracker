@@ -1,5 +1,15 @@
-import getAllFormIdElements from "../../../../../../core/utils/dom/forms/getAllFormIDElements.min.js";
-import buildInputBlocks from "./buildInputBlocks.min.js";
+import getAllFormIdElements from "../../../../../../core/utils/dom/forms/getAllFormIDElements.js";
+import buildInputBlocks from "./buildInputBlocks.js";
+import makeInputsGreen from './makeInputsGreen.js';
+
+// Set up debug mode
+const COMPONENT = 'Farrier Prices';
+const DEBUG = false;
+const debugLog = (...args) => {
+    if (DEBUG) {
+        console.log(COMPONENT, ...args);
+    }
+};
 
 /**
  * Populates the farrier prices form with saved pricing data
@@ -11,20 +21,22 @@ import buildInputBlocks from "./buildInputBlocks.min.js";
  * @throws {AppError} If there's an error populating the form
  * @returns {Promise<void>}
  */
-export default async function populateFarrierPricesForm({formEle, manageUser}) {
+export default async function populateFarrierPricesForm({form, manageUser, componentId}) {
     try {
+        debugLog('populateFarrierPricesForm: formEle', form);
         const farrierPrices = await manageUser.getFarrierPrices();
 
         if(Object.keys(farrierPrices).length === 0) return;
         
         if(farrierPrices){
-            handleFarrierPrices(formEle, farrierPrices);
-            handleAccessories(formEle, farrierPrices.accessories);
+            handleFarrierPrices({form, farrierPrices});
+            handleAccessories({form, accessoryPrices: farrierPrices.accessories});
+            await makeInputsGreen({form, componentId});
         }
     }
     catch (err) {
         // Terminal - fails silently
-        const { AppError } = await import("../../../../../../core/errors/models/AppError.min.js");
+        const { AppError } = await import("../../../../../../core/errors/models/AppError.js");
         AppError.handleError(err, {
             errorCode: AppError.Types.FORM_POPULATION_ERROR,
             userMessage: null,
@@ -40,15 +52,22 @@ export default async function populateFarrierPricesForm({formEle, manageUser}) {
  * @param {Object} farrierPrices[key] - Price values keyed by input name
  * @throws {Error} If there's an error handling the farrier prices
  */
-function handleFarrierPrices(formEle, farrierPrices) {
+function handleFarrierPrices({form, farrierPrices}) {
     try {
-        const elements = getAllFormIdElements(formEle);
+        const elements = getAllFormIdElements(form);
         
         // Populate the farrier prices
         Object.entries(elements).forEach(([_, ele]) => {
-            if(farrierPrices[ele.name]){
-                ele.value = farrierPrices[ele.name];
-            }
+            if(farrierPrices[ele.name] === undefined) return;
+
+            debugLog(`ele.value: ${ele.value} === farrierPrices[${ele.name}]: ${farrierPrices[ele.name]}`);
+            // If values match, do nothing.
+            if(ele.value === farrierPrices[ele.name]) return;
+
+            const newValue = farrierPrices[ele.name] || '';
+            const currentValue = ele.removeAttribute('value');
+
+            ele.value = newValue;
         });
     }
     catch (err) {
@@ -70,7 +89,7 @@ function handleFarrierPrices(formEle, farrierPrices) {
  * @param {Array<Object>} [accessoryPrices.sedation] - Array of sedation pricing objects
  * @throws {Error} If there's an error handling the accessories
  */
-function handleAccessories(form, accessoryPrices) {
+function handleAccessories({form, accessoryPrices}) {
     try {
         // Set the accessory inputs
         const accessories = [
@@ -98,7 +117,12 @@ function handleAccessories(form, accessoryPrices) {
                     numberInputEle.value = valueLength > 0 ? valueLength : '';
 
                     if (valueLength > 0 && displayElement) {
-                        buildInputBlocks(valueLength, accessory, form, displayElement, accessoryValues);
+                        buildInputBlocks({
+                            numBlocks: valueLength,
+                            inputName: accessory,
+                            display: displayElement,
+                            value: accessoryValues
+                        });
                     }
                 } else if (singleInputEle && accessoryValues.length > 0) {
                     singleInputEle.value = accessoryValues[0].cost;

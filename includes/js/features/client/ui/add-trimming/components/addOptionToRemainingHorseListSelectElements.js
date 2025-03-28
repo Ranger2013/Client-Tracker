@@ -16,7 +16,7 @@ export default async function addOptionToRemainingHorseListSelectElements({conta
 		});
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../../core/errors/models/AppError.min.js");
+		const { AppError } = await import("../../../../../core/errors/models/AppError.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.RENDER_ERROR,
 			userMessage: 'We encountered an error repopulating the horse list select element. Please refresh the page and start over.',

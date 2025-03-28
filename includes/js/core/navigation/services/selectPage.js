@@ -1,4 +1,4 @@
-import { removeListeners } from "../../utils/dom/listeners.min.js";
+import { removeListeners } from "../../utils/dom/listeners.js";
 
 /** @type {Function|null} */
 let cleanup = null;
@@ -26,91 +26,88 @@ export default async function selectPage({ evt, page, cID = null, closeMenu = nu
     evt.preventDefault();
 
     // Page configuration map
-        const PAGE_CONFIG = {
-            clients: {
-                active: {
-                    module: "../../layout/client/pages/schedule-list/buildAppointmentListPage.min.js",
-                    getState: () => "/tracker/clients/appointments/?active=yes",
-                    getArgs: () => [{ active: 'yes', mainContainer: main, manageClient, manageUser }]
-                },
-                inactive: {
-                    module: "../../layout/client/pages/schedule-list/buildAppointmentListPage.min.js",
-                    getState: () => "/tracker/clients/appointments/?active=no",
-                    getArgs: () => [{ active: 'no', mainContainer: main, manageClient, manageUser }]
-                },
-                single: {
-                    module: "../../layout/client/pages/schedule-list/buildAppointmentListPage.min.js",
-                    getState: (cID, primaryKey) => `/tracker/clients/appointments/?cID=${cID}&primaryKey=${primaryKey}`,
-                    getArgs: (cID, primaryKey) => [{mainContainer: main, cID, primaryKey, manageClient, manageUser }]
-                },
-                add: {
-                    module: "../../layout/client/pages/add-edit-client/buildAddEditClientPage.min.js",
-                    getState: () => "/tracker/clients/add-client/",
-                    getArgs: (cID, primaryKey) => [{ cID, primaryKey, mainContainer: main, manageClient, manageUser }]
-                },
-                duplicate: {
-                    module: "../../layout/client/pages/duplicate-client/buildDuplicateClientPage.js",
-                    getState: () => "/tracker/clients/duplicate/",
-                    getArgs: () => [{ mainContainer: main, manageClient, manageUser }]
-                },
-                deleteDuplicate: {
-                    module: "../../layout/client/pages/delete-duplicate/buildDeleteDuplicateClientPage.js",
-                    getState: () => "/tracker/clients/delete-duplicate/",
-                    getArgs: () => [{ mainContainer: main, manageClient, manageUser }]
-                }
+    const PAGE_CONFIG = {
+        clients: {
+            active: {
+                module: "../../layout/client/pages/schedule-list/buildAppointmentListPage.js",
+                getState: () => "/tracker/clients/appointments/?active=yes",
+                getArgs: () => [{ active: 'yes', mainContainer: main, manageClient, manageUser }]
             },
-            management: {
-                mileage: {
-                    module: "../../layout/user/pages/mileage/add/buildAddMileagePage.min.js",
-                    getState: () => "/tracker/mileage/add/",
-                    getArgs: () => [{ mainContainer: main, manageClient, manageUser }]
-                },
-                expenses: {
-                    add: {
-                        module: "../page-builders/pages/expenses/add/buildAddExpensesPage.js",
-                        getState: () => "/tracker/expenses/add/",
-                        getArgs: () => [{ mainContainer: main }]
-                    },
-                    edit: {
-                        module: "../page-builders/pages/expenses/edit/buildEditExpensesPage.js",
-                        getState: () => "/tracker/expenses/edit/",
-                        getArgs: () => [{ mainContainer: main }]
-                    }
-                }
+            inactive: {
+                module: "../../layout/client/pages/schedule-list/buildAppointmentListPage.js",
+                getState: () => "/tracker/clients/appointments/?active=no",
+                getArgs: () => [{ active: 'no', mainContainer: main, manageClient, manageUser }]
             },
-            notes: {
-                add: {
-                    module: "../page-builders/pages/personal-notes/add/buildAddPersonalNotesPage.js",
-                    getState: () => "/tracker/personal-notes/add/",
-                    getArgs: () => [{ mainContainer: main }]
-                },
-                edit: {
-                    module: "../page-builders/pages/personal-notes/edit/buildEditPersonalNotesPage.js",
-                    getState: () => "/tracker/personal-notes/edit/",
-                    getArgs: () => [{ mainContainer: main }]
-                },
-                view: {
-                    module: "../page-builders/pages/personal-notes/view/buildViewPersonalNotesPage.js",
-                    getState: () => "/tracker/personal-notes/view/",
-                    getArgs: () => [{ mainContainer: main }]
-                }
+            single: {
+                module: "../../layout/client/pages/schedule-list/buildAppointmentListPage.js",
+                getState: (cID, primaryKey) => `/tracker/clients/appointments/?cID=${cID}&primaryKey=${primaryKey}`,
+                getArgs: (cID, primaryKey) => [{ mainContainer: main, cID, primaryKey, manageClient, manageUser }]
+            },
+            add: {
+                module: "../../layout/client/pages/add-edit-client/buildAddEditClientPage.js",
+                getState: () => "/tracker/clients/add-client/",
+                getArgs: (cID, primaryKey) => [{ cID, primaryKey, mainContainer: main, manageClient, manageUser }]
+            },
+            duplicate: {
+                module: "../../layout/client/pages/duplicate-client/buildDuplicateClientPage.js",
+                getState: () => "/tracker/clients/duplicate/",
+                getArgs: () => [{ mainContainer: main, manageClient, manageUser }]
+            },
+            deleteDuplicate: {
+                module: "../../layout/client/pages/delete-duplicate/buildDeleteDuplicateClientPage.js",
+                getState: () => "/tracker/clients/delete-duplicate/",
+                getArgs: () => [{ mainContainer: main, manageClient, manageUser }]
             }
-        };
+        },
+        management: {
+            mileage: {
+                add: {
+                    module: "../../layout/user/pages/mileage/add/buildAddMileagePage.js",
+                    getState: () => "/tracker/mileage/add/",
+                    getArgs: () => [{ mainContainer: main, manageClient, manageUser }],
+                },
+            },
+            expenses: {
+                add: {
+                    module: "../../layout/user/pages/expenses/add/buildAddExpensesPage.js",
+                    getState: () => "/tracker/expenses/add/",
+                    getArgs: () => [{ mainContainer: main, manageClient, manageUser }]
+                },
+            }
+        },
+        notes: {
+            add: {
+                module: "../../layout/user/pages/personal-notes/add/buildAddPersonalNotesPage.js",
+                getState: () => "/tracker/personal-notes/add/",
+                getArgs: () => [{ mainContainer: main, manageClient, manageUser }]
+            },
+            edit: {
+                module: "../page-builders/pages/personal-notes/edit/buildEditPersonalNotesPage.js",
+                getState: () => "/tracker/personal-notes/edit/",
+                getArgs: () => [{ mainContainer: main }]
+            },
+            view: {
+                module: "../page-builders/pages/personal-notes/view/buildViewPersonalNotesPage.js",
+                getState: () => "/tracker/personal-notes/view/",
+                getArgs: () => [{ mainContainer: main }]
+            }
+        }
+    };
 
-        const PAGE_MAPPINGS = {
-            'activeClients': { config: PAGE_CONFIG.clients.active, displayName: 'Active Clients' },
-            'inactiveClients': { config: PAGE_CONFIG.clients.inactive, displayName: 'Inactive Clients' },
-            'singleClient': { config: PAGE_CONFIG.clients.single, displayName: 'Single Client' },
-            'addClient': { config: PAGE_CONFIG.clients.add, displayName: 'Add Client' },
-            'duplicateClient': { config: PAGE_CONFIG.clients.duplicate, displayName: 'Duplicate Client' },
-            'deleteDuplicateClient': { config: PAGE_CONFIG.clients.deleteDuplicate, displayName: 'Delete Duplicate Client' },
-            'addMileage': { config: PAGE_CONFIG.management.mileage, displayName: 'Add Mileage' },
-            'addExpenses': { config: PAGE_CONFIG.management.expenses.add, displayName: 'Add Expenses' },
-            'editExpenses': { config: PAGE_CONFIG.management.expenses.edit, displayName: 'Edit Expenses' },
-            'addPersonalNotes': { config: PAGE_CONFIG.notes.add, displayName: 'Add Personal Notes' },
-            'editPersonalNotes': { config: PAGE_CONFIG.notes.edit, displayName: 'Edit Personal Notes' },
-            'viewPersonalNotes': { config: PAGE_CONFIG.notes.view, displayName: 'View Personal Notes' }
-        };
+    const PAGE_MAPPINGS = {
+        'activeClients': { config: PAGE_CONFIG.clients.active, displayName: 'Active Clients' },
+        'inactiveClients': { config: PAGE_CONFIG.clients.inactive, displayName: 'Inactive Clients' },
+        'singleClient': { config: PAGE_CONFIG.clients.single, displayName: 'Single Client' },
+        'addClient': { config: PAGE_CONFIG.clients.add, displayName: 'Add Client' },
+        'duplicateClient': { config: PAGE_CONFIG.clients.duplicate, displayName: 'Duplicate Client' },
+        'deleteDuplicateClient': { config: PAGE_CONFIG.clients.deleteDuplicate, displayName: 'Delete Duplicate Client' },
+        'addMileage': { config: PAGE_CONFIG.management.mileage.add, displayName: 'Add Mileage' },
+        'addExpenses': { config: PAGE_CONFIG.management.expenses.add, displayName: 'Add Expenses' },
+        'editExpenses': { config: PAGE_CONFIG.management.expenses.edit, displayName: 'Edit Expenses' },
+        'addPersonalNotes': { config: PAGE_CONFIG.notes.add, displayName: 'Add Personal Notes' },
+        'editPersonalNotes': { config: PAGE_CONFIG.notes.edit, displayName: 'Edit Personal Notes' },
+        'viewPersonalNotes': { config: PAGE_CONFIG.notes.view, displayName: 'View Personal Notes' }
+    };
 
     try {
         // Clean up any server-rendered page listeners before SPA navigation
@@ -145,7 +142,7 @@ export default async function selectPage({ evt, page, cID = null, closeMenu = nu
             errorType: err.name === 'ImportError' ? 'load' : 'build'
         });
 
-        const { AppError } = await import("../../errors/models/AppError.min.js");
+        const { AppError } = await import("../../errors/models/AppError.js");
         AppError.handleError(err, {
             errorCode: AppError.Types.RENDER_ERROR,
             userMessage: null,
@@ -188,7 +185,7 @@ async function importModule(modulePath) {
         const response = await caches.match(absolutePath);
 
         if (!response) throw err;
-        
+
         const text = await response.text();
 
         const blob = new Blob([text], { type: 'application/javascript' });
@@ -205,11 +202,12 @@ async function importModule(modulePath) {
 }
 
 function cleanupServerRenderedListeners() {
-    removeListeners('color-options');       // From colorOptionsJS.js
-    removeListeners('farrier-prices');      // From farrierPricesJS.js
-    removeListeners('date-time');           // From dateTimeJS.js
-    removeListeners('mileage-charges');     // From mileageCharges.js
-    removeListeners('schedule-options');     // From scheduleOptionsJS.js
+    removeListeners('color-options');           // From colorOptionsJS.js
+    removeListeners('farrier-prices');          // From farrierPricesJS.js
+    removeListeners('date-time');               // From dateTimeJS.js
+    removeListeners('mileage-charges');         // From mileageCharges.js
+    removeListeners('schedule-options');        // From scheduleOptionsJS.js
+    removeListeners('tracker-install-manager'); // From ManageTrackerInstallApp.js
     // We'll add more as we work through other server-rendered pages
 }
 
@@ -223,9 +221,8 @@ function closeNavigationMenu() {
     const closeNav = document.querySelectorAll('.drop-menu');
     const sideBar = document.getElementById('mySidebar');
 
-    // Close sidebar if open
-    if (sideBar?.classList.contains('w3-show')) {
-        sideBar.classList.remove('w3-show');
+    // Always ensure the w3-hide class is present on the sidebar
+    if (sideBar && !sideBar.classList.contains('w3-hide')) {
         sideBar.classList.add('w3-hide');
     }
 

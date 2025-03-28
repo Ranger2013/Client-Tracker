@@ -1,6 +1,6 @@
-import { disableEnableSubmitButton, updateSelectOptions } from '../../../../../core/utils/dom/elements.min.js';
-import { trimCycleRange } from '../../../../../core/utils/dom/forms/trimCycleConfigurations.min.js';
-import { safeDisplayMessage } from '../../../../../core/utils/dom/messages.min.js';
+import { disableEnableSubmitButton, updateSelectOptions } from '../../../../../core/utils/dom/elements.js';
+import { trimCycleRange } from '../../../../../core/utils/dom/forms/trimCycleConfigurations.js';
+import { safeDisplayMessage } from '../../../../../core/utils/dom/messages.js';
 
 export default async function handleEditHorseFormSubmission({ evt, cID, primaryKey, horseContainer, manageClient, componentId }) {
 	try {
@@ -19,7 +19,7 @@ export default async function handleEditHorseFormSubmission({ evt, cID, primaryK
 		const errors = await validateEditHorseForm(userData);
 
 		if (errors.length > 0) {
-			const { default: displayFormErrors } = await import("../../../../../core/utils/dom/forms/displayFormValidationErrors.min.js");
+			const { default: displayFormErrors } = await import("../../../../../core/utils/dom/forms/displayFormValidationErrors.js");
 			displayFormErrors(errors, { formMessage: 'Please fix the following errors', scrollToTope: true });
 			disableEnableSubmitButton('submit-button');
 			return;
@@ -44,7 +44,8 @@ export default async function handleEditHorseFormSubmission({ evt, cID, primaryK
 				textMapper: horse => horse.horse_name,
 				datasetMapper: horse => ({
 					'data-service-type': horse.service_type,
-					'data-trim-cycle': horse.trim_cycle
+					'data-trim-cycle': horse.trim_cycle,
+					'data-horse-type': horse.horse_type,
 				})
 			});
 
@@ -60,7 +61,7 @@ export default async function handleEditHorseFormSubmission({ evt, cID, primaryK
 		});
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../../core/errors/models/AppError.min.js");
+		const { AppError } = await import("../../../../../core/errors/models/AppError.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.FORM_SUBMISSION_ERROR,
 			userMessage: AppError.BaseMessages.forms.submissionFailed,
@@ -69,17 +70,19 @@ export default async function handleEditHorseFormSubmission({ evt, cID, primaryK
 	}
 }
 
-async function deleteClientHorse({ evt, manageClient, cID, primaryKey, horseContainer, componentId }) {
+async function deleteClientHorse({ evt, manageClient, cID, primaryKey, clientName, horseContainer, componentId }) {
 	try {
 		const shouldSubmit = confirm('Are you sure you want to delete this horse?');
 
 		if (!shouldSubmit) {
 			return;
 		}
+		const clientInfo = await manageClient.getClientInfo({ primaryKey });
+		const clientName = clientInfo.client_name;
 
 		// Get the form data
 		const userData = Object.fromEntries(new FormData(evt.target));
-		const deleteHorse = await manageClient.deleteClientHorse({ hID: userData.hID, cID: cID });
+		const deleteHorse = await manageClient.deleteClientHorse({ hID: userData.hID, cID: cID, client_name: clientName });
 
 		if (!deleteHorse) {
 			safeDisplayMessage({
@@ -96,8 +99,9 @@ async function deleteClientHorse({ evt, manageClient, cID, primaryKey, horseCont
 			textMapper: horse => horse.horse_name,
 			datasetMapper: horse => ({
 				'data-service-type': horse.type_service,
-				'data-trim-cycle': horse.trim_cycle
-			})
+				'data-trim-cycle': horse.trim_cycle,
+				'data-horse-type': horse.horse_type,
+			}),
 		});
 
 		// Clear the horse container
@@ -109,7 +113,7 @@ async function deleteClientHorse({ evt, manageClient, cID, primaryKey, horseCont
 		});
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../../core/errors/models/AppError.min.js");
+		const { AppError } = await import("../../../../../core/errors/models/AppError.js");
 		AppError.process(err, {
 			errorCode: AppError.Types.FORM_SUBMISSION_ERROR,
 			userMessage: AppError.BaseMessages.forms.submissionFailed,
@@ -136,7 +140,7 @@ async function validateEditHorseForm(userData) {
 			},
 			{
 				field: 'trim_cycle',
-				isValid: value => trimCycleRange.includes(parseInt(value,10)),
+				isValid: value => trimCycleRange.includes(parseInt(value, 10)),
 				message: 'Please select a trim cycle.'
 			}
 		];
@@ -154,7 +158,7 @@ async function validateEditHorseForm(userData) {
 		return errors;
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../../core/errors/models/AppError.min.js");
+		const { AppError } = await import("../../../../../core/errors/models/AppError.js");
 		AppError.process(err, {
 			errorCode: AppError.Types.FORM_VALIDATION_ERROR,
 			userMessage: AppError.BaseMessages.forms.validationFailed,

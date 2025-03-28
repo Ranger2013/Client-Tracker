@@ -1,4 +1,4 @@
-import { buildEle } from '../../../utils/dom/elements.min.js';
+import { buildEle } from '../../../utils/dom/elements.js';
  
 /**
  * Builds and displays a block indicating no appointments for the provided date.

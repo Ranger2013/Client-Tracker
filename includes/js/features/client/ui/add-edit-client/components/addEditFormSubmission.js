@@ -1,3 +1,5 @@
+import setupBackupNotice from '../../../../../core/services/backup-notice/backupNotice.min';
+
 const COMPONENT = 'Add Edit Form Submission';
 const DEBUG = false;
 
@@ -7,7 +9,7 @@ const debugLog = (...args) => {
 	}
 }
 
-export default async function addEditFormSubmission({ evt, cID, primaryKey, manageClient }) {
+export default async function addEditFormSubmission({ evt, cID, primaryKey, manageClient, manageUser }) {
 	try {
 		// Get the submitter to determine if we are adding/editing a client or deleting a client
 		const submitter = evt.submitter;
@@ -33,6 +35,7 @@ export default async function addEditFormSubmission({ evt, cID, primaryKey, mana
 			const editClient = await manageClient.editClient(userData, cID, primaryKey);
 
 			if (editClient) {
+				await setupBackupNotice({ errorEleID: 'backup-data-notice', manageUser });
 				return { status: 'success', type: 'edit', msg: `${userData.client_name} has been edited successfully.` };
 			}
 			return { status: 'error', type: 'edit', msg: `An error occurred while editing ${userData.client_name}.` };
@@ -43,6 +46,7 @@ export default async function addEditFormSubmission({ evt, cID, primaryKey, mana
 			const addClient = await manageClient.addNewClient(userData);
 			debugLog('Client Added: ', addClient);
 			if (addClient) {
+				await setupBackupNotice({ errorEleID: 'backup-data-notice', manageUser });
 				return { status: 'success', type: 'add', msg: `${userData.client_name} has been added successfully` };
 			};
 			return { status: 'error', type: 'add', msg: `An error occurred while adding ${userData.client_name}.` };

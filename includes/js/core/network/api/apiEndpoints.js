@@ -8,6 +8,7 @@ export const authAPI = {
 
 export const systemAPI = {
     installApp: "/includes/api/home/getInstallAppAPI.php",
+    installIOS: "/includes/api/home/getInstallIOSAPI.php",
     notifications: "/includes/api/home/getNotificationsAPI.php",
     errorLog: "/includes/api/error-logs/errorLogAPI.php"
 };

@@ -1,13 +1,13 @@
-import setupClientAnchorListener from '../../../../core/navigation/components/setupClientAnchorListener.min.js';
-import checkAppointment from '../../../../core/services/appointment-block/checkAppointment.min.js';
-import { disableEnableSubmitButton } from '../../../../core/utils/dom/elements.min.js';
-import { addListener } from '../../../../core/utils/dom/listeners.min.js';
-import { clearMsg, safeDisplayMessage } from '../../../../core/utils/dom/messages.min.js';
-import { ucwords, underscoreToSpaces } from '../../../../core/utils/string/stringUtils.min.js';
-import buildListOfHorsesSection from './components/buildListOfHorsesSection.min.js';
-import calculateTotalCost from './components/calculateTotalCost.min.js';
-import { handleShowingAccessoriesSelectBox, handleShowingCostChangeInput, updateCostChangeInput, updateServiceCostSelectedIndex } from './handlers/costHandlers.min.js';
-import handleAddTrimmingFormSubmission from './handlers/formSubmission.min.js';
+import setupClientAnchorListener from '../../../../core/navigation/components/setupClientAnchorListener.js';
+import checkAppointment from '../../../../core/services/appointment-block/checkAppointment.js';
+import { disableEnableSubmitButton } from '../../../../core/utils/dom/elements.js';
+import { addListener } from '../../../../core/utils/dom/listeners.js';
+import { clearMsg, safeDisplayMessage } from '../../../../core/utils/dom/messages.js';
+import { ucwords, underscoreToSpaces } from '../../../../core/utils/string/stringUtils.js';
+import buildListOfHorsesSection from './components/buildListOfHorsesSection.js';
+import calculateTotalCost from './components/calculateTotalCost.js';
+import { handleShowingAccessoriesSelectBox, handleShowingCostChangeInput, updateCostChangeInput, updateServiceCostSelectedIndex } from './handlers/costHandlers.js';
+import handleAddTrimmingFormSubmission from './handlers/formSubmission.js';
 
 const COMPONENT = 'Add Trimming JS';
 const DEBUG = false;
@@ -29,20 +29,6 @@ export default async function addTrimming({ cID, primaryKey, mainContainer, mana
 		// Get the clients information
 		const clientInfo = await manageClient.getClientInfo({ primaryKey });
 
-		// This is an ugly fix in the event we don't have a page, but are showing the add a horse link
-		const addHorseLink = document.getElementById('add-horse-link');
-		if (!addHorseLink) {
-			// Initial appointment check
-			checkAppointment({
-				trimDate: 'next-trim-date',
-				appBlock: 'appointment-block',
-				projAppBlock: 'projected-appointment-block',
-				clientInfo,
-				manageClient,
-				manageUser,
-			});
-		}
-
 		// Set up static event handlers for known elements
 		const staticEventHandlers = {
 			'input:number-horses': async (evt) => {
@@ -61,21 +47,6 @@ export default async function addTrimming({ cID, primaryKey, mainContainer, mana
 			'submit:trimming-form': (evt) => {
 				evt.preventDefault();
 				handleAddTrimmingFormSubmission({ evt, cID, primaryKey, mainContainer, manageClient })
-			},
-			'click:add-horse-link': async (evt) => {
-				evt.preventDefault();
-				debugLog('Click event to the add horse link: ', evt.target);
-				// This only shows up if the client doesn't have a horse, so lazy load the navigation
-				const { default: selectClientMenuPage } = await import("../../../../core/navigation/services/selectClientMenuPage.js");
-				selectClientMenuPage({
-					evt,
-					page: 'add-horse',
-					cID,
-					primaryKey,
-					manageClient,
-					manageUser,
-					mainContainer,
-				});
 			},
 		};
 
@@ -111,6 +82,7 @@ export default async function addTrimming({ cID, primaryKey, mainContainer, mana
 				handler: async (evt, index) => {
 					debugLog(`Cost change ${index} input:`, evt.target.value);
 					await updateServiceCostSelectedIndex({ evt, index });
+					calculateTotalCost();
 				}
 			},
 			'accessories-': {
@@ -152,7 +124,7 @@ export default async function addTrimming({ cID, primaryKey, mainContainer, mana
 	}
 	catch (err) {
 		debugLog('Add Trimming Error: ', err);
-		const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
+		const { AppError } = await import("../../../../core/errors/models/AppError.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.INITIALIZATION_ERROR,
 			userMessage: AppError.BaseMessages.system.initialization,
@@ -163,6 +135,7 @@ export default async function addTrimming({ cID, primaryKey, mainContainer, mana
 async function numberOfHorsesServiced({ evt, primaryKey, manageClient, manageUser }) {
 	try {
 		debugLog('number of horses serviced: user input value: ', evt.target.value);
+		// Show error message if blank or 0. return early
 		if (evt.target.value === '0' || evt.target.value === '') {
 			safeDisplayMessage({
 				elementId: `${evt.target.id}-error`,
@@ -183,7 +156,7 @@ async function numberOfHorsesServiced({ evt, primaryKey, manageClient, manageUse
 	catch (err) {
 		disableEnableSubmitButton('submit-button');
 
-		const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
+		const { AppError } = await import("../../../../core/errors/models/AppError.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.RENDER_ERROR,
 			userMessage: AppError.BaseMessages.system.render,
@@ -205,7 +178,7 @@ async function disableMileageCharges({ evt }) {
 		await calculateTotalCost();
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
+		const { AppError } = await import("../../../../core/errors/models/AppError.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.INITIALIZATION_ERROR,
 			userMessage: 'We encountered an error trying to disable mileage charges.'
@@ -236,9 +209,7 @@ async function updateAllHorseListSelectElements(evt) {
 				// If there was a previously selected option for this select element, add it back
 				if (prevOptions.has(select.id)) {
 					let prevOption = prevOptions.get(select.id);
-					let option = document.createElement("option");
-					option.text = prevOption.text;
-					option.value = prevOption.value;
+					let option = prevOption.cloneNode(true);
 					sel.add(option);
 				}
 
@@ -258,7 +229,7 @@ async function updateAllHorseListSelectElements(evt) {
 		debugLog('Previous Options Map:', prevOptions);
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
+		const { AppError } = await import("../../../../core/errors/models/AppError.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.INITIALIZATION_ERROR,
 			userMessage: 'We encountered an error trying to update the horse list select elements.'
@@ -326,7 +297,7 @@ async function changeServiceCostToMatchHorseService({ evt, primaryKey, manageCli
         }
     }
     catch (err) {
-        const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
+        const { AppError } = await import("../../../../core/errors/models/AppError.js");
         AppError.handleError(err, {
             errorCode: AppError.Types.INITIALIZATION_ERROR,
             userMessage: 'We encountered an error trying to update the service cost to match the horse service.'
@@ -344,7 +315,7 @@ async function updateHorseListLabel({evt}){
 		horseNameLabel.innerHTML = `Horse's Name: <span class="w3-small">${ucwords(underscoreToSpaces(serviceType))} Cycle: ${serviceTime / 7} weeks</span>`;
 	}
 	catch(err){
-		const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
+		const { AppError } = await import("../../../../core/errors/models/AppError.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.RENDER_ERROR,
 			userMessage: null,

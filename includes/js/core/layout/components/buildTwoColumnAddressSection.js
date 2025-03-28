@@ -1,6 +1,6 @@
-import { buildEle } from '../../utils/dom/elements.min.js';
-import { buildErrorDiv } from '../../utils/dom/forms/buildUtils.min.js';
-import { cleanUserOutput } from '../../utils/string/stringUtils.min.js';
+import { buildEle } from '../../utils/dom/elements.js';
+import { buildErrorDiv } from '../../utils/dom/forms/buildUtils.js';
+import { cleanUserOutput } from '../../utils/string/stringUtils.js';
 
 /**
  * Builds an HTML address section with specified fields.
@@ -73,7 +73,7 @@ export default async function buildTwoColumnAddressSection(labelText, inputID, f
         return row;
 
     } catch (err) {
-        const { AppError } = await import("../../errors/models/AppError.min.js");
+        const { AppError } = await import("../../errors/models/AppError.js");
 		AppError.process(err, {
 			errorCode: AppError.Types.RENDER_ERROR,
 			userMessage: AppError.BaseMessages.system.render,

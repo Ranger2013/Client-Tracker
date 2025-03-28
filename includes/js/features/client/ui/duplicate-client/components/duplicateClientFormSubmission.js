@@ -1,7 +1,7 @@
-import { getValidElement } from '../../../../../core/utils/dom/elements.min.js';
-import { trimCycleRange } from '../../../../../core/utils/dom/forms/trimCycleConfigurations.min.js';
-import { clearMsg, safeDisplayMessage } from '../../../../../core/utils/dom/messages.min.js';
-import { cleanUserOutput } from '../../../../../core/utils/string/stringUtils.min.js';
+import { getValidElement } from '../../../../../core/utils/dom/elements.js';
+import { trimCycleRange } from '../../../../../core/utils/dom/forms/trimCycleConfigurations.js';
+import { clearMsg, safeDisplayMessage } from '../../../../../core/utils/dom/messages.js';
+import { cleanUserOutput } from '../../../../../core/utils/string/stringUtils.js';
 
 // Set up debugging
 const COMPONENT = 'Duplicate Client Form Submission';
@@ -63,7 +63,7 @@ export default async function duplicateClientFormSubmission({evt, manageClient, 
 		}
 	}
 	catch(err){
-		const { AppError } = await import("../../../../../core/errors/models/AppError.min.js");
+		const { AppError } = await import("../../../../../core/errors/models/AppError.js");
 		AppError.process(err, {
 			errorCode: AppError.Types.FORM_SUBMISSION_ERROR,
 			userMessage: 'Unable to process the form submission at this time.',

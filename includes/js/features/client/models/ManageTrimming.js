@@ -3,8 +3,8 @@
 // import IndexedDBOperations from "./IndexedDBOperations.js";
 // import ManageClient from "./ManageClient.js";
 
-import IndexedDBOperations from '../../../core/database/IndexedDBOperations.min.js';
-import ManageClient from './ManageClient.min.js';
+import IndexedDBOperations from '../../../core/database/IndexedDBOperations.js';
+import ManageClient from './ManageClient.js';
 
 /**
  * Manages trimming session operations and related data using IndexedDB
@@ -82,7 +82,8 @@ export default class ManageTrimming {
 			}
 
 			// Convert cID to a number if it is a string
-			if (typeof cID === 'string') cID = parseInt(cID, 10);
+			cID = typeof cID === 'string' ? parseInt(cID, 10) : cID;
+			primaryKey = typeof primaryKey === 'string' ? parseInt(primaryKey, 10) : primaryKey;
 
 			// Get the previous trim sessions and next trimming id concurrently
 			const [prevTrims, nextTrimID] = await Promise.all([
@@ -131,7 +132,7 @@ export default class ManageTrimming {
 			return { status: 'ok', message: `Trimming/Shoeing session added successfully.${receiptMsg}` };
 		}
 		catch (err) {
-			const { AppError } = await import("../../../core/errors/models/AppError.min.js");
+			const { AppError } = await import("../../../core/errors/models/AppError.js");
 			AppError.process(err, {
 				errorCode: AppError.Types.PROCESSING_ERROR,
 				userMessage: 'Failed to add trimming session',
@@ -186,14 +187,19 @@ export default class ManageTrimming {
 	 */
 	async handleSendingReceipt(userData) {
 		try {
+			this.#log('Getting imports all at once.');
 			const [{ getValidationToken }, { dataAPI }, { fetchData }] = await Promise.all([
 				import("../../../tracker.js"),
 				import("../../../core/network/api/apiEndpoints.js"),
 				import("../../../core/network/services/network.js"),
 			]);
 
+			this.#log('Imports: ', getValidationToken, dataAPI, fetchData);
+
 			// Get the authorization token
+
 			const validationToken = getValidationToken();
+			this.#log('Validation Token: ', validationToken);
 			this.#log('Before we send the receipt.');
 			// Make the reqeust to the server api
 			const response = await fetchData({
@@ -243,7 +249,7 @@ export default class ManageTrimming {
 				.map(({ index, ...horse }) => horse);
 		}
 		catch (err) {
-			const { AppError } = await import("../../../core/errors/models/AppError.min.js");
+			const { AppError } = await import("../../../core/errors/models/AppError.js");
 			await AppError.process(err, {
 				errorCode: AppError.Types.PROCESSING_ERROR,
 				userMessage: 'Failed to process horse data',
@@ -263,6 +269,12 @@ export default class ManageTrimming {
 	 */
 	async addTrimSession(backupData, trimmingStoreData) {
 		try {
+			const { cID, add_trimming, userData, ...newTrimmingData } = backupData;
+			const { trimID } = backupData;
+
+			// Push the trimming onto the trimmingstoreData
+			trimmingStoreData.trimmings.push(newTrimmingData);
+
 			// Make a shallow copy of the backup trimming data structure
 			const db = await this.#indexed.openDBPromise();
 
@@ -273,34 +285,20 @@ export default class ManageTrimming {
 				this.#indexed.stores.TRIMMING
 			], 'readwrite');
 
-			// Add the backup trimming data and the max trim id into their appropriate stores
-			const backupTrimming = this.#indexed.putStorePromise(db, backupData, this.#indexed.stores.ADDTRIMMING, false, tx);
-			const putTrimID = this.#indexed.putStorePromise(db, { trimID: backupData.trimID }, this.#indexed.stores.MAXTRIMID, true, tx);
+			await Promise.all([
+				this.#indexed.putStorePromise(db, backupData, this.#indexed.stores.ADDTRIMMING, false, tx),
+				this.#indexed.putStorePromise(db, { trimID }, this.#indexed.stores.MAXTRIMID, true, tx),
+				this.#indexed.putStorePromise(db, trimmingStoreData, this.#indexed.stores.TRIMMING, false, tx),
+			]);
 
-			// Remove the cID, add_trimming boolean and the userData from the backup data structure
-			const cID = backupData.cID;
-			delete backupData.add_trimming;
-			delete backupData.userData;
-
-			// push the backup trimming data onto the trimming store data trimmings array
-			trimmingStoreData.trimmings.push(backupData);
-
-			this.#log('Add Trim Session: trimmingStoreData after backupData push: ', trimmingStoreData);
-
-			// Now add the trimming data to the trimming store
-			const addTrimming = this.#indexed.putStorePromise(db, trimmingStoreData, this.#indexed.stores.TRIMMING, false, tx);
-
-			// Wait for all the promises to resolve
-			await Promise.all([backupTrimming, putTrimID, addTrimming]);
-			this.#log('Before cleanup Trimmings.');
 			// Lets clean up the trimmings
 			await this.cleanupTrimmings(cID);
-			this.#log('After cleanup Trimmings.');
+
 			// Return a properly formatted success response
 			return true;
 		}
 		catch (err) {
-			const { AppError } = await import("../../../core/errors/models/AppError.min.js");
+			const { AppError } = await import("../../../core/errors/models/AppError.js");
 			AppError.process(err, {
 				errorCode: AppError.Types.DATABASE_ERROR,
 				userMessage: 'Failed to add trimming session',

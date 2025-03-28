@@ -8,20 +8,18 @@ import { clearMsg } from '../../../../../../core/utils/dom/messages.js';
  * @param {Object} tabs - An object containing the list of tabs for the page.
  * @param {Element|string} msgElement - The Element Node or the string ID of the element to remove the message.
  */
-export function setActiveTab({evt, tabs, msgElement}) {
+export function setActiveTab({evt, msgElement}) {
 	// Clear any messages when the user selects a different tab
 	clearMsg({ container: msgElement });
 
-	const ele = evt.target;
+	const tabs = document.getElementById('tab-container').querySelectorAll('[id$="-tab"]');
 
-	for (const tab in tabs) {
-		if (evt.target.id === tabs[tab].eleId) {
-			ele.nextElementSibling.classList.add('w3-blue-grey');
-		} else {
-			const tabEle = document.getElementById(tabs[tab].eleId);
-			if (tabEle) {
-				tabEle.nextElementSibling.classList.remove('w3-blue-grey');
-			}
+	Array.from(tabs).forEach(tab => {
+		if(tab.id === evt.target.id) {
+			tab.nextElementSibling.classList.add('w3-blue-grey');
 		}
-	}
+		else {
+			tab.nextElementSibling.classList.remove('w3-blue-grey');
+		}
+	});
 }

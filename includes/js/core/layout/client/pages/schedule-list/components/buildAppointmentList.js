@@ -1,4 +1,5 @@
-import processClientList from './processClientList.min.js';
+import { safeDisplayMessage } from '../../../../../utils/dom/messages.js';
+import processClientList from './processClientList.js';
 
 export default async function buildAppointmentList({ active, clientId, primaryKey, manageClient, manageUser }) {
     try {
@@ -75,7 +76,10 @@ async function handleNoSettings({colorOptions, dateTime}){
 		}
 
 		if(settingsMsg !== '') {
-			myError('page-msg', settingsMsg);
+            safeDisplayMessage({
+                elementId: 'page-msg',
+                message: settingsMsg,
+            });
 		}
 	}
 	catch(err){

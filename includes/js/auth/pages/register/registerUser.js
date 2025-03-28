@@ -1,12 +1,12 @@
-import { addListener } from "../../../core/utils/dom/listeners.min.js";
-import { ucwords } from "../../../core/utils/string/stringUtils.min.js";
-import { clearMsg, safeDisplayMessage } from "../../../core/utils/dom/messages.min.js";
-import { checkForDuplicate } from "../../services/duplicateCheck.min.js";
-import { formatEmail, formatPhone } from "../../../core/utils/dom/forms/validation.min.js";
-import { checkPasswordStrength, comparePasswords } from "../../utils/passwordValidation.min.js";
-import { getTerms, handleUserRegistration } from "./components/registerUserHelpers.min.js";
-import { createAdaptiveHandler } from "../../../core/utils/dom/eventUtils.min.js";
-import { disableEnableSubmitButton } from "../../../core/utils/dom/elements.min.js";
+import { addListener } from "../../../core/utils/dom/listeners.js";
+import { ucwords } from "../../../core/utils/string/stringUtils.js";
+import { clearMsg, safeDisplayMessage } from "../../../core/utils/dom/messages.js";
+import { checkForDuplicate } from "../../services/duplicateCheck.js";
+import { formatEmail, formatPhone } from "../../../core/utils/dom/forms/validation.js";
+import { checkPasswordStrength, comparePasswords } from "../../utils/passwordValidation.js";
+import { getTerms, handleUserRegistration } from "./components/registerUserHelpers.js";
+import { createAdaptiveHandler } from "../../../core/utils/dom/eventUtils.js";
+import { disableEnableSubmitButton } from "../../../core/utils/dom/elements.js";
 
 /**
  * Initializes the registration form validation and event handlers

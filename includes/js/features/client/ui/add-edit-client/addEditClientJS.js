@@ -1,12 +1,12 @@
-import checkAppointment from '../../../../core/services/appointment-block/checkAppointment.min.js';
-import { disableEnableSubmitButton } from '../../../../core/utils/dom/elements.min.js';
-import { createDebouncedHandler, getOptimalDelay } from '../../../../core/utils/dom/eventUtils.min.js';
-import getAllFormIdElements from '../../../../core/utils/dom/forms/getAllFormIDElements.min.js';
-import { trimCycleRange } from '../../../../core/utils/dom/forms/trimCycleConfigurations.min.js';
-import { addListener, removeListeners } from '../../../../core/utils/dom/listeners.min.js';
-import { clearMsg, safeDisplayMessage } from '../../../../core/utils/dom/messages.min.js';
-import { hyphenToSpaces, hyphenToUnderscore, ucwords } from '../../../../core/utils/string/stringUtils.min.js';
-import { top } from '../../../../core/utils/window/scroll.min.js';
+import checkAppointment from '../../../../core/services/appointment-block/checkAppointment.js';
+import { disableEnableSubmitButton } from '../../../../core/utils/dom/elements.js';
+import { createDebouncedHandler, getOptimalDelay } from '../../../../core/utils/dom/eventUtils.js';
+import getAllFormIdElements from '../../../../core/utils/dom/forms/getAllFormIDElements.js';
+import { trimCycleRange } from '../../../../core/utils/dom/forms/trimCycleConfigurations.js';
+import { addListener, removeListeners } from '../../../../core/utils/dom/listeners.js';
+import { clearMsg, safeDisplayMessage } from '../../../../core/utils/dom/messages.js';
+import { hyphenToSpaces, hyphenToUnderscore, ucwords } from '../../../../core/utils/string/stringUtils.js';
+import { top } from '../../../../core/utils/window/scroll.js';
 
 const FORM_FIELDS = [
 	'client-name', 'street', 'city', 'state',
@@ -35,7 +35,7 @@ export default async function addEditClient({ cID, primaryKey, clientInfo, manag
 		initializeForm({ cID, primaryKey, clientInfo, manageClient, manageUser, componentId });
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
+		const { AppError } = await import("../../../../core/errors/models/AppError.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.INITIALIZATION_ERROR,
 			userMessage: AppError.BaseMessages.system.initialization,
@@ -111,7 +111,7 @@ function initializeForm({ cID, primaryKey, clientInfo, manageClient, manageUser,
 		eventType: 'submit',
 		handler: (evt) => {
 			evt.preventDefault();
-			handleFormSubmission({evt, cID, primaryKey, clientInfo, manageClient, manageUser, componentId});
+			handleFormSubmission({ evt, cID, primaryKey, clientInfo, manageClient, manageUser, componentId });
 		},
 		componentId
 	});
@@ -150,7 +150,7 @@ async function handleFormValidation({ evt, field, cID, primaryKey, clientInfo, m
 		await disableEnableSubmitButton('submit-button');
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
+		const { AppError } = await import("../../../../core/errors/models/AppError.js");
 		AppError.process(err, {
 			errorCode: AppError.Types.FORM_VALIDATION_ERROR,
 			userMessage: AppError.BaseMessages.forms.validationFailed,
@@ -187,7 +187,7 @@ async function checkClientFormValidity({ evt, cID, primaryKey, manageClient }) {
 		}
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
+		const { AppError } = await import("../../../../core/errors/models/AppError.js");
 		AppError.process(err, {
 			errorCode: AppError.Types.FORM_VALIDATION_ERROR,
 			userMessage: AppError.BaseMessages.forms.validationFailed,
@@ -203,12 +203,12 @@ async function checkClientFormValidity({ evt, cID, primaryKey, manageClient }) {
  * @param {string|null} primaryKey - Database primary key
  * @returns {Promise<boolean>} True if all fields are valid, false otherwise
  */
-async function validateAllFormFields({userData, cID, primaryKey, manageClient}) {
+async function validateAllFormFields({ userData, cID, primaryKey, manageClient }) {
 	let hasErrors = false;
 
 	for (const fieldId of FORM_FIELDS) {
 		const fieldName = hyphenToUnderscore(fieldId);
-		
+
 		const fieldValue = userData[fieldName];
 		const field = document.getElementById(fieldId);
 
@@ -239,13 +239,13 @@ async function validateAllFormFields({userData, cID, primaryKey, manageClient}) 
  * @param {Object|null} clientInfo - Client information used in the check appointment process
  * @returns {Promise<void>}
  */
-async function handleFormSubmission({evt, cID, primaryKey, clientInfo, manageClient, manageUser, componentId}) {
+async function handleFormSubmission({ evt, cID, primaryKey, clientInfo, manageClient, manageUser, componentId }) {
 	try {
 		const userData = Object.fromEntries(new FormData(evt.target));
 
-		const [ isValid, trimCycleCheck ] = await Promise.all([
-			validateAllFormFields({userData, cID, primaryKey, manageClient, componentId}),
-			handleTrimCycleCheck({userData, componentId})
+		const [isValid, trimCycleCheck] = await Promise.all([
+			validateAllFormFields({ userData, cID, primaryKey, manageClient, componentId }),
+			handleTrimCycleCheck({ userData, componentId })
 		]);
 
 		// Validate all form fields before submission. In the case the user found a loop hole. 
@@ -263,7 +263,7 @@ async function handleFormSubmission({evt, cID, primaryKey, clientInfo, manageCli
 		if (!trimCycleCheck) return;
 
 		const { default: formSubmission } = await import("./components/addEditFormSubmission.js");
-		const response = await formSubmission({ evt, cID, primaryKey, manageClient });
+		const response = await formSubmission({ evt, cID, primaryKey, manageClient, manageUser });
 		const { status, message, delete: isDelete } = handleIDBResponse(response);
 
 		// Handle the response
@@ -291,15 +291,20 @@ async function handleFormSubmission({evt, cID, primaryKey, clientInfo, manageCli
 				manageClient,
 				manageUser,
 			});
-			
+
 			// Reset the form if we are adding a client
-			if(!cID && !primaryKey) evt.target.reset();
+			if (!cID && !primaryKey) {
+				evt.target.reset();
+
+				document.getElementById('trim-date').value = new Date().toISOString().slice(0, 10);
+				document.getElementById('app-time').value = '09:00';
+			}
 			return;
 		}
 	}
 	catch (err) {
 		top();
-		const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
+		const { AppError } = await import("../../../../core/errors/models/AppError.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.FORM_SUBMISSION_ERROR,
 			userMessage: AppError.BaseMessages.forms.submissionFailed,
@@ -308,9 +313,9 @@ async function handleFormSubmission({evt, cID, primaryKey, clientInfo, manageCli
 	}
 }
 
-async function handleTrimCycleCheck({userData, componentId}) {
+async function handleTrimCycleCheck({ userData, componentId }) {
 	try {
-		if(trimCycleRange.includes(parseInt(userData?.trim_cycle), 10)){
+		if (trimCycleRange.includes(parseInt(userData?.trim_cycle), 10)) {
 			top();
 
 			// Show the error message
@@ -335,7 +340,7 @@ async function handleTrimCycleCheck({userData, componentId}) {
 		return true;
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
+		const { AppError } = await import("../../../../core/errors/models/AppError.js");
 		AppError.process(err, {
 			errorCode: AppError.Types.FORM_VALIDATION_ERROR,
 			userMessage: AppError.BaseMessages.forms.validationFailed,

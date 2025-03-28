@@ -1,10 +1,10 @@
-import { buildGenericSelectOptions, disableEnableSubmitButton, getValidElement } from '../../../../../core/utils/dom/elements.min.js';
-import { clearMsg } from '../../../../../core/utils/dom/messages.min.js';
-import { cleanUserOutput, ucwords, underscoreToSpaces } from '../../../../../core/utils/string/stringUtils.min.js';
-import autoFillHorseList from './autoFillHorseList.min.js';
-import calculateTotalCost from './calculateTotalCost.min.js';
-import { updateTrimCost } from './updateTrimCost.min.js';
-import { prevOptions } from '../addTrimmingJS.min.js';
+import { buildGenericSelectOptions, disableEnableSubmitButton, getValidElement } from '../../../../../core/utils/dom/elements.js';
+import { clearMsg } from '../../../../../core/utils/dom/messages.js';
+import { cleanUserOutput, ucwords, underscoreToSpaces } from '../../../../../core/utils/string/stringUtils.js';
+import autoFillHorseList from './autoFillHorseList.js';
+import calculateTotalCost from './calculateTotalCost.js';
+import { updateTrimCost } from './updateTrimCost.js';
+import { prevOptions } from '../addTrimmingJS.js';
 
 const COMPONENT = 'BuildListOfHorsesSection';
 const DEBUG = false;
@@ -15,6 +15,18 @@ const debugLog = (...args) => {
 	}
 };
 
+/**
+ * Builds and manages the section where users can select horses for trimming
+ * @async
+ * @param {Object} params - The parameters object
+ * @param {Event} params.evt - The event that triggered this function
+ * @param {HTMLElement} params.horseListContainer - The container element for the horse list
+ * @param {string|number} params.primaryKey - The primary key identifier for the client
+ * @param {Object} params.manageClient - Client management interface object
+ * @param {Object} params.manageUser - User management interface object
+ * @throws {AppError} When unable to render the list or when farrier prices are not set
+ * @returns {Promise<void>}
+ */
 export default async function buildListOfHorsesSection({ evt, horseListContainer, primaryKey, manageClient, manageUser }) {
 	try {
 		// Clear any form messages
@@ -22,11 +34,104 @@ export default async function buildListOfHorsesSection({ evt, horseListContainer
 
 		// Get a valid html element
 		horseListContainer = getValidElement(horseListContainer);
+		// Get the number of children in the container
 		const horseListChildren = horseListContainer.children.length;
 
-		// Get the clients information to extrapolate the horse list and total horses
-		const clientInfo = await manageClient.getClientInfo({ primaryKey });
+		// Get all of our page data
+		const {
+			clientInfo,
+			clientTrimCycle,
+			clientHorses,
+			totalHorses,
+			farrierPrices,
+			accessoryPrices,
+		} = await getPageData({ manageUser, manageClient, primaryKey });
+
+		debugLog('farrier prices: ', farrierPrices);
+
+		const haveFarrierPricing = Object.values(farrierPrices).some(price => price !== '' && price !== '0.00' && price !== 0.00);
+
+		if (!haveFarrierPricing) {
+			throw new Error('Please update your farrier prices settings.');
+		}
+
+		// Set up the configuration options to pass to handle showing number of horses.
+		const optionsConfig = getOptionsConfig({ clientHorses, userFarrierPrices: farrierPrices, accessoryPrices });
+
+		const horseListSection = await handleShowingNumberOfHorses({
+			evt,
+			horseListContainer,
+			clientTotalHorses: totalHorses,
+			// farrierPrices: farrierPrices,
+			optionsConfig,
+			containerChildren: horseListChildren,
+		});
+
+		renderPage({ container: horseListContainer, horseList: horseListSection });
+
+		await autoUpdateServiceCost(horseListContainer);
+
+		// Get the final number of horses to determine the trimming costs
+		const finalHorseCount = document.getElementById('number-horses').value;
+
+		// Update the trimming costs and calculate total cost
+		await updateTrimCost({ blockElementNode: horseListContainer, numberHorses: finalHorseCount, userFarrierPrices: farrierPrices });
+
+		disableEnableSubmitButton('submit-button');
+
+	}
+	catch (err) {
+		const { AppError } = await import("../../../../../core/errors/models/AppError.js");
+		AppError.process(err, {
+			errorCode: AppError.Types.RENDER_ERROR,
+			userMessage: 'Unable to render the list of horses section. Please update your farrier prices settings.',
+			displayTarget: 'number-horses-error',
+		}, true);
+	}
+}
+
+/**
+ * Renders the horse list section to the page
+ * @param {Object} params - The parameters object
+ * @param {HTMLElement} params.container - The container element to render into
+ * @param {Array<HTMLElement>} params.horseList - Array of horse list elements to render
+ * @private
+ */
+function renderPage({ container, horseList }) {
+	// Set up a fragment
+	const fragment = document.createDocumentFragment();
+
+	fragment.append(...horseList);
+
+	container.appendChild(fragment);
+}
+
+/**
+ * Retrieves and processes all necessary data for the page
+ * @async
+ * @param {Object} params - The parameters object
+ * @param {Object} params.manageUser - User management interface
+ * @param {Object} params.manageClient - Client management interface
+ * @param {string|number} params.primaryKey - The primary key identifier
+ * @throws {AppError} When unable to get client data or when farrier prices are not set
+ * @returns {Promise<Object>} Object containing client info, trim cycle, horses, and pricing data
+ * @private
+ */
+async function getPageData({ manageUser, manageClient, primaryKey }) {
+	try {
+		const [clientInfo, userFarrierPrices] = await Promise.all([
+			manageClient.getClientInfo({ primaryKey }),
+			manageUser.getFarrierPrices(),
+		]);
+
+		// Get the user's accessory and farrier prices. If we don't have any, throw the error.
+		const { accessories: accessoryPrices, ...farrierPrices } = userFarrierPrices;
+		if (!accessoryPrices || Object.keys(farrierPrices).length === 0) throw new Error('Please update your farrier prices settings.');
+
+		// Get the clients trim cycle
 		const clientTrimCycle = clientInfo?.trim_cycle;
+
+		// Get the clients horses sorted by trim cycle
 		const clientHorses = clientInfo?.horses.sort((a, b) => {
 			// First check if either matches the client's trim cycle
 			const aMatchesClientCycle = a.trim_cycle === clientTrimCycle;
@@ -39,52 +144,38 @@ export default async function buildListOfHorsesSection({ evt, horseListContainer
 			// If both match or both don't match, sort alphabetically
 			return a.horse_name.localeCompare(b.horse_name);
 		}) || [];
+
+		// Get the clients total horses
 		const totalHorses = clientHorses.length;
 
-		// Get the user's farrier prices
-		const userFarrierPrices = await manageUser.getFarrierPrices();
-		const { accessories: accessoryPrices, ...farrierPrices } = userFarrierPrices;
-
-		const optionsConfig = getOptionsConfig({ clientHorses, userFarrierPrices });
-		debugLog('Options Configuration: ', optionsConfig);
-		const horseListSection = await handleShowingNumberOfHorses({
-			evt,
-			horseListContainer,
-			clientTotalHorses: totalHorses,
-			farrierPrices: farrierPrices,
-			optionsConfig,
-			containerChildren: horseListChildren,
-		});
-
-		horseListSection?.forEach(horseList => horseListContainer.appendChild(horseList));
-
-		await autoUpdateServiceCost(horseListContainer);
-
-		// Get the final number of horses to determine the trimming costs
-		const finalHorseCount = document.getElementById('number-horses').value;
-
-		// Update the trimming costs and calculate total cost
-		await Promise.all([
-			updateTrimCost({ blockElementNode: horseListContainer, numberHorses: finalHorseCount, userFarrierPrices: farrierPrices }),
-			calculateTotalCost(),
-		]);
-
-		disableEnableSubmitButton('submit-button');
-
+		return {
+			clientInfo,
+			clientTrimCycle,
+			clientHorses,
+			totalHorses,
+			accessoryPrices,
+			farrierPrices,
+		};
 	}
 	catch (err) {
-		throw err;
+		const { AppError } = await import("../../../../../core/errors/models/AppError.js");
+		AppError.process(err, {
+			errorCode: AppError.Types.PROCESSING_ERROR,
+			userMessage: 'Unable to get client data.'
+		}, true);
 	}
 }
 
 /**
- * Get the options configuration for the select elements.
- * @param {Array} clientHorses - The list of client horses.
- * @param {Object} userFarrierPrices - The user farrier prices.
- * @returns {Object} The options configuration.
+ * Creates configuration objects for various select elements
+ * @param {Object} params - The parameters object
+ * @param {Array} params.clientHorses - List of client's horses
+ * @param {Object} params.userFarrierPrices - Farrier pricing information
+ * @param {Object} params.accessoryPrices - Accessory pricing information
+ * @returns {Object} Configuration object for horse list, farrier prices, and accessory options
+ * @private
  */
-function getOptionsConfig({ clientHorses, userFarrierPrices }) {
-	const { accessories: accessoryPrices, ...farrierPrices } = userFarrierPrices;
+function getOptionsConfig({ clientHorses, userFarrierPrices, accessoryPrices }) {
 	return {
 		horseListOptionsConfig: {
 			list: clientHorses,
@@ -96,7 +187,7 @@ function getOptionsConfig({ clientHorses, userFarrierPrices }) {
 			})
 		},
 		farrierPricesOptionsConfig: {
-			list: Object.entries(farrierPrices)
+			list: Object.entries(userFarrierPrices)
 				.filter(([key, value]) => value !== '' && value !== '0.00' && value !== 0.00)
 				.reduce((acc, [key, value]) => {
 					const isTrim = key.includes('trim');
@@ -123,15 +214,18 @@ function getOptionsConfig({ clientHorses, userFarrierPrices }) {
 }
 
 /**
- * Handle showing the number of horses based on user input.
- * @param {Object} params - The parameters.
- * @param {Event} params.evt - The event object.
- * @param {HTMLElement} params.horseListContainer - The container for the horse list.
- * @param {number} params.clientTotalHorses - The total number of client horses.
- * @param {Object} params.farrierPrices - The farrier prices.
- * @param {Object} params.optionsConfig - The options configuration.
- * @param {number} params.containerChildren - The number of children in the horse list container.
- * @returns {Promise<Array>} The list of horse elements to display.
+ * Manages the display of horse selection elements based on user input
+ * @async
+ * @param {Object} params - The parameters object
+ * @param {Event} params.evt - The event object
+ * @param {HTMLElement} params.horseListContainer - Container for the horse list
+ * @param {number} params.clientTotalHorses - Total number of horses for the client
+ * @param {Object} params.farrierPrices - Farrier pricing information
+ * @param {Object} params.optionsConfig - Select elements configuration
+ * @param {number} params.containerChildren - Current number of children in container
+ * @returns {Promise<Array>} Array of horse elements to display
+ * @throws {Error} When there's an error processing the horse list
+ * @private
  */
 async function handleShowingNumberOfHorses({ evt, horseListContainer, clientTotalHorses, farrierPrices, optionsConfig, containerChildren }) {
 	try {
@@ -152,8 +246,6 @@ async function handleShowingNumberOfHorses({ evt, horseListContainer, clientTota
 
 			// Clear the horse list container
 			horseListContainer.innerHTML = '';
-			debugLog('Options Configuration: ', optionsConfig);
-			debugLog('Max Possible Horses: clientTotalHorses: ', clientTotalHorses);
 
 			// Auto fill with the horses names and the service auto set to trim
 			const autoFill = await autoFillHorseList({ totalHorses: clientTotalHorses, optionsConfig });
@@ -179,8 +271,8 @@ async function handleShowingNumberOfHorses({ evt, horseListContainer, clientTota
 			let removedOptions = [];
 
 			const [removeLastOption, addNewOption] = await Promise.all([
-				import("./removeLastChildAndGetOptions.min.js"),
-				import("./addOptionToRemainingHorseListSelectElements.min.js"),
+				import("./removeLastChildAndGetOptions.js"),
+				import("./addOptionToRemainingHorseListSelectElements.js"),
 			]);
 			const { default: removeLastChildAndGetOptions } = removeLastOption;
 			const { default: addOptionToRemainingHorseListSelectElements } = addNewOption;
@@ -219,6 +311,11 @@ async function handleShowingNumberOfHorses({ evt, horseListContainer, clientTota
 	}
 }
 
+/**
+ * Initializes horse selection dropdowns and manages their state
+ * @param {Array<HTMLElement>} buildShowHorseList - Array of horse list elements
+ * @private
+ */
 function initializeHorseSelections(buildShowHorseList) {
 	// Clear previous options when rebuilding list
 	prevOptions.clear();
@@ -246,6 +343,11 @@ function initializeHorseSelections(buildShowHorseList) {
 	debugLog('Initialized prevOptions:', prevOptions);
 }
 
+/**
+ * Automatically updates service costs based on horse selections
+ * @param {HTMLElement} horseListContainer - Container element for the horse list
+ * @private
+ */
 function autoUpdateServiceCost(horseListContainer) {
 	try {
 		const serviceTypeMapping = {
@@ -266,13 +368,13 @@ function autoUpdateServiceCost(horseListContainer) {
 
 			if (serviceCostOption) {
 				serviceCostOption.selected = true;
-				const changeEvent = new Event('change', {
-					bubbles: true,
-					cancelable: true
-				});
-				Object.defineProperty(changeEvent, 'target', { value: serviceCostSelect });
-				serviceCostSelect.dispatchEvent(changeEvent);
 			}
+			const changeEvent = new Event('change', {
+				bubbles: true,
+				cancelable: true
+			});
+			Object.defineProperty(changeEvent, 'target', { value: serviceCostSelect });
+			serviceCostSelect.dispatchEvent(changeEvent);
 		});
 	}
 	catch (err) {

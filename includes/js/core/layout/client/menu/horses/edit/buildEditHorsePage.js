@@ -1,8 +1,8 @@
-import { buildEle } from '../../../../../utils/dom/elements.min.js';
-import { buildPageContainer, buildTwoColumnSelectElementSection } from '../../../../../utils/dom/forms/buildUtils.min.js';
-import { removeListeners } from '../../../../../utils/dom/listeners.min.js';
-import { clearMsg } from '../../../../../utils/dom/messages.min.js';
-import { cleanUserOutput } from '../../../../../utils/string/stringUtils.min.js';
+import { buildEle } from '../../../../../utils/dom/elements.js';
+import { buildPageContainer, buildTwoColumnSelectElementSection } from '../../../../../utils/dom/forms/buildUtils.js';
+import { removeListeners } from '../../../../../utils/dom/listeners.js';
+import { clearMsg } from '../../../../../utils/dom/messages.js';
+import { cleanUserOutput } from '../../../../../utils/string/stringUtils.js';
 
 const COMPONENT_ID = 'edit-horse';
 
@@ -60,14 +60,14 @@ export default async function buildEditHorsePage({ cID, primaryKey, mainContaine
 		mainContainer.appendChild(container);
 
 		// Initialize the UI handler file
-		const { default: editClientHorse } = await import('../../../../../../features/client/ui/edit-horse/editClientHorse.min.js');
+		const { default: editClientHorse } = await import('../../../../../../features/client/ui/edit-horse/editClientHorse.js');
 		editClientHorse({ cID, primaryKey, mainContainer, manageClient, manageUser, componentId: COMPONENT_ID });
 
 		// Remove event listeners
 		return () => removeListeners(COMPONENT_ID);
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../../errors/models/AppError.min.js");
+		const { AppError } = await import("../../../../../errors/models/AppError.js");
 		AppError.process(err, {
 			errorCode: AppError.Types.RENDER_ERROR,
 			userMessage: null,

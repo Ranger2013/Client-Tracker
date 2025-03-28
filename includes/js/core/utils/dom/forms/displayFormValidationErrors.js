@@ -1,6 +1,6 @@
-import { top } from "../../window/scroll.min.js";
-import { safeDisplayMessage } from "../messages.min.js";
-import { underscoreToHyphen, underscoreToHyphenPlusError } from "../../string/stringUtils.min.js";
+import { top } from "../../window/scroll.js";
+import { safeDisplayMessage } from "../messages.js";
+import { underscoreToHyphen, underscoreToHyphenPlusError } from "../../string/stringUtils.js";
 
 /**
  * Displays form validation errors on the page by finding and populating error elements.
@@ -87,7 +87,7 @@ export default async function displayFormValidationErrors(errors, options = {}) 
         if (scrollToTop) top();
     }
     catch (err) {
-        const { AppError } = await import("../../../errors/models/AppError.min.js");
+        const { AppError } = await import("../../../errors/models/AppError.js");
         AppError.handleError(err, {
             errorCode: AppError.Types.FORM_VALIDATION_ERROR,
             userMessage: null,

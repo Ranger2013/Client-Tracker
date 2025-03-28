@@ -1,4 +1,4 @@
-import IndexedDBOperations from '../../../core/database/IndexedDBOperations.min.js';
+import IndexedDBOperations from '../../../core/database/IndexedDBOperations.js';
 
 export default class ManageClient {
     // Static private property to hold the singleton instance
@@ -58,7 +58,7 @@ export default class ManageClient {
             this.#initialized = true;
         }
         catch (error) {
-            const { AppError } = await import("../../../core/errors/models/AppError.min.js");
+            const { AppError } = await import("../../../core/errors/models/AppError.js");
             AppError.process(error, {
                 errorCode: AppError.Types.INITIALIZATION_ERROR,
                 userMessage: 'Client data initialization failed',
@@ -91,7 +91,7 @@ export default class ManageClient {
             return this.#findDuplicates(clientInfo);
         }
         catch (err) {
-            const { AppError } = await import("../../../core/errors/models/AppError.min.js");
+            const { AppError } = await import("../../../core/errors/models/AppError.js");
             AppError.process(err, {
                 errorCode: AppError.Types.DATABASE_ERROR,
                 userMessage: 'Unable to retrieve duplicate clients',
@@ -165,7 +165,7 @@ export default class ManageClient {
             return true;  // Just return success status
         }
         catch (error) {
-            const { AppError } = await import('../../../core/errors/models/AppError.min.js');
+            const { AppError } = await import('../../../core/errors/models/AppError.js');
             AppError.process(error, {
                 errorCode: AppError.Types.DATABASE_ERROR,
                 userMessage: null,
@@ -187,6 +187,9 @@ export default class ManageClient {
             // No cID or primary key, throw an error
             if (!cID || !primaryKey) throw new Error('No cID or primaryKey provided.');
 
+            cID = typeof cID === 'string' ? parseInt(cID, 10) : cID;
+            primaryKey = typeof primaryKey === 'string' ? parseInt(primaryKey, 10) : primaryKey;
+
             // Open idb db
             const db = await this.#indexed.openDBPromise();
 
@@ -204,19 +207,19 @@ export default class ManageClient {
                     const newClientData = {
                         ...userData,
                         horses: clientInfo[0].horses || [],
-                        cID: parseInt(cID, 10),
-                        primaryKey: parseInt(primaryKey, 10),
+                        cID,
+                        primaryKey,
                     };
 
                     this.#log('NewClientData: ', newClientData);
 
                     // If the primaryKey doesn't match the current client, update the appointment time, trim cycle, and trim date
-                    if (parseInt(client.primaryKey, 10) !== parseInt(primaryKey, 10)) {
+                    if (client.primaryKey !== primaryKey) {
                         Object.assign(newClientData, {
                             trim_cycle: client.trim_cycle,
                             trim_date: client.trim_date,
                             app_time: client.app_time,
-                            primaryKey: parseInt(client.primaryKey, 10)
+                            primaryKey,
                         });
                     }
 
@@ -239,7 +242,7 @@ export default class ManageClient {
             return true;  // Just return success status
         }
         catch (error) {
-            const { AppError } = await import('../../../core/errors/models/AppError.min.js');
+            const { AppError } = await import('../../../core/errors/models/AppError.js');
             AppError.process(error, {
                 errorCode: AppError.Types.DATABASE_ERROR,
                 userMessage: null,
@@ -281,7 +284,7 @@ export default class ManageClient {
             return { status: true, msg: 'Client has been removed.', type: 'delete-client' };
         }
         catch (err) {
-            const { AppError } = await import('../../../core/errors/models/AppError.min.js');
+            const { AppError } = await import('../../../core/errors/models/AppError.js');
             AppError.process(err, {
                 errorCode: AppError.Types.DATABASE_ERROR,
                 userMessage: null,
@@ -331,7 +334,7 @@ export default class ManageClient {
             return true;
         }
         catch (err) {
-            const { AppError } = await import('../../../core/errors/models/AppError.min.js');
+            const { AppError } = await import('../../../core/errors/models/AppError.js');
             AppError.process(err, {
                 errorCode: AppError.Types.DATABASE_ERROR,
                 userMessage: null,
@@ -343,7 +346,7 @@ export default class ManageClient {
         try {
             if (!primaryKey) throw new Error('No primary key provided.');
 
-            if(typeof primaryKey === 'string') primaryKey = parseInt(primaryKey, 10);
+            if (typeof primaryKey === 'string') primaryKey = parseInt(primaryKey, 10);
 
             const db = await this.#indexed.openDBPromise();
             const tx = db.transaction([
@@ -364,7 +367,7 @@ export default class ManageClient {
             return true;
         }
         catch (err) {
-            const { AppError } = await import('../../../core/errors/models/AppError.min.js');
+            const { AppError } = await import('../../../core/errors/models/AppError.js');
             AppError.process(err, {
                 errorCode: AppError.Types.DATABASE_ERROR,
                 userMessage: null,
@@ -380,7 +383,7 @@ export default class ManageClient {
             return clientInfo?.horses || [];
         }
         catch (err) {
-            const { AppError } = await import('../../../core/errors/models/AppError.min.js');
+            const { AppError } = await import('../../../core/errors/models/AppError.js');
             AppError.process(err, {
                 errorCode: AppError.Types.DATABASE_ERROR,
                 userMessage: null,
@@ -396,7 +399,7 @@ export default class ManageClient {
      * @returns {Promise<Object>} A promise that resolves to an object containing the status and message.
      * @throws Will throw an error if the operation fails.
      */
-    async addNewHorse({ userData, cID, primaryKey }) {
+    async addNewHorse({ userData, cID, primaryKey, clientName }) {
         try {
             if (!cID || !primaryKey) throw new Error('No cID or primaryKey provided.');
 
@@ -420,6 +423,7 @@ export default class ManageClient {
             // Add the new horse to the horse list
             const newHorse = {
                 hID: hID,
+                client_name: clientName,
                 horse_name: userData.horse_name,
                 horse_type: userData.horse_type,
                 service_type: userData.service_type,
@@ -440,7 +444,7 @@ export default class ManageClient {
             return true;
         }
         catch (err) {
-            const { AppError } = await import('../../../core/errors/models/AppError.min.js');
+            const { AppError } = await import('../../../core/errors/models/AppError.js');
             AppError.process(err, {
                 errorCode: AppError.Types.DATABASE_ERROR,
                 userMessage: null,
@@ -458,15 +462,10 @@ export default class ManageClient {
      */
     async editClientHorse({ cID, userData }) {
         try {
-            console.log('cID: ', cID);
-            console.log('typof cID: ', typeof cID);
-            console.log('userData: ', userData);
-
-            const { hID, ...updatedUserData } = userData;
-            const hID = parseInt(hID, 10);
+            const { hID: stringhID, primaryKey, ...updatedUserData } = userData;
+            const hID = parseInt(stringhID, 10);
 
             if (isNaN(hID) || !cID) throw new Error('No horse id or client id provided.');
-            return true;
             // Set up the transaction
             const db = await this.#indexed.openDBPromise();
             const tx = db.transaction([
@@ -477,11 +476,24 @@ export default class ManageClient {
             const clientInfo = await this.#indexed.getAllStoreByIndexPromise(db, this.#indexed.stores.CLIENTLIST, 'cID', cID, tx);
             const clientName = clientInfo[0]?.client_name;
 
+            const backupData = {
+                edit_clientHorse: true,
+                hID,
+                cID: parseInt(cID, 10),
+                client_name: clientName,
+                ...updatedUserData,
+            };
+
             await Promise.all([
                 // Update all the client horses
                 ...clientInfo.map(client => {
                     const updatedHorses = client.horses.map(horse => {
                         if (horse.hID === hID) {
+                            const newObject = {
+                                ...horse,
+                                hID: hID,
+                                ...updatedUserData,
+                            };
                             return { ...horse, hID: hID, ...updatedUserData };
                         }
                         return horse;
@@ -489,8 +501,9 @@ export default class ManageClient {
 
                     return this.#indexed.putStorePromise(db, { ...client, horses: updatedHorses }, this.#indexed.stores.CLIENTLIST, false, tx);
                 }),
+
                 // Add the horse data to the EDITHORSE object store
-                this.#indexed.putStorePromise(db, { edit_clientHorse: true, hID, ...updatedUserData }, this.#indexed.stores.EDITHORSE, false, tx),
+                this.#indexed.putStorePromise(db, backupData, this.#indexed.stores.EDITHORSE, false, tx),
 
             ]);
 
@@ -501,7 +514,7 @@ export default class ManageClient {
             return true;
         }
         catch (err) {
-            const { AppError } = await import('../../../core/errors/models/AppError.min.js');
+            const { AppError } = await import('../../../core/errors/models/AppError.js');
             AppError.process(err, {
                 errorCode: AppError.Types.DATABASE_ERROR,
                 userMessage: null,
@@ -572,7 +585,7 @@ export default class ManageClient {
             return true;
         }
         catch (err) {
-            const { AppError } = await import('../../../core/errors/models/AppError.min.js');
+            const { AppError } = await import('../../../core/errors/models/AppError.js');
             AppError.process(err, {
                 errorCode: AppError.Types.DATABASE_ERROR,
                 userMessage: null,
@@ -592,7 +605,7 @@ export default class ManageClient {
             return clientList || [];
         }
         catch (err) {
-            const { AppError } = await import('../../../core/errors/models/AppError.min.js');
+            const { AppError } = await import('../../../core/errors/models/AppError.js');
             AppError.process(err, {
                 errorCode: AppError.Types.DATABASE_ERROR,
                 userMessage: null,
@@ -614,7 +627,7 @@ export default class ManageClient {
             return clientList || [];
         }
         catch (err) {
-            const { AppError } = await import('../../../core/errors/models/AppError.min.js');
+            const { AppError } = await import('../../../core/errors/models/AppError.js');
             AppError.process(err, {
                 errorCode: AppError.Types.DATABASE_ERROR,
                 userMessage: null,
@@ -634,7 +647,7 @@ export default class ManageClient {
             return clientTrimmingInfo?.trimmings || [];
         }
         catch (err) {
-            const { AppError } = await import('../../../core/errors/models/AppError.min.js');
+            const { AppError } = await import('../../../core/errors/models/AppError.js');
             AppError.process(err, {
                 errorCode: AppError.Types.DATABASE_ERROR,
                 userMessage: null,
@@ -652,13 +665,13 @@ export default class ManageClient {
     async getClientTrimmingInfo(cID) {
         try {
             cID = typeof cID === 'string' ? parseInt(cID, 10) : cID;
-            
+
             const db = await this.#indexed.openDBPromise();
             const trimmingInfo = await this.#indexed.getStorePromise(db, this.#indexed.stores.TRIMMING, cID);
             return trimmingInfo?.trimmings || [];
         }
         catch (err) {
-            const { AppError } = await import('../../../core/errors/models/AppError.min.js');
+            const { AppError } = await import('../../../core/errors/models/AppError.js');
             AppError.process(err, {
                 errorCode: AppError.Types.DATABASE_ERROR,
                 userMessage: null,
@@ -669,8 +682,11 @@ export default class ManageClient {
 
     async updateClientSchedule({ cID, primaryKey, userData }) {
         try {
-            console.log('cID: ', cID);
-            console.log('primaryKey: ', primaryKey);
+            this.#log('cID: ', cID);
+            this.#log('typeof cID: ', typeof cID);
+
+            this.#log('primaryKey: ', primaryKey);
+            this.#log('typeof primaryKey: ', typeof primaryKey);
             if (!cID || !primaryKey || !userData) throw new Error('No cID, primaryKey, or userData provided.');
 
             // Destructure userData
@@ -688,13 +704,19 @@ export default class ManageClient {
 
             const newClientInfo = {
                 ...clientInfo,
+                cID,
+                primaryKey,
                 app_time,
                 trim_date: next_trim_date,
             }
 
+            const backupClientInfo = {
+                ...newClientInfo,
+                edit_client: true,
+            };
             await Promise.all([
                 this.#indexed.putStorePromise(db, newClientInfo, this.#indexed.stores.CLIENTLIST, false, tx),
-                this.#indexed.putStorePromise(db, { ...newClientInfo, edit_client: true, cID: parseInt(cID, 10), primaryKey: parseInt(primaryKey, 10) }, this.#indexed.stores.EDITCLIENT, false, tx)
+                this.#indexed.putStorePromise(db, backupClientInfo, this.#indexed.stores.EDITCLIENT, false, tx)
             ]);
 
             // Reset the cache after successful update
@@ -704,7 +726,7 @@ export default class ManageClient {
             return true;
         }
         catch (err) {
-            const { AppError } = await import('../../../core/errors/models/AppError.min.js');
+            const { AppError } = await import('../../../core/errors/models/AppError.js');
             AppError.handleError(err, {
                 errorCode: AppError.Types.DATABASE_ERROR,
                 userMessage: 'We had an issue updating the client\'s new schedule. Update their schedule through the edit client and please report this issue.',
@@ -725,7 +747,7 @@ export default class ManageClient {
             return true;
         }
         catch (error) {
-            const { AppError } = await import('../../core/errors/models/AppError.min.js');
+            const { AppError } = await import('../../core/errors/models/AppError.js');
             throw new AppError('Failed to update client data', {
                 originalError: error,
                 errorCode: AppError.Types.DATABASE_ERROR,

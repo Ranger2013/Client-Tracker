@@ -1,5 +1,5 @@
-import { getValidElement } from '../elements.min.js';
-import { clearMsg } from '../messages.min.js';
+import { getValidElement } from '../elements.js';
+import { clearMsg } from '../messages.js';
 
 // Set up Debug mode
 const COMPONENT = 'Filter Client Select Element';
@@ -46,7 +46,7 @@ export default async function filterClientList({evt, selectElement}) {
 		debugLog('Map: ', savedOptions);
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
+		const { AppError } = await import("../../../../core/errors/models/AppError.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.INITIALIZATION_ERROR,
 			userMessage: 'Search functionality not available at the moment.',

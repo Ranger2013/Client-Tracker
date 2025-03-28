@@ -1,8 +1,8 @@
-import ManageUser from "../../models/ManageUser.min.js";
-import handleRadioButtonSelect from "./components/mileage-charges/handleRadioButtonSelect.min.js";
-import handlePerMileFormSubmission from "./components/mileage-charges/handlePerMileFormSubmission.min.js";
-import handleByRangeFormSubmission from "./components/mileage-charges/handleByRangeFormSubmission.min.js";
-import { addListener } from "../../../../core/utils/dom/listeners.min.js";
+import ManageUser from "../../models/ManageUser.js";
+import handleRadioButtonSelect from "./components/mileage-charges/handleRadioButtonSelect.js";
+import handlePerMileFormSubmission from "./components/mileage-charges/handlePerMileFormSubmission.js";
+import handleByRangeFormSubmission from "./components/mileage-charges/handleByRangeFormSubmission.js";
+import { addListener } from "../../../../core/utils/dom/listeners.js";
 
 const COMPONENT_ID = 'mileage-charges';
 const manageUser = new ManageUser();

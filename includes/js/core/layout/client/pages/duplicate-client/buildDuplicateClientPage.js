@@ -1,7 +1,7 @@
-import { buildElementsFromConfig } from '../../../../utils/dom/elements.min.js';
-import { buildPageContainer, buildTwoColumnInputSection, buildTwoColumnSelectElementSection } from '../../../../utils/dom/forms/buildUtils.min.js';
-import { removeListeners } from '../../../../utils/dom/listeners.min.js';
-import { cleanUserOutput } from '../../../../utils/string/stringUtils.min.js';
+import { buildElementsFromConfig } from '../../../../utils/dom/elements.js';
+import { buildPageContainer, buildTwoColumnInputSection, buildTwoColumnSelectElementSection } from '../../../../utils/dom/forms/buildUtils.js';
+import { removeListeners } from '../../../../utils/dom/listeners.js';
+import { cleanUserOutput } from '../../../../utils/string/stringUtils.js';
 
 // Set up logging.
 const COMPONENT = 'Build Duplicate Client Page';

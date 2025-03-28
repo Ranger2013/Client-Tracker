@@ -1,7 +1,7 @@
-import { authAPI } from "../../../core/network/api/apiEndpoints.min.js";
-import { fetchData } from "../../../core/network/services/network.min.js";
-import { safeDisplayMessage } from "../../../core/utils/dom/messages.min.js";
-import ManageUser from "../../../features/user/models/ManageUser.min.js";
+import { authAPI } from "../../../core/network/api/apiEndpoints.js";
+import { fetchData } from "../../../core/network/services/network.js";
+import { safeDisplayMessage } from "../../../core/utils/dom/messages.js";
+import ManageUser from "../../../features/user/models/ManageUser.js";
 
 async function handleLogIn(evt) {
     evt.preventDefault();
@@ -50,7 +50,7 @@ async function handleLogIn(evt) {
 
     }
     catch (err) {
-        const { AppError } = await import("../../../core/errors/models/AppError.min.js");
+        const { AppError } = await import("../../../core/errors/models/AppError.js");
         AppError.handleError(err, {
             errorCode: AppError.Types.AUTHORIZATION_ERROR,
             userMessage: AppError.BaseMessages.system.authorization,

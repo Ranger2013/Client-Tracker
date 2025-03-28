@@ -1,4 +1,4 @@
-import setupClientAnchorListener from '../../../../core/navigation/components/setupClientAnchorListener.min.js';
+import setupClientAnchorListener from '../../../../core/navigation/components/setupClientAnchorListener.js';
 
 // Set up debugging.
 const COMPONENT = '[View Trimming Dates]';
@@ -20,7 +20,7 @@ export default async function viewTrimmingDates({ cID, primaryKey, mainContainer
 		});
 	}
 	catch(err){
-		const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
+		const { AppError } = await import("../../../../core/errors/models/AppError.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.INITIALIZATION_ERROR,
 			userMessage: AppError.BaseMessages.system.initialization,

@@ -1,4 +1,4 @@
-import { buildEle, buildElementsFromConfig, buildGenericSelectOptions } from '../../utils/dom/elements.min.js';
+import { buildEle, buildElementsFromConfig, buildGenericSelectOptions } from '../../utils/dom/elements.js';
 
 /**
  * Builds the search block with filter options and search input
@@ -81,7 +81,7 @@ export default async function buildSearchBlockSection(filterOptions) {
 		return elements.searchBlock;
 	}
 	catch (err) {
-		const { AppError } = await import("../../errors/models/AppError.min.js");
+		const { AppError } = await import("../../errors/models/AppError.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.RENDER_ERROR,
 			userMessage: AppError.BaseMessages.system.render,

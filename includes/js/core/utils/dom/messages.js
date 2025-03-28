@@ -1,4 +1,4 @@
-import { getValidElement } from './elements.min.js';
+import { getValidElement } from './elements.js';
 
 /**
  * Safely displays a message with fallback handling
@@ -54,7 +54,7 @@ export function myError(ele, msg, target = null) {
         }
     }
     catch (err) {
-        import('../../errors/models/AppError.min.js')
+        import('../../errors/models/AppError.js')
             .then(({ AppError }) => {
                 throw new AppError('Display error failed', {
                     originalError: err,
@@ -88,7 +88,7 @@ export function mySuccess(ele, msg, color = 'w3-text-green') {
         element.classList.remove('w3-hide');
     }
     catch (err) {
-        import('../../errors/models/AppError.min.js')
+        import('../../errors/models/AppError.js')
             .then(({ AppError }) => {
                 throw new AppError('Success message display failed', {
                     originalError: err,
@@ -151,7 +151,7 @@ export function clearMsg({ container, hide = false, input = null }) {
         }
     }
     catch (err) {
-        import('../../errors/models/AppError.min.js')
+        import('../../errors/models/AppError.js')
             .then(({ AppError }) => {
                 throw new AppError('Failed to clear message', {
                     originalError: err,
@@ -189,6 +189,10 @@ function isMessageContainer(element) {
  */
 function handleTargetStyling(target) {
     const targetElement = getValidElement(target);
-    targetElement.classList.add('w3-border-error');
+
+    if (targetElement) {
+        targetElement.classList.add('w3-border-error');
+        return;
+    }
 }
 

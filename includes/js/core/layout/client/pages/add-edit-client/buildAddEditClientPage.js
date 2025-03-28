@@ -1,9 +1,9 @@
-import { buildEle } from '../../../../utils/dom/elements.min.js';
-import { buildPageContainer, buildTwoColumnInputSection, buildTwoColumnRadioButtonSection, buildTwoColumnSelectElementSection } from '../../../../utils/dom/forms/buildUtils.min.js';
-import { trimCycleConfigurations } from '../../../../utils/dom/forms/trimCycleConfigurations.min.js';
-import { removeListeners } from '../../../../utils/dom/listeners.min.js';
-import { clearMsg } from '../../../../utils/dom/messages.min.js';
-import buildTwoColumnAddressSection from '../../../components/buildTwoColumnAddressSection.min.js';
+import { buildEle } from '../../../../utils/dom/elements.js';
+import { buildPageContainer, buildTwoColumnInputSection, buildTwoColumnRadioButtonSection, buildTwoColumnSelectElementSection } from '../../../../utils/dom/forms/buildUtils.js';
+import { trimCycleConfigurations } from '../../../../utils/dom/forms/trimCycleConfigurations.js';
+import { removeListeners } from '../../../../utils/dom/listeners.js';
+import { clearMsg } from '../../../../utils/dom/messages.js';
+import buildTwoColumnAddressSection from '../../../components/buildTwoColumnAddressSection.js';
 
 export const COMPONENT_ID = 'add-edit-client';
 
@@ -233,7 +233,7 @@ export default async function buildAddEditClientPage({ cID = null, primaryKey = 
         return () => removeListeners(COMPONENT_ID);
     }
     catch (err) {
-        const { AppError } = await import("../../../../errors/models/AppError.min.js");
+        const { AppError } = await import("../../../../errors/models/AppError.js");
         AppError.process(err, {
             errorCode: AppError.Types.RENDER_ERROR,
             userMessage: AppError.BaseMessages.system.render,

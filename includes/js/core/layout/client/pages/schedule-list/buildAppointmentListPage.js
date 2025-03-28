@@ -1,7 +1,7 @@
-import { clearMsg } from '../../../../utils/dom/messages.min.js';
-import { top } from '../../../../utils/window/scroll.min.js';
-import { removeListeners } from '../../../../utils/dom/listeners.min.js';
-import buildPageElements from './components/buildPageElements.min.js';
+import { clearMsg } from '../../../../utils/dom/messages.js';
+import { top } from '../../../../utils/window/scroll.js';
+import { removeListeners } from '../../../../utils/dom/listeners.js';
+import buildPageElements from './components/buildPageElements.js';
 
 const COMPONENT_ID = 'schedule-list';
 
@@ -17,13 +17,13 @@ export default async function buildAppointmentListPage({ active, cID = null, pri
         mainContainer.innerHTML = '';
         mainContainer.appendChild(pageElements);
 
-        const { default: appointmentList } = await import("../../../../../features/client/ui/schedule-list/appointmentListJS.min.js");
+        const { default: appointmentList } = await import("../../../../../features/client/ui/schedule-list/appointmentListJS.js");
         await appointmentList({active, cID, primaryKey, manageClient, manageUser, mainContainer, componentId: COMPONENT_ID});
 
         return () => removeListeners(COMPONENT_ID);
     }
     catch(err) {
-        const { AppError } = await import("../../../../errors/models/AppError.min.js");
+        const { AppError } = await import("../../../../errors/models/AppError.js");
         AppError.process(err, {
             errorCode: AppError.Types.RENDER_ERROR,
             userMessage: AppError.BaseMessages.system.render,
@@ -45,7 +45,7 @@ async function initializePage(mainContainer) {
         }
     }
     catch (err) {
-        const { AppError } = await import("../../../../errors/models/AppError.min.js");
+        const { AppError } = await import("../../../../errors/models/AppError.js");
         AppError.process(err, {
             errorCode: AppError.Types.RENDER_ERROR,
             userMessage: null,

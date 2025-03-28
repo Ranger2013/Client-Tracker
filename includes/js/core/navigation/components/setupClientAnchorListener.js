@@ -1,5 +1,5 @@
-import { addListener } from '../../utils/dom/listeners.min.js';
-import selectPage from '../services/selectPage.min.js';
+import { addListener } from '../../utils/dom/listeners.js';
+import selectPage from '../services/selectPage.js';
 
 export default async function setupClientAnchorListener({ manageUser, manageClient, componentId }) {
 	try{
@@ -25,7 +25,7 @@ export default async function setupClientAnchorListener({ manageUser, manageClie
 		}
 	}
 	catch(err){
-		const { AppError } = await import("../../errors/models/AppError.min.js");
+		const { AppError } = await import("../../errors/models/AppError.js");
 		AppError.handle(err, {
 			errorCode: AppError.Types.INITIALIZATION_ERROR,
 			userMessage: 'Client name navigation failed to initialize.',

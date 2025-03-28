@@ -1,7 +1,7 @@
-import { authAPI } from "../../../../core/network/api/apiEndpoints.min.js";
-import { fetchData } from "../../../../core/network/services/network.min.js";
-import { clearMsg, safeDisplayMessage } from "../../../../core/utils/dom/messages.min.js";
-import { top } from "../../../../core/utils/window/scroll.min.js";
+import { authAPI } from "../../../../core/network/api/apiEndpoints.js";
+import { fetchData } from "../../../../core/network/services/network.js";
+import { clearMsg, safeDisplayMessage } from "../../../../core/utils/dom/messages.js";
+import { top } from "../../../../core/utils/window/scroll.js";
 
 export async function getTerms(type) {
     try {
@@ -19,7 +19,7 @@ export async function getTerms(type) {
     catch (err) {
         const [{default: openModal}, { AppError }] = await Promise.all([
             import("../../../../core/services/modal/openModal.js"),
-            import("../../../../core/errors/models/AppError.min.js")
+            import("../../../../core/errors/models/AppError.js")
         ]);
 
         openModal({ 
@@ -84,7 +84,7 @@ export async function handleUserRegistration(evt) {
         }
     }
     catch (err) {
-        const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
+        const { AppError } = await import("../../../../core/errors/models/AppError.js");
         AppError.handleError(err, {
             errorCode: AppError.Types.FORM_SUBMISSION_ERROR,
             userMessage: 'Unable to complete registration. Please try again later.',

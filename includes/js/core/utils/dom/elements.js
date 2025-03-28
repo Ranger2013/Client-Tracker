@@ -64,7 +64,7 @@ export function disableEnableSubmitButton(button) {
 	}
 	catch (error) {
 		// Let AppError handle all logging
-		import('../../errors/models/AppError.min.js')
+		import('../../errors/models/AppError.js')
 			.then(({ AppError }) => {
 				return new AppError('Submit button state update failed', {
 					originalError: error,
@@ -107,6 +107,11 @@ export function buildElementsFromConfig(config) {
 
 export function buildElementTree(config) {
 	debugLog('Building element tree with config:', config);
+	debugLog('Desctructor: type: ', config.type);
+	debugLog('Desctructor: attributes: ', config.attributes);
+	debugLog('Desctructor: myClass: ', config.myClass);
+	debugLog('Desctructor: text: ', config.text);
+	debugLog('Desctructor: children: ', config.children);
 	const element = buildEle({
 		type: config.type,
 		attributes: config.attributes,
@@ -124,8 +129,6 @@ export function buildElementTree(config) {
 
 	return element;
 };
-
-
 
 /**
  * Generates an array of option elements based on the provided configuration.

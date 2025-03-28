@@ -34,31 +34,31 @@ export default async function selectClientMenuPage({ evt, page, cID, primaryKey,
     try {
         const PAGE_BUILDERS = {
             'add-trimming': {
-                importPath: "../../layout/client/menu/trimming/add/buildAddTrimmingPage.min.js",
+                importPath: "../../layout/client/menu/trimming/add/buildAddTrimmingPage.js",
                 importFunction: "default",
                 historyState: `/tracker/trimming/add/?cID=${cID}&key=${primaryKey}`,
                 args: [{ cID, primaryKey, mainContainer: main, manageClient, manageUser }],
             },
             'view-trim-dates': {
-                importPath: "../../layout/client/menu/trimming/view/buildViewTrimmingPage.min.js",
+                importPath: "../../layout/client/menu/trimming/view/buildViewTrimmingPage.js",
                 importFunction: "default",
                 historyState: `/tracker/trimming/view/?cID=${cID}&key=${primaryKey}`,
                 args: [{ cID, primaryKey, mainContainer: main, manageClient, manageUser }],
             },
             'edit-client': {
-                importPath: "../../layout/client/pages/add-edit-client/buildAddEditClientPage.min.js",
+                importPath: "../../layout/client/pages/add-edit-client/buildAddEditClientPage.js",
                 importFunction: "default",
                 historyState: `/tracker/clients/edit-client/?cID=${cID}&key=${primaryKey}`,
                 args: [{ cID, primaryKey, mainContainer: main, manageClient, manageUser }],
             },
             'add-horse': {
-                importPath: "../../layout/client/menu/horses/add/buildAddHorsePage.min.js",
+                importPath: "../../layout/client/menu/horses/add/buildAddHorsePage.js",
                 importFunction: "default",
                 historyState: `/tracker/client-horses/add/?cID=${cID}&key=${primaryKey}`,
                 args: [{ cID, primaryKey, mainContainer: main, manageClient, manageUser }],
             },
             'edit-horse': {
-                importPath: "../../layout/client/menu/horses/edit/buildEditHorsePage.min.js",
+                importPath: "../../layout/client/menu/horses/edit/buildEditHorsePage.js",
                 importFunction: "default",
                 historyState: `/tracker/client-horses/edit/?cID=${cID}&key=${primaryKey}`,
                 args: [{ cID, primaryKey, mainContainer: main, manageClient, manageUser }],
@@ -87,7 +87,7 @@ export default async function selectClientMenuPage({ evt, page, cID, primaryKey,
             errorType: err.name === 'ImportError' ? 'load' : 'build'
         });
 
-        const { AppError } = await import("../../errors/models/AppError.min.js");
+        const { AppError } = await import("../../errors/models/AppError.js");
         AppError.handleError(err, {
             errorCode: AppError.Types.RENDER_ERROR,
             userMessage: `Unable to load ${PAGE_MAPPINGS[page]?.displayName || 'requested'} page.`,

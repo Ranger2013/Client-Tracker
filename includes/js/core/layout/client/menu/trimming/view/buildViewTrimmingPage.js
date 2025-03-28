@@ -1,8 +1,8 @@
-import { formatDate, getWeeksAndDaysSinceLastTrim, sortByDateOnly } from '../../../../../utils/date/dateUtils.min.js';
-import { buildEle, buildElementTree } from '../../../../../utils/dom/elements.min.js';
-import { buildPageContainer } from '../../../../../utils/dom/forms/buildUtils.min.js';
-import { removeListeners } from '../../../../../utils/dom/listeners.min.js';
-import { cleanUserOutput, ucwords, underscoreToSpaces } from '../../../../../utils/string/stringUtils.min.js';
+import { formatDate, getWeeksAndDaysSinceLastTrim, sortByDateOnly } from '../../../../../utils/date/dateUtils.js';
+import { buildEle, buildElementTree } from '../../../../../utils/dom/elements.js';
+import { buildPageContainer } from '../../../../../utils/dom/forms/buildUtils.js';
+import { removeListeners } from '../../../../../utils/dom/listeners.js';
+import { cleanUserOutput, ucwords, underscoreToSpaces } from '../../../../../utils/string/stringUtils.js';
 
 const COMPONENT_ID = 'buildViewTrimmingPage';
 
@@ -252,7 +252,7 @@ export default async function buildViewTrimmingPage({ cID, primaryKey, mainConta
 		mainContainer.innerHTML = '';
 		mainContainer.appendChild(container);
 
-		const { default: viewTrimming } = await import("../../../../../../features/client/ui/view-trimming/viewTrimmingJS.min.js");
+		const { default: viewTrimming } = await import("../../../../../../features/client/ui/view-trimming/viewTrimmingJS.js");
 		viewTrimming({ cID, primaryKey, mainContainer, manageClient, manageUser, componentId: COMPONENT_ID});
 
 		return () => removeListeners(COMPONENT_ID);

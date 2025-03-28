@@ -1,7 +1,5 @@
-import calculateTotalCost from '../components/calculateTotalCost.min.js';
-
 const COMPONENT = 'costHandlers';
-const DEBUG = false;
+const DEBUG = true;
 
 const debugLog = (...args) => {
 	if(DEBUG){
@@ -22,13 +20,15 @@ export async function handleShowingAccessoriesSelectBox({ evt, index }) {
 		// Show the accessories container if the service is not a trim
 		const container = document.getElementById(`accessories-container-${index}`);
 		const accSelect = document.getElementById(`accessories-${index}`);
+		if(accSelect.options.length === 1) return;
+		
 		container.classList.toggle('w3-hide', evt.target.value.includes('trim'));
 
 		// Disable the accessories select if the service is a trim
 		accSelect.disabled = evt.target.value.includes('trim');
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
+		const { AppError } = await import("../../../../core/errors/models/AppError.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.INITIALIZATION_ERROR,
 			userMessage: 'We encountered an error trying to display the accessories.'
@@ -37,7 +37,7 @@ export async function handleShowingAccessoriesSelectBox({ evt, index }) {
 }
 
 /**
- * Updates the cost change input value based on service selection
+ * Updates the cost change input value based on service selection change event
  * @async
  * @param {Object} params - The parameters object
  * @param {Event} params.evt - The change event from the service-cost select
@@ -58,7 +58,7 @@ export async function updateCostChangeInput({ evt, index }) {
 		debugLog('final cost change input: ', costChangeInput);
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
+		const { AppError } = await import("../../../../core/errors/models/AppError.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.INITIALIZATION_ERROR,
 			userMessage: 'We encountered an error trying to update the change service cost.'
@@ -84,7 +84,7 @@ export async function handleShowingCostChangeInput({ evt, index }) {
 		costChangeInput.disabled = !evt.target.checked;
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
+		const { AppError } = await import("../../../../core/errors/models/AppError.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.INITIALIZATION_ERROR,
 			userMessage: 'We encountered an error trying to display change service cost input.'
@@ -113,10 +113,9 @@ export async function updateServiceCostSelectedIndex({ evt, index }) {
 		const newCostValue = `${selectIndexValue}:${costChangeInput.value}`;
 
 		selectIndex.value = newCostValue;
-		await calculateTotalCost();
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
+		const { AppError } = await import("../../../../core/errors/models/AppError.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.INITIALIZATION_ERROR,
 			userMessage: 'We encountered an error trying to update the service cost selected index.'

@@ -12,11 +12,11 @@
  * @requires mySuccess
  */
 
-import { addListener, removeListeners } from "../../../../core/utils/dom/listeners.min.js";
-import { clearMsg, safeDisplayMessage } from "../../../../core/utils/dom/messages.min.js";
-import { disableEnableSubmitButton } from "../../../../core/utils/dom/elements.min.js";
-import ManageUser from "../../models/ManageUser.min.js";
-import populateDateTimeForm from "./components/date-time/populateDateTimeForm.min.js";
+import { addListener, removeListeners } from "../../../../core/utils/dom/listeners.js";
+import { clearMsg, safeDisplayMessage } from "../../../../core/utils/dom/messages.js";
+import { disableEnableSubmitButton } from "../../../../core/utils/dom/elements.js";
+import ManageUser from "../../models/ManageUser.js";
+import populateDateTimeForm from "./components/date-time/populateDateTimeForm.js";
 
 /**
  * Component ID for event listener tracking
@@ -82,7 +82,7 @@ async function handleFormSubmission(evt) {
 			});
 		}
 	} catch (err) {
-		const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
+		const { AppError } = await import("../../../../core/errors/models/AppError.js");
 		await AppError.handleError(err, {
 			errorCode: AppError.Types.FORM_SUBMISSION_ERROR,
 			userMessage: AppError.BaseMessages.forms.submissionFailed,
@@ -119,7 +119,7 @@ async function validateFormFields(form) {
 		return dateFormatValid && timeZoneValid;
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
+		const { AppError } = await import("../../../../core/errors/models/AppError.js");
 		await AppError.process(err, {
 			errorCode: AppError.Types.FORM_VALIDATION_ERROR,
 			userMessage: AppError.BaseMessages.forms.validationFailed,

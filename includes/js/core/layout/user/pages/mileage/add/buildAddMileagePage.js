@@ -1,9 +1,9 @@
-import { sortByTrimDateAndAppTime } from '../../../../../utils/date/dateUtils.min.js';
-import { buildEle, buildElementTree } from '../../../../../utils/dom/elements.min.js';
-import { buildPageContainer, buildSubmitButtonSection, buildTwoColumnInputSection } from '../../../../../utils/dom/forms/buildUtils.min.js';
-import createSelectElement from '../../../../../utils/dom/forms/createSelectElement.min.js';
-import { removeListeners } from '../../../../../utils/dom/listeners.min.js';
-import { cleanUserOutput } from '../../../../../utils/string/stringUtils.min.js';
+import { sortByTrimDateAndAppTime } from '../../../../../utils/date/dateUtils.js';
+import { buildEle, buildElementTree } from '../../../../../utils/dom/elements.js';
+import { buildErrorDiv, buildPageContainer, buildSubmitButtonSection, buildTwoColumnInputSection } from '../../../../../utils/dom/forms/buildUtils.js';
+import createSelectElement from '../../../../../utils/dom/forms/createSelectElement.js';
+import { removeListeners } from '../../../../../utils/dom/listeners.js';
+import { cleanUserOutput } from '../../../../../utils/string/stringUtils.js';
 
 // Set up debugging
 const COMPONENT = 'Build Add Mileage Page';
@@ -43,7 +43,7 @@ async function getPageData({ manageClient, manageUser }) {
 async function buildPageComponents({ clientList }) {
 	// Convert the client list into a list of options
 	const clientOptions = clientListToOptions(clientList);
-	debugLog('buildPageComponents: Client Options:', clientOptions);
+
 	// Build most of the page components concurrently
 	const [[container, card], startMileageSection, endMileageSection, submitButton] = await Promise.all([
 		buildPageContainer({ pageTitle: 'Add Mileage' }),
@@ -89,7 +89,7 @@ async function buildPageComponents({ clientList }) {
 			placeholder: 'Destination',
 		},
 		myClass: ['w3-input', 'w3-border'],
-	})
+	});
 
 	// Build the form
 	const form = buildEle({
@@ -168,6 +168,11 @@ function buildPageStructure() {
 								myClass: ['w3-hide'],
 								attributes: { id: 'destination-display-container' },
 							},
+							destinationErrorContainer: {
+								type: 'div',
+								attributes: { id: 'destination-error' },
+								myClass: ['w3-padding-small', 'w3-center'],
+							},
 						},
 					},
 				},
@@ -221,7 +226,7 @@ function renderPage({ pageComponents, mainContainer }) {
 }
 
 async function initializeHandlers({ manageClient, manageUser, componentId }) {
-	const { default: addMileage} = await import("../../../../../../features/user/ui/mileage/add/addMileageJS.js");
+	const { default: addMileage } = await import("../../../../../../features/user/ui/mileage/add/addMileageJS.js");
 	addMileage({ manageClient, manageUser, componentId });
 
 	return () => removeListeners(COMPONENT_ID);

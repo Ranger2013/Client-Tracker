@@ -1,9 +1,9 @@
-import { dropDownClientMenu } from '../../../../core/navigation/services/dropDownClientMenu.min.js';
-import selectClientMenuPage from '../../../../core/navigation/services/selectClientMenuPage.min.js';
-import { createDebouncedHandler, getOptimalDelay } from '../../../../core/utils/dom/eventUtils.min.js';
-import { addListener, removeListeners } from '../../../../core/utils/dom/listeners.min.js';
-import { safeDisplayMessage } from '../../../../core/utils/dom/messages.min.js';
-import { handleSearch } from './components/searchHandlers.min.js';
+import { dropDownClientMenu } from '../../../../core/navigation/services/dropDownClientMenu.js';
+import selectClientMenuPage from '../../../../core/navigation/services/selectClientMenuPage.js';
+import { createDebouncedHandler, getOptimalDelay } from '../../../../core/utils/dom/eventUtils.js';
+import { addListener, removeListeners } from '../../../../core/utils/dom/listeners.js';
+import { safeDisplayMessage } from '../../../../core/utils/dom/messages.js';
+import { handleSearch } from './components/searchHandlers.js';
 
 const COMPONENT_ID = 'schedule-list';
 
@@ -19,7 +19,7 @@ export default async function appointmentList({ active, cID, primaryKey, manageC
             await initializeSearchHandlers({ manageUser });
         }
         catch (err) {
-            const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
+            const { AppError } = await import("../../../../core/errors/models/AppError.js");
             AppError.handleError(err, {
                 errorCode: AppError.Types.INITIALIZATION_ERROR,
                 userMessage: AppError.BaseMessages.system.initialization,
@@ -30,7 +30,7 @@ export default async function appointmentList({ active, cID, primaryKey, manageC
             await initializeMenuHandlers({ cID, primaryKey, manageClient, manageUser, mainContainer });
         }
         catch (err) {
-            const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
+            const { AppError } = await import("../../../../core/errors/models/AppError.js");
             AppError.handleError(err, {
                 errorCode: AppError.Types.INITIALIZATION_ERROR,
                 userMessage: AppError.BaseMessages.system.initialization,
@@ -38,7 +38,7 @@ export default async function appointmentList({ active, cID, primaryKey, manageC
         }
     }
     catch (err) {
-        const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
+        const { AppError } = await import("../../../../core/errors/models/AppError.js");
         AppError.handleError(err, {
             errorCode: AppError.Types.INITIALIZATION_ERROR,
             userMessage: AppError.BaseMessages.system.initialization,
@@ -102,7 +102,7 @@ async function initializeSearchHandlers({ manageUser }) {
         });
     }
     catch (err) {
-        const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
+        const { AppError } = await import("../../../../core/errors/models/AppError.js");
         AppError.process(err, {
             errorCode: AppError.Types.INITIALIZATION_ERROR,
             userMessage: 'Search functionality not available at the moment.',
@@ -157,7 +157,7 @@ function initializeMenuHandlers({ cID, primaryKey, manageClient, manageUser, mai
                 }
             }
             catch (err) {
-                const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
+                const { AppError } = await import("../../../../core/errors/models/AppError.js");
                 AppError.handleError(err, {
                     errorCode: AppError.Types.INITIALIZATION_ERROR,
                     userMessage: 'Manage client menu not available at the moment.',

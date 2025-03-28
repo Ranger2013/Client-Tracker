@@ -56,7 +56,7 @@ export async function addFuelCharges({ userData, formType, manageUser }) {
         return await handleMileageChargesIDBOoperation({ userData: mileageCharges, manageUser });
     }
     catch(err){
-        const { AppError } = await import("../../../../../../core/errors/models/AppError.min.js");
+        const { AppError } = await import("../../../../../../core/errors/models/AppError.js");
         AppError.handleError(err, {
             errorCode: AppError.Types.FORM_SUBMISSION_ERROR,
             userMessage: 'Failed to add fuel charges',
@@ -78,7 +78,7 @@ async function buildRangeData({ userData }) {
         );
     }
     catch (err) {
-        const { AppError } = await import("../../../../../../core/errors/models/AppError.min.js");
+        const { AppError } = await import("../../../../../../core/errors/models/AppError.js");
         AppError.process(err, {
             errorCode: AppError.Types.DATA_ERROR,
             userMessage: 'Failed to build range data',
@@ -135,7 +135,7 @@ async function handleMileageChargesIDBOoperation({ userData, manageUser }) {
         return true;
     }
     catch (err) {
-        const { AppError } = await import("../../../../../../core/errors/models/AppError.min.js");
+        const { AppError } = await import("../../../../../../core/errors/models/AppError.js");
         AppError.process(err, {
             errorCode: AppError.Types.DATABASE_ERROR,
             userMessage: AppError.BaseMessages.system.generic,

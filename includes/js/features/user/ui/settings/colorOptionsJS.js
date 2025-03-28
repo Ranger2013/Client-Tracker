@@ -1,9 +1,9 @@
-import displayFormValidationErrors from '../../../../core/utils/dom/forms/displayFormValidationErrors.min.js';
-import { addListener } from '../../../../core/utils/dom/listeners.min.js';
-import { clearMsg, safeDisplayMessage } from '../../../../core/utils/dom/messages.min.js';
-import { top } from '../../../../core/utils/window/scroll.min.js';
-import ManageUser from '../../models/ManageUser.min.js';
-import populateColorOptionsForm from './components/color-options/populateColorOptions.min.js';
+import displayFormValidationErrors from '../../../../core/utils/dom/forms/displayFormValidationErrors.js';
+import { addListener } from '../../../../core/utils/dom/listeners.js';
+import { clearMsg, safeDisplayMessage } from '../../../../core/utils/dom/messages.js';
+import { top } from '../../../../core/utils/window/scroll.js';
+import ManageUser from '../../models/ManageUser.js';
+import populateColorOptionsForm from './components/color-options/populateColorOptions.js';
 
 const COMPONENT_ID = 'color-options';
 
@@ -83,7 +83,7 @@ async function handleColorOptionFormSubmission(evt) {
         top();
     }
     catch (err) {
-        const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
+        const { AppError } = await import("../../../../core/errors/models/AppError.js");
         AppError.handleError(err, {
             errorCode: AppError.Types.FORM_SUBMISSION_ERROR,
             userMessage: AppError.BaseMessages.forms.submissionFailed,

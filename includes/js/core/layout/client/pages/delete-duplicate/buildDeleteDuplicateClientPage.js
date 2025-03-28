@@ -1,7 +1,7 @@
-import { buildEle } from '../../../../utils/dom/elements.min.js';
-import { buildPageContainer, buildTwoColumnInputSection, buildTwoColumnSelectElementSection } from '../../../../utils/dom/forms/buildUtils.min.js';
-import { removeListeners } from '../../../../utils/dom/listeners.min.js';
-import { cleanUserOutput } from '../../../../utils/string/stringUtils.min.js';
+import { buildEle } from '../../../../utils/dom/elements.js';
+import { buildPageContainer, buildTwoColumnInputSection, buildTwoColumnSelectElementSection } from '../../../../utils/dom/forms/buildUtils.js';
+import { removeListeners } from '../../../../utils/dom/listeners.js';
+import { cleanUserOutput } from '../../../../utils/string/stringUtils.js';
 
 // Handle logging
 const COMPONENT = 'Build Delete Duplicate Client Page';
@@ -204,7 +204,7 @@ async function initializeEventHandlers({ mainContainer, manageClient, manageUser
 		return () => removeListeners(COMPONENT_ID);
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../errors/models/AppError.min.js");
+		const { AppError } = await import("../../../../errors/models/AppError.js");
 		AppError.process(err, {
 			errorCode: AppError.Types.INITIALIZATION_ERROR,
 			userMessage: AppError.BaseMessages.system.initialization,

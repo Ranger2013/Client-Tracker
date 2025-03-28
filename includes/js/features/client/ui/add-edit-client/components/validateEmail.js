@@ -1,4 +1,4 @@
-import { clearMsg } from '../../../../../core/utils/dom/messages.min.js';
+import { clearMsg } from '../../../../../core/utils/dom/messages.js';
 
 export default async function validateEmail({ evt, cID, primaryKey, manageClient }) {
 	try {

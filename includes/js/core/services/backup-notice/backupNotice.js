@@ -1,11 +1,16 @@
-import { getValidElement } from '../../utils/dom/elements.min.js';
-import { addListener, removeListeners } from '../../utils/dom/listeners.min.js';
+import { getValidElement } from '../../utils/dom/elements.js';
+import { addListener, removeListeners } from '../../utils/dom/listeners.js';
 
-/** 
- * Constants 
- */
+// Set up debug mode
+const COMPONENT = 'Backup Notice';
+const DEBUG = false;
+const debugLog = (...args) => {
+    if (DEBUG) {
+        console.log(`[${COMPONENT}]`, ...args);
+    }
+}; 
+
 const TWO_HOURS = 60 * 60 * 2 * 1000; // 2 Hours in milliseconds
-// const TWO_HOURS = 60 * 1000; // 1 minute in milliseconds for testing.
 const REMINDER_PATTERNS = ['add', 'edit', 'delete', 'dateTime', 'farrierPrices', 'schedulingOptions', 'mileageCharges', 'colorOptions'];
 const BACKUP_NOTICE_ID = 'backup-notice-component';  // Add consistent component ID
 
@@ -29,7 +34,7 @@ export default async function setupBackupNotice({ errorEleID, manageUser }) {
         });
     }
     catch (error) {
-        const { AppError } = await import("../../errors/models/AppError.min.js");
+        const { AppError } = await import("../../errors/models/AppError.js");
         AppError.handleError(error, {
             originalError: error,
             errorCode: AppError.Types.BACKUP_ERROR,
@@ -44,7 +49,9 @@ export default async function setupBackupNotice({ errorEleID, manageUser }) {
  */
 async function initializeBackupNotice({ reminders, displayElement, manageUser }) {
     try {
+        debugLog('Manage User: ', manageUser);
         const userSettings = await manageUser.getSettings();
+        debugLog('User settings: ', userSettings);
         const idbStores = await manageUser.getStoreNames();
 
         // Check if we should show the reminder yet.
@@ -60,7 +67,7 @@ async function initializeBackupNotice({ reminders, displayElement, manageUser })
         }
     }
     catch (err) {
-        const { AppError } = await import("../../errors/models/AppError.min.js");
+        const { AppError } = await import("../../errors/models/AppError.js");
         throw new AppError('Failed to initialize backup notice: ', {
             originalError: err,
             errorCode: AppError.Types.BACKUP_ERROR,
@@ -150,7 +157,7 @@ async function closeBackupNotice({noticeEle, manageUser}) {
         removeListeners(BACKUP_NOTICE_ID);
     }
     catch (err) {
-        const { AppError } = await import("../../errors/models/AppError.min.js");
+        const { AppError } = await import("../../errors/models/AppError.js");
         AppError.handleError(err, {
             errorCode: AppError.Types.DATABASE_ERROR,
             userMessage: AppError.BaseMessages.system.server,

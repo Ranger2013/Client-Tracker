@@ -1,9 +1,9 @@
-import { buildEle, buildElementsFromConfig } from '../../../../../utils/dom/elements.min.js';
-import { buildPageContainer, buildSubmitButtonSection, buildTwoColumnInputSection, buildTwoColumnRadioButtonSection, buildTwoColumnSelectElementSection } from '../../../../../utils/dom/forms/buildUtils.min.js';
-import { trimCycleConfigurations } from '../../../../../utils/dom/forms/trimCycleConfigurations.min.js';
-import { removeListeners } from '../../../../../utils/dom/listeners.min.js';
-import { clearMsg } from '../../../../../utils/dom/messages.min.js';
-import { cleanUserOutput } from '../../../../../utils/string/stringUtils.min.js';
+import { buildEle, buildElementsFromConfig } from '../../../../../utils/dom/elements.js';
+import { buildPageContainer, buildSubmitButtonSection, buildTwoColumnInputSection, buildTwoColumnRadioButtonSection, buildTwoColumnSelectElementSection } from '../../../../../utils/dom/forms/buildUtils.js';
+import { trimCycleConfigurations } from '../../../../../utils/dom/forms/trimCycleConfigurations.js';
+import { removeListeners } from '../../../../../utils/dom/listeners.js';
+import { clearMsg } from '../../../../../utils/dom/messages.js';
+import { cleanUserOutput } from '../../../../../utils/string/stringUtils.js';
 
 const COMPONENT_ID = 'add-horse';
 
@@ -53,7 +53,7 @@ export default async function buildAddHorsePage({ cID, primaryKey, mainContainer
 		mainContainer.append(container);
 
 		// Initialize UI handler file
-		const { default: addNewHorse } = await import("../../../../../../features/client/ui/add-horse/addNewHorseJS.min.js");
+		const { default: addNewHorse } = await import("../../../../../../features/client/ui/add-horse/addNewHorseJS.js");
 		await addNewHorse({ cID, primaryKey, mainContainer, manageClient, manageUser, componentId: COMPONENT_ID });
 
 		return () => removeListeners(COMPONENT_ID);
@@ -113,7 +113,7 @@ async function buildHorseForm() {
 		return form;
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../../errors/models/AppError.min.js");
+		const { AppError } = await import("../../../../../errors/models/AppError.js");
 		AppError.process(err, {
 			errorCode: AppError.Types.RENDER_ERROR,
 			userMessage: AppError.BaseMessages.system.render,
@@ -123,13 +123,13 @@ async function buildHorseForm() {
 
 function typeHorseOptions() {
 	return [
-		{ value: 'null', 'text': '-- Select Horse Type --' },
-		{ value: 'draft', 'text': 'Draft' },
-		{ value: 'horse', 'text': 'Horse' },
-		{ value: 'mule', 'text': 'Mule' },
-		{ value: 'donkey', 'text': 'Donkey' },
-		{ value: 'mini_donkey', 'text': 'Mini Donkey' },
-		{ value: 'pony', 'text': 'Pony' },
-		{ value: 'mini_pony', 'text': 'Mini Pony' },
+		{ value: 'null', text: '-- Select Horse Type --' },
+		{ value: 'horse', text: 'Horse' },
+		{ value: 'draft', text: 'Draft' },
+		{ value: 'mule', text: 'Mule' },
+		{ value: 'donkey', text: 'Donkey' },
+		{ value: 'mini_donkey', text: 'Mini Donkey' },
+		{ value: 'pony', text: 'Pony' },
+		{ value: 'mini_pony', text: 'Mini Pony' },
 	];
 }

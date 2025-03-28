@@ -1,5 +1,5 @@
-import { addListener, removeListeners } from "../../../../../../core/utils/dom/listeners.min.js";
-import buildMileageRangeInputs from "./buildMileageRangeInputs.min.js";
+import { addListener, removeListeners } from "../../../../../../core/utils/dom/listeners.js";
+import buildMileageRangeInputs from "./buildMileageRangeInputs.js";
 
 export default async function listenForFuelRangeInput({ userClass, rangeContainer, rangeInputId }) {
     const rangeInput = document.getElementById('fuel-ranges');
@@ -14,7 +14,7 @@ export default async function listenForFuelRangeInput({ userClass, rangeContaine
             mileageCharges = await userClass.getMileageCharges();
         }
         catch(err) {
-            const { AppError } = await import("../../../../../../core/errors/models/AppError.min.js");
+            const { AppError } = await import("../../../../../../core/errors/models/AppError.js");
             await AppError.handleError(err, {
                 errorCode: AppError.Types.FORM_POPULATION_ERROR,
                 userMessage: null,

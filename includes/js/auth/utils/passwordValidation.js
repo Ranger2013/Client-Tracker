@@ -1,6 +1,6 @@
-import { clearMsg, getValidElement, safeDisplayMessage } from '../../core/utils/dom/messages.min.js';
-import { disableEnableSubmitButton } from '../../core/utils/dom/elements.min.js';
-import deepFreeze from '../../core/utils/deepFreeze.min.js';
+import { clearMsg, getValidElement, safeDisplayMessage } from '../../core/utils/dom/messages.js';
+import { disableEnableSubmitButton } from '../../core/utils/dom/elements.js';
+import deepFreeze from '../../core/utils/deepFreeze.js';
 
 const PASSWORD_VALIDATION = deepFreeze({
 	MIN_LENGTH: 8,
@@ -80,7 +80,7 @@ export async function comparePasswords(evt, passwordFieldId, errorContainer, sub
 		}
 	}
 	catch (error) {
-		const { AppError } = await import('../../core/errors/models/AppError.min.js');
+		const { AppError } = await import('../../core/errors/models/AppError.js');
 
 		AppError.handleError(error, {
 			errorCode: ErrorTypes.INPUT_ERROR,
@@ -119,7 +119,7 @@ export async function checkPasswordStrength(evt, strengthBadge, errorContainer, 
 	}
 	catch (error) {
 		console.warn('Error in checkPasswordStrength:', error);
-		const { AppError } = await import('../../core/errors/models/AppError.min.js');
+		const { AppError } = await import('../../core/errors/models/AppError.js');
 
 		AppError.handleError(error, {
 			errorCode: ErrorTypes.INPUT_ERROR,

@@ -1,5 +1,5 @@
-import { trimCycleRange } from '../../../utils/dom/forms/trimCycleConfigurations.min.js';
-import predictNextSessionNumberHorses from './predictNextSessionNumberHorses.min.js';
+import { trimCycleRange } from '../../../utils/dom/forms/trimCycleConfigurations.js';
+import predictNextSessionNumberHorses from './predictNextSessionNumberHorses.js';
 
 const COMPONENT = 'Get Projected Appointments';
 const DEBUG = false;

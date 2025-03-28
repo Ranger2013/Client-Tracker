@@ -1,10 +1,10 @@
-import { disableEnableSubmitButton } from '../../../../../core/utils/dom/elements.min.js';
-import { clearMsg, safeDisplayMessage } from '../../../../../core/utils/dom/messages.min.js';
-import { top } from '../../../../../core/utils/window/scroll.min.js';
-import ManageTrimming from '../../../models/ManageTrimming.min.js';
+import { disableEnableSubmitButton } from '../../../../../core/utils/dom/elements.js';
+import { clearMsg, safeDisplayMessage } from '../../../../../core/utils/dom/messages.js';
+import { top } from '../../../../../core/utils/window/scroll.js';
+import ManageTrimming from '../../../models/ManageTrimming.js';
 
 const COMPONENT = 'Form Submission';
-const DEBUG = false;
+const DEBUG = true;
 
 const debugLog = (...args) => {
 	if (DEBUG) {
@@ -15,11 +15,11 @@ const debugLog = (...args) => {
 export default async function handleAddTrimmingFormSubmission({ evt, cID, primaryKey, mainContainer, manageClient }) {
 	try {
 		// Clear any previous messages
-		clearMsg({ container: 'form-msg'});
+		clearMsg({ container: 'form-msg' });
 
 		// Process the data from the form due to select elements having multiple selections
 		const userData = processFormData(new FormData(evt.target));
-
+		debugLog('User Data: after form submission:', userData);
 		// Validate the form data
 		const isValidated = await validateTrimmingForm({ userData });
 		debugLog('Validation:', isValidated);
@@ -45,10 +45,10 @@ export default async function handleAddTrimmingFormSubmission({ evt, cID, primar
 			return;
 		}
 
-		const manageTrimming = new ManageTrimming();
+		const manageTrimming = new ManageTrimming({debug: false});
 		const result = await manageTrimming.handleAddTrimmingSession({ cID, primaryKey, userData });
 
-		debugLog('Form Submission:', result);
+		debugLog('Form Submission result:', result);
 
 		// Handle success
 		safeDisplayMessage({
@@ -57,15 +57,11 @@ export default async function handleAddTrimmingFormSubmission({ evt, cID, primar
 			isSuccess: result.status === 'ok' ? true : false,
 		});
 
-		// Reset the form
-		evt.target.reset();
-		// Scroll to the top of the page
-		top();
-		document.getElementById('number-horse-container').innerHTML = '';
+		handleFormReset({ evt, numberHorseContainer: 'number-horse-container', userData });
 	}
 	catch (err) {
 		console.warn('Error submitting form:', err);
-		const { AppError } = await import("../../../../../core/errors/models/AppError.min.js");
+		const { AppError } = await import("../../../../../core/errors/models/AppError.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.FORM_SUBMISSION_ERROR,
 			userMessage: AppError.BaseMessages.forms.submissionFailed,
@@ -139,20 +135,6 @@ async function validateTrimmingForm({ userData }) {
 	}
 }
 
-async function formSubmission({ cID, primaryKey, userData, manageClient }) {
-	try {
-		const manageTrimming = new ManageTrimming();
-		console.log('BEFORE SUBMIT FORM');
-		const submitForm = await manageTrimming.handleAddTrimmingSession({ cID, userData});
-		console.log('SUBMIT FORM: ', submitForm);
-		debugLog('Form Submission:', submitForm);
-
-	}
-	catch (err) {
-		throw err;
-	}
-}
-
 function getReceiptMessage(status) {
 	const messages = {
 		'success': 'Receipt sent successfully',
@@ -161,4 +143,25 @@ function getReceiptMessage(status) {
 		'offline': 'Receipt will be sent when online'
 	};
 	return messages[status] || null;
+}
+
+function handleFormReset({ evt, numberHorseContainer, userData }) {
+	debugLog('userData: ', userData);
+	const { trim_date: trimDate, next_trim_date: nextTrimDate, app_time: appTime } = userData;
+	debugLog('trimDate: ', trimDate);
+	debugLog('nextTrimDate: ', nextTrimDate);
+	debugLog('appTime: ', appTime);
+	// Reset the form
+	evt.target.reset();
+
+	// Put default values back
+	document.getElementById('trim-date').value = trimDate;
+	document.getElementById('next-trim-date').value = nextTrimDate;
+	document.getElementById('app-time').value = appTime;
+
+	// Clear the number horse container
+	document.getElementById(numberHorseContainer).innerHTML = '';
+
+	// Scroll to top
+	top();
 }

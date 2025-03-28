@@ -1,46 +1,54 @@
-import { addListener } from "../../../../../../core/utils/dom/listeners.min.js";
-import buildInputBlocks from "./buildInputBlocks.min.js";
-import makeInputsGreen from "./makeInputsGreen.min.js";
+import { addListener } from "../../../../../../core/utils/dom/listeners.js";
+import buildInputBlocks from "./buildInputBlocks.js";
+import makeInputsGreen from "./makeInputsGreen.js";
 
 // Configuration for accessory inputs that can have multiple values
-const ACCESSORY_INPUTS = {
-    pads: {
-        eleId: 'num-pads',
-        displayEle: 'display-pads'
-    },
-    packing: {
-        eleId: 'num-packing',
-        displayEle: 'display-packing'
-    },
-    wedges: {
-        eleId: 'num-wedges',
-        displayEle: 'display-wedges'
-    }
-};
+export default async function displayMultipleInputs(form, componentId) {
+    try {
+        const eventHandlers = {
+            'input:num-pads': async (evt) => {
+                buildInputBlocks({ numBlocks: evt.target.value, inputName: 'pads', display: 'display-pads' });
+                await makeInputsGreen(form, componentId);
+            },
+            'input:num-packing': async (evt) => {
+                buildInputBlocks({ numBlocks: evt.target.value, inputName: 'packing', display: 'display-packing' });
+                await makeInputsGreen(form, componentId);
+            },
+            'input:num-wedges': async (evt) => {
+                buildInputBlocks({ numBlocks: evt.target.value, inputName: 'wedges', display: 'display-wedges' });
+                await makeInputsGreen(form, componentId);
+            },
+        };
 
-export default function displayMultipleInputs(form, componentId) {
-    Object.entries(ACCESSORY_INPUTS).forEach(([accessory, config]) => {
         addListener({
-            elementOrId: config.eleId,
+            elementOrId: form,
             eventType: 'input',
             handler: async (evt) => {
                 try {
-                    buildInputBlocks(evt.target.value, accessory, form, config.displayEle);
-                    makeInputsGreen(form, componentId);
+                    const keyPath = `${evt.type}:${evt.target.id}`;
+                    console.log('KeyPath:', keyPath);
+                    if (eventHandlers[keyPath]) {
+                        console.log('we have the handler keypath.')
+                        eventHandlers[keyPath](evt);
+                    }
                 }
                 catch (err) {
-                    const { AppError } = await import("../../../../../../core/errors/models/AppError.min.js");
-                    // Handle error terminally here because:
-                    // 1. It's isolated to this input section
-                    // 2. Rest of form can still work
-                    await AppError.handleError(err, {
+                    const { AppError } = await import("../../../../../../core/errors/models/AppError.js");
+                    AppError.handleError(err, {
                         errorCode: AppError.Types.RENDER_ERROR,
-                        userMessage: `Unable to create ${accessory} inputs. ${AppError.BaseMessages.system.helpDesk}`,
-                        displayTarget: config.displayEle,
+                        userMessage: 'Error building accessory inputs',
+                        displayTarget: evt.target,
                     });
                 }
             },
-            componentId
+            componentId,
         });
-    });
+    }
+    catch (err) {
+        const { AppError } = await import("../../../../../../core/errors/models/AppError.js");
+        AppError.handleError(err, {
+            errorCode: AppError.Types.INITIALIZATION_ERROR,
+            userMessage: AppError.BaseMessages.system.initialization,
+        });
+    }
 }

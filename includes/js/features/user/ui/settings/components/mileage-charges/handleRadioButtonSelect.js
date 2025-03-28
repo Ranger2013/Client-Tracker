@@ -1,7 +1,7 @@
-import { addListener } from "../../../../../../core/utils/dom/listeners.min.js";
-import { clearMsg } from "../../../../../../core/utils/dom/messages.min.js";
-import listenForFuelRangeInput from "./listenForFuelRangeInput.min.js";
-import populateByMileForm from "./populateByMileForm.min.js";
+import { addListener } from "../../../../../../core/utils/dom/listeners.js";
+import { clearMsg } from "../../../../../../core/utils/dom/messages.js";
+import listenForFuelRangeInput from "./listenForFuelRangeInput.js";
+import populateByMileForm from "./populateByMileForm.js";
 
 const COMPONENT_ID = 'fuel-charges-radio';
 const RANGE_INPUT_ID = 'fuel-range-input';

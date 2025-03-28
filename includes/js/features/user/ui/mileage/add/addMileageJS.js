@@ -1,8 +1,11 @@
-import { addListener } from '../../../../../core/utils/dom/listeners.min.js';
+import { disableEnableSubmitButton } from '../../../../../core/utils/dom/elements.js';
+import { addListener } from '../../../../../core/utils/dom/listeners.js';
+import { clearMsg } from '../../../../../core/utils/dom/messages.js';
+import handleAddMileageFormSubmission from './components/handleAddMileageFormSubmission.js';
 
 // Set up debuggin
 const COMPONENT = 'Add Mileage';
-const DEBUG = true;
+const DEBUG = false;
 const debugLog = (...args) => {
 	if (DEBUG) {
 		console.log(`[${COMPONENT}]`, ...args);
@@ -21,42 +24,79 @@ const debugLog = (...args) => {
  */
 export default async function addMileage({ manageClient, manageUser, componentId }) {
 	try {
-		// Set up the static event handlers
-		const staticHandlers = {
-			'click:client-list-button': (evt) => {
-				evt.preventDefault();
-				toggleDisplays(evt)
-			},
-			'click:destination-button': (evt) => {
-				evt.preventDefault();
-				toggleDisplays(evt)
-			},
-			'focusin:starting-mileage': () => { },
-			'focusin:ending-mileage': () => { },
-			'submit:mileage-form': () => { },
-		};
+		// Initialize event handlers for the page
+		await setupEventHandlers({componentId, manageClient, manageUser});
 
-		// Set up the listener for the form
-		addListener({
-			elementOrId: 'mileage-form',
-			eventType: ['click', 'focusin', 'submit'],
-			handler: (evt) => {
-				const keyPath = `${evt.type}:${evt.target.id}`;
-
-				if (staticHandlers[keyPath]) {
-					staticHandlers[keyPath](evt);
-				}
-			},
-			componentId,
-		})
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../../core/errors/models/AppError.min.js");
+		const { AppError } = await import("../../../../../core/errors/models/AppError.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.INITIALIZATION_ERROR,
 			message: AppError.BaseMessages.system.initialization,
 		});
 	}
+}
+
+/**
+ * Sets up event delegation for all mileage form interactions
+ * 
+ * Uses a static handler mapping to respond to different DOM events
+ * based on element ID and event type. This approach improves performance
+ * by using a single event listener at the form level instead of
+ * individual listeners for each element.
+ * 
+ * @param {Object} params - Configuration parameters
+ * @param {string} params.componentId - ID of the component for listener tracking
+ * @param {Object} params.manageClient - Client management instance
+ * @param {Object} params.manageUser - User management instance
+ * @returns {void}
+ */
+function setupEventHandlers({componentId, manageClient, manageUser}) {
+	// Set up the static event handlers
+	const staticHandlers = {
+		'click:client-list-button': (evt) => {
+			evt.preventDefault();
+			toggleDisplays(evt);
+		},
+		'change:select-destination': (evt) => {
+			clearMsg({container: 'destination-error', hide: true, input: 'select-destination'});
+			disableEnableSubmitButton('submit-button');
+		},
+		'focusin:input-destination': (evt) => {
+			clearMsg({container: 'destination-error', hide: true, input: 'input-destination'});
+			disableEnableSubmitButton('submit-button');
+		},
+		'click:destination-button': (evt) => {
+			evt.preventDefault();
+			toggleDisplays(evt)
+		},
+		'focusin:starting-mileage': (evt) => {
+			clearMsg({container: `${evt.target.id}-error`, hide: true, input: evt.target.id});
+			disableEnableSubmitButton('submit-button');
+		},
+		'focusin:ending-mileage': (evt) => {
+			clearMsg({container: `${evt.target.id}-error`, hide: true, input: evt.target.id});
+			disableEnableSubmitButton('submit-button');
+		},
+		'submit:mileage-form': async (evt) => {
+			evt.preventDefault();
+			await handleAddMileageFormSubmission({evt, manageClient, manageUser});
+		},
+	};
+
+	// Set up the listener for the form
+	addListener({
+		elementOrId: 'mileage-form',
+		eventType: ['click', 'focusin', 'submit', 'change'],
+		handler: (evt) => {
+			const keyPath = `${evt.type}:${evt.target.id}`;
+
+			if (staticHandlers[keyPath]) {
+				staticHandlers[keyPath](evt);
+			}
+		},
+		componentId,
+	});
 }
 
 /**

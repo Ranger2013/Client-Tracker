@@ -1,13 +1,27 @@
-import { createDebouncedHandler, getOptimalDelay } from '../../../../core/utils/dom/eventUtils.min.js';
-import { addListener } from '../../../../core/utils/dom/listeners.min.js';
-import { clearMsg, safeDisplayMessage } from '../../../../core/utils/dom/messages.min.js';
-import { handleAddHorseFormSubmission, handleHorseNameInput } from './components/handleHorseNameInput.min.js';
-import clientAnchorNav from '../../../../core/navigation/components/setupClientAnchorListener.min.js';
+import { createDebouncedHandler, getOptimalDelay } from '../../../../core/utils/dom/eventUtils.js';
+import { addListener } from '../../../../core/utils/dom/listeners.js';
+import { clearMsg, safeDisplayMessage } from '../../../../core/utils/dom/messages.js';
+import { handleAddHorseFormSubmission, handleHorseNameInput } from './components/handleHorseNameInput.js';
+import clientAnchorNav from '../../../../core/navigation/components/setupClientAnchorListener.js';
+
+// Set up debugging log
+const COMPONENT = 'Add Horse Page';
+const DEBUG = false;
+const debugLog = (...args) => {
+	if (DEBUG) {
+		console.log(`[${COMPONENT}]`, ...args);
+	}
+};
 
 export default async function addNewHorse({ cID, primaryKey, mainContainer, manageClient, manageUser, componentId }) {
 	try {
 		// Add the event listener for the client name to navigate back to the client page
 		await clientAnchorNav({ manageUser, manageClient, componentId });
+
+		const clientInfo = await manageClient.getClientInfo({primaryKey});
+		debugLog('clientInfo: ', clientInfo);
+		const clientName = clientInfo.client_name;
+		debugLog('clientName: ', clientName);
 
 		// Set up the debouncer for validation.
 		const debouncedValidate = createDebouncedHandler(
@@ -33,7 +47,7 @@ export default async function addNewHorse({ cID, primaryKey, mainContainer, mana
 			'focusin:horse-type': (evt) => clearMsg({ container: `${evt.target.id}-error`, hide: true, input: evt.target }),
 			'submit:add-horse-form': async (evt) => {
 				evt.preventDefault();
-				await handleAddHorseFormSubmission({ evt, cID, primaryKey, manageClient, componentId });
+				await handleAddHorseFormSubmission({ evt, cID, primaryKey, clientName, manageClient, componentId });
 			},
 		};
 
@@ -51,7 +65,7 @@ export default async function addNewHorse({ cID, primaryKey, mainContainer, mana
 		});
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
+		const { AppError } = await import("../../../../core/errors/models/AppError.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.INITIALIZATION_ERROR,
 			userMessage: 'An error occurred while initializing the add new horse page.',

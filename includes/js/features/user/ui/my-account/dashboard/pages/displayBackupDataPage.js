@@ -1,82 +1,69 @@
-import { addListener } from '../../../../../../core/utils/dom/listeners.js';
+import { buildEle, getValidElement } from '../../../../../../core/utils/dom/elements.js';
+import { addListener, removeListeners } from '../../../../../../core/utils/dom/listeners.js';
 import { clearMsg } from '../../../../../../core/utils/dom/messages.js';
-import buildObjectStoreRows from '../components/backup-data/buildObjectStoreRows.js';
 import buildBackupDataPageComponents from '../components/backup-data/buildPageComponents.js';
 
 const COMPONENT_ID = 'backup-data-tab';
+
+const COMPONENT = 'Display Backup Data Page';
+const DEBUG = false;
+const debugLog = (...args) => {
+	if (DEBUG) {
+		console.log(`[${COMPONENT}]`, ...args);
+	}
+};
 
 /**
  * Displays the backup data page.
  * @param {Object} params - The parameters for the function.
  * @param {Event} params.evt - The event object.
- * @param {HTMLElement} params.messageContainer - The container for displaying messages.
  * @param {HTMLElement} params.tabContainer - The container for the tab content.
  * @param {Object} params.manageUser - The manageUser instance.
  * @returns {Promise<void>}
  */
-export default async function displayBackupDataPage({evt, messageContainer, tabContainer, manageUser}){
-	try{
-		// Operational flow
+export default async function displayBackupDataPage({ evt, tabContainer, manageUser, componentId }) {
+	try {
 		// 1. Clear any messages that may have been displayed
-		clearMsg({container: 'form-msg'});
-		clearMsg({container: 'page-msg'});
+		clearMsg({ container: 'form-msg' });
+		clearMsg({ container: 'page-msg' });
 
-		// 2. Build the page title and content container, get the object stores and stores that need updating
-		const objectStoreRows = await buildObjectStoreRows({manageUser});
-		
-		// 3. Build the Object store rows and indicators
-		const pageComponents = buildBackupDataPageComponents({manageUser, objectStoreRows});
-		
-		// 4. Append the object store rows to the display container
-		const displayContainer = pageComponents.querySelector('#display-container');
-		
-		displayContainer.appendChild(objectStoreRows);
+		tabContainer = getValidElement(tabContainer);
 
-		tabContainer.innerHTML = '';
-		tabContainer.appendChild(pageComponents);
+		const pageComponents = await buildBackupDataPageComponents({ manageUser });
+		debugLog('In displayBackupDataPage: pageComponents: ', pageComponents);
 
-		// Check if we have a submit button, if not, just return, we are done
-		const submitButton = tabContainer.querySelector('#submit-button');
-		if(!submitButton) return;
+		renderPage({ tabContainer, pageComponents });
 
-		// Only import the backupDataToServer file if we have the submit button
-		const { default: backupDataToServer } = await import('../components/backup-data/backupDataToServer');
-		
-		// 5. Attach event listener to the submit button
-		addListener({
-			elementOrId: submitButton,
-			eventType: 'click',
-			handler: async (evt) => {
-				try{
-					await backupDataToServer({tabContainer});
-				}
-				catch(err){
-					const { AppError } = await import("../../../../../../core/errors/models/AppError.min.js");
-					AppError.handleError(err, {
-						errorCode: AppError.Types.DATABASE_ERROR,
-						userMessage: AppError.BaseMessages.system.network,
-					});
-				}
-			},
-			componentId: COMPONENT_ID,
-		});
+		showBackupDataButton({pageComponents})
 
-		const indexed = new IndexedDBOperations();
-		const db = await indexed.openDBPromise();
-
-		try {
-			await indexed.addStorePromise(db, data, store);
-		} catch (err) {
-			// Error handling is already done in #handleError
-			console.error('Failed to add data:', err);
-		}
-		
+		return () => removeListeners(componentId);
 	}
-	catch(err){
-		const { AppError } = await import("../../../../../../core/errors/models/AppError.min.js");
+	catch (err) {
+		const { AppError } = await import("../../../../../../core/errors/models/AppError.js");
 		AppError.process(err, {
 			errorCode: AppError.Types.RENDER_ERROR,
 			userMessage: AppError.BaseMessages.system.render,
 		}, true);
+	}
+}
+
+function renderPage({ tabContainer, pageComponents }) {
+	const { container, errorContainer, storeRowsContainer, successContainer, title, titleContainer, buttonContainer, button } = pageComponents;
+
+	titleContainer.appendChild(title);
+	buttonContainer.appendChild(button);
+	container.append(titleContainer, successContainer, errorContainer, buttonContainer, storeRowsContainer);
+
+	tabContainer.innerHTML = '';
+	tabContainer.appendChild(container);
+}
+
+function showBackupDataButton({pageComponents}){
+	const { storeRowsContainer, buttonContainer } = pageComponents;
+	debugLog('In showBackupDataButton: storeRowsContainer: ', storeRowsContainer);
+	const imgElementsHasData = storeRowsContainer.querySelectorAll('img[data-hasdata="true"]');
+	debugLog('In showBackupDataButton: imgElementsHasData: ', imgElementsHasData);
+	if(imgElementsHasData.length > 0){
+		buttonContainer.classList.remove('w3-hide');
 	}
 }

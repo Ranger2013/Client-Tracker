@@ -1,6 +1,6 @@
-import selectPage from '../../../navigation/services/selectPage.min.js';
-import { buildEle } from '../../../utils/dom/elements.min.js';
-import { addListener } from '../../../utils/dom/listeners.min.js';
+import selectPage from '../../../navigation/services/selectPage.js';
+import { buildEle } from '../../../utils/dom/elements.js';
+import { addListener } from '../../../utils/dom/listeners.js';
 
 /**
  * Builds and displays the projected appointment block in the provided container.

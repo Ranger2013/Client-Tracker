@@ -1,4 +1,4 @@
-import { getValidElement } from './elements.min.js';
+import { getValidElement } from './elements.js';
 
 /**
  * Tracks event listeners by component for cleanup
@@ -16,7 +16,7 @@ const listenerRegistry = new Map();
  * @throws {AppError} If element not found or listener registration fails
  * @returns {boolean} True if listener was added successfully
  */
-export function addListener({elementOrId, eventType, handler, componentId}) {
+export function addListener({ elementOrId, eventType, handler, componentId }) {
     try {
         // Input validation first
         if (!elementOrId || !eventType || typeof handler !== 'function' || !componentId) {
@@ -24,7 +24,16 @@ export function addListener({elementOrId, eventType, handler, componentId}) {
         }
 
         // Use our utility function instead
-        const element = getValidElement(elementOrId);
+        // const element = getValidElement(elementOrId);
+        let element;
+
+        // Special case for window and document objects
+        if (elementOrId === window || elementOrId === document) {
+            element = elementOrId;
+        }
+        else {
+            element = getValidElement(elementOrId);
+        }
 
         // Normalize eventType to always be an array
         const eventTypes = Array.isArray(eventType) ? eventType : [eventType];
@@ -32,15 +41,25 @@ export function addListener({elementOrId, eventType, handler, componentId}) {
         // Process all event types in a single loop
         eventTypes.forEach(type => {
             element.addEventListener(type, handler);
-            registerListener({element, type, listener: handler, componentId});
+            registerListener({ element, type, listener: handler, componentId });
         });
 
         return true;
     }
     catch (error) {
-        const elementDesc = typeof elementOrId === 'string' 
-            ? `element with ID "${elementOrId}"` 
-            : (elementOrId?.id ? `element with ID "${elementOrId.id}"` : 'element (no ID)');
+        let elementDesc;
+
+        if (elementOrId === window) {
+            elementDesc = 'window object';
+        }
+        else if (elementOrId === document) {
+            elementDesc = 'document object';
+        }
+        else {
+            elementDesc = typeof elementOrId === 'string'
+                ? `element with ID "${elementOrId}"`
+                : (elementOrId?.id ? `element with ID "${elementOrId.id}"` : 'element (no ID)');
+        }
 
         // Keep error handling synchronous for immediate feedback
         console.error('Listener registration failed:', {
@@ -51,7 +70,7 @@ export function addListener({elementOrId, eventType, handler, componentId}) {
         });
 
         // Handle error asynchronously
-        import('../../errors/models/AppError.min.js')
+        import('../../errors/models/AppError.js')
             .then(({ AppError }) => {
                 return AppError.handleError(error, {
                     errorCode: AppError.Types.INITIALIZATION_ERROR,
@@ -71,7 +90,7 @@ export function addListener({elementOrId, eventType, handler, componentId}) {
  * @param {EventListener} options.listener - Event handler
  * @param {string} options.componentId - Component identifier
  */
-function registerListener({element, type, listener, componentId}) {
+function registerListener({ element, type, listener, componentId }) {
     if (!listenerRegistry.has(componentId)) {
         listenerRegistry.set(componentId, new Set());
     }

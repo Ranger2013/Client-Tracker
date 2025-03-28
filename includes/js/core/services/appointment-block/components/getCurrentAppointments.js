@@ -1,6 +1,6 @@
-import { sortByTrimDateAndAppTime } from '../../../utils/date/dateUtils.min.js';
-import appointmentBlockData from './appointmentBlockData.min.js';
-import predictNextSessionNumberHorses from './predictNextSessionNumberHorses.min.js';
+import { sortByTrimDateAndAppTime } from '../../../utils/date/dateUtils.js';
+import appointmentBlockData from './appointmentBlockData.js';
+import predictNextSessionNumberHorses from './predictNextSessionNumberHorses.js';
 
 const COMPONENT = 'getCurrentAppointments';
 const DEBUG = false;

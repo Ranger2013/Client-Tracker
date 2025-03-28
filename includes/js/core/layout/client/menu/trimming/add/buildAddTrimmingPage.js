@@ -1,11 +1,18 @@
-import { getReadableCurrentFutureDate } from '../../../../../utils/date/dateUtils.min.js';
-import { buildElementsFromConfig } from '../../../../../utils/dom/elements.min.js';
-import { buildPageContainer, buildSubmitButtonSection, buildTwoColumnInputSection } from '../../../../../utils/dom/forms/buildUtils.min.js';
-import { removeListeners } from '../../../../../utils/dom/listeners.min.js';
-import { clearMsg } from '../../../../../utils/dom/messages.min.js';
-import { cleanUserOutput } from '../../../../../utils/string/stringUtils.min.js';
-import { buildFuelChargeCheckboxSection, buildInvoicePaidCheckbox, buildSessionNotesSection } from './components/buildUtils.min.js';
-import getMileageCharges from './components/getMileageCharges.min.js';
+import { getReadableCurrentFutureDate } from '../../../../../utils/date/dateUtils.js';
+import { buildEle, buildElementsFromConfig, buildElementTree } from '../../../../../utils/dom/elements.js';
+import { buildPageContainer, buildSubmitButtonSection, buildTwoColumnInputSection, buildTwoColumnTextareaSection } from '../../../../../utils/dom/forms/buildUtils.js';
+import { removeListeners } from '../../../../../utils/dom/listeners.js';
+import { clearMsg } from '../../../../../utils/dom/messages.js';
+import { cleanUserOutput } from '../../../../../utils/string/stringUtils.js';
+
+// Set up the debug mode
+const COMPONENT = 'Build Add Trimming Page';
+const DEBUG = true;
+const debugLog = (...args) => {
+	if (DEBUG) {
+		console.log(`[${COMPONENT}]`, ...args);
+	}
+};
 
 // Setup the component id to track event listeners
 const COMPONENT_ID = 'add-trimming';
@@ -17,7 +24,7 @@ export default async function buildAddTrimmingPage({ cID, primaryKey, mainContai
 
 		// If we don't have a cID or a primary key, throw new Error
 		if (!cID || !primaryKey) throw new Error('Unable to build the add trimming page. Certain parameters are missing.');
- 
+
 		// Get all required Data
 		const pageData = await fetchRequiredData({
 			cID,
@@ -37,19 +44,17 @@ export default async function buildAddTrimmingPage({ cID, primaryKey, mainContai
 			});
 		}
 
-		// Build the trimming page components
-		const pageElements = await buildPageComponents({cID, primaryKey, pageData});
+		const [pageComponents, formComponents, optionalComponents] = await Promise.all([
+			buildPageComponents({ pageData, cID, primaryKey }),
+			buildFormComponents({ pageData, cID, primaryKey }),
+			buildOptionalComponents({ pageData, cID, primaryKey }),
+		]);
 
-		renderPage(mainContainer, pageElements);
+		renderPage({ mainContainer, pageComponents, formComponents, optionalComponents });
 
-		return await initializeUIHandlers({
-			cID,
-			primaryKey,
-			mainContainer,
-			manageClient,
-			manageUser,
-		})
+		await initializeUIHandlers({ cID, primaryKey, mainContainer, manageClient, manageUser });
 
+		return () => removeListeners(COMPONENT_ID);
 	}
 	catch (err) {
 		throw err;
@@ -74,216 +79,199 @@ async function fetchRequiredData({ cID, primaryKey, manageClient, manageUser }) 
 }
 
 async function handleNoHorsesScenerio({ cID, primaryKey, mainContainer, manageClient, manageUser }) {
+	const [{ default: buildNoHorsePage }, { default: addTrimmingNoHorse }] = await Promise.all([
+		import("./components/buildNoHorsePage.js"),
+		import("../../../../../../features/client/ui/add-trimming/addTrimmingNoHorseJS.js"),
+	]);
+
 	buildNoHorsePage({ cID, primaryKey, mainContainer });
-	const { default: addTrimming } = await import("../../../../../../features/client/ui/add-trimming/addTrimmingJS.js");
-	addTrimming({ cID, primaryKey, mainContainer, manageClient, manageUser, componentId: COMPONENT_ID });
+
+	await addTrimmingNoHorse({ cID, primaryKey, manageClient, manageUser, mainContainer, componentId: COMPONENT_ID });
 
 	return () => removeListeners(COMPONENT_ID);
 }
 
-function buildNoHorsePage({ cID, primaryKey, mainContainer }) {
-	try {
-		const PAGE_MAPPING = {
-			container: {
-				type: 'div',
-				myClass: ['w3-center'],
-			},
-			card: {
-				type: 'div',
-				myClass: ['w3-card'],
-				attributes: { id: 'card' },
-			},
-			notice: {
-				type: 'h4',
-				myClass: ['w3-text-red'],
-				text: 'This client does not have any horses Listed.',
-			},
-			linkContainer: {
-				type: 'p',
-				myClass: ['w3-margin-top', 'w3-padding-small'],
-				text: 'Please ',
-			},
-			link: {
-				type: 'a',
-				attributes: {
-					id: 'add-horse-link',
-					href: `/tracker/client-horses/add/?cID=${cID}&primaryKey=${primaryKey}`,
-					title: 'Add a Horse',
-					'data-add-horse-navigation:': true, // This will give us something to look for when we create our event listeners in the UI file.
-				},
-				myClass: ['w3-text-blue'],
-				text: 'add a horse',
-			},
-		};
-
-		const elements = buildElementsFromConfig(PAGE_MAPPING);
-		const { container, card, notice, linkContainer, link } = elements;
-
-		// Add child elements first
-		linkContainer.appendChild(link);
-		// Append the elements
-		card.append(notice, linkContainer);
-		container.appendChild(card);
-
-		mainContainer.innerHTML = '';
-		mainContainer.appendChild(elements.container);
-	}
-	catch (err) {
-		throw err;
-	}
-}
-
-async function buildPageComponents({cID, primaryKey, pageData}) {
-	const { clientInfo, clientName, trimCycleWeeks } = pageData;
-
-	// Build the base page components
-	const pageElements = createBaseStructure(trimCycleWeeks);
-
-	// Build form components
-	const formElements = await buildFormComponents({
-		pageElements,
-		clientInfo,
-		clientName,
+async function buildPageComponents({ pageData, cID, primaryKey }) {
+	const [container, card] = await buildPageContainer({
+		pageTitle: 'Add Trimming for ',
+		clientName: pageData.clientName,
 		cID,
 		primaryKey,
 	});
-	const [container, card, ...updatedFormElements] = formElements;
-	// Get the optional sections
-	const optionalSections = await getOptionalSections(pageData);
-
-	return { ...pageElements, container, card, updatedFormElements, ...optionalSections };
+	return { container, card };
 }
 
-function createBaseStructure(trimCycleWeeks) {
-	const PAGE_MAPPING = {
-		trimmingForm: { type: 'form', attributes: { id: 'trimming-form' } },
-		numberHorseContainer: { type: 'div', attributes: { id: 'number-horse-container' }, myClass: ['w3-padding-small'] },
-		trimCycleNoteContainer: {
-			type: 'div',
-			myClass: ['w3-small', 'w3-text-red'],
-			text: `Note: Client's appointment is set to ${trimCycleWeeks} weeks.`
+async function buildFormComponents({ pageData, cID, primaryKey }) {
+	const { clientInfo, trimCycleWeeks } = pageData;
+
+	// Build the Mapping for extra form components
+	const FORM_COMPONENTS_MAPPING = {
+		form: {
+			type: 'form',
+			attributes: { id: 'trimming-form' },
 		},
+		optionalContainer: {
+			type: 'div',
+			attributes: { id: 'optional-container' },
+		},
+		numberHorseContainer: {
+			type: 'div',
+			myClass: ['w3-padding-small'],
+			attributes: { id: 'number-horse-container' },
+		}
 	};
 
-	return buildElementsFromConfig(PAGE_MAPPING);
-}
+	const INVOICE_PAID_MAPPING = {
+		type: 'div',
+		myClass: ['w3-container', 'w3-margin-bottom', 'w3-margin-top', 'w3-center'],
+		children: {
+			label: {
+				type: 'label',
+				attributes: { for: 'paid' },
+				myClass: ['w3-bold'],
+				text: 'Invoice Paid: ',
+				children: {
+					checkbox: {
+						type: 'input',
+						attributes: {
+							id: 'paid',
+							type: 'checkbox',
+							name: 'paid',
+							value: 'yes',
+						},
+					}
+				},
+			},
+		},
+	}
 
-async function buildFormComponents({ pageElements, clientInfo, clientName, cID, primaryKey }) {
+	const { form, optionalContainer, numberHorseContainer } = buildElementsFromConfig(FORM_COMPONENTS_MAPPING);
+	const invoicePaidContainer = buildElementTree(INVOICE_PAID_MAPPING);
+
 	const [
-		[container, card],
-		numberHorses,
-		trimDate,
-		nextTrimDate,
-		appTime,
-		sessionNotes,
-		amountDue,
-		invoicePaid,
-		submit,
+		numberHorseSection,
+		appointmentDateSection,
+		nextAppointmentSection,
+		appointmentTimeSection,
+		sessionNotesSection,
+		paymentSection,
+		submitButtonSection,
 	] = await Promise.all([
-		// Main page container and the card with the title
-		buildPageContainer({
-			pageTitle: 'Add Trimming for ',
-			clientName,
-			cID,
-			primaryKey
-		}),
-		// Input for number of horses that were trimmed/shod
+		// Number horse section
 		buildTwoColumnInputSection({
 			labelText: 'Number of Horses:',
-			inputType: 'number',
 			inputID: 'number-horses',
+			inputType: 'number',
 			inputName: 'number_horses',
 			inputTitle: 'Number of Horses',
 			required: true,
 		}),
-		// Date input for the trim date
+		// appointment date section
 		buildTwoColumnInputSection({
-			labelText: 'Trim Date:',
-			inputType: 'date',
+			labelText: 'Appointment Date:',
 			inputID: 'trim-date',
-			inputName: 'trim_date',
-			inputTitle: 'Trim Date',
-			required: true,
-			additionalElement: pageElements.trimCycleNoteContainer,
-		}),
-		// Next appointment date input
-		buildTwoColumnInputSection({
-			labelText: 'Next Trimming/Shoeing Date:',
 			inputType: 'date',
+			inputName: 'trim_date',
+			inputTitle: 'Date of Trimming',
+			required: true,
+			inputValue: new Date().toISOString().slice(0, 10),
+			additionalElement: buildEle({
+				type: 'div',
+				myClass: ['w3-small', 'w3-text-red'],
+				text: `Note: Client's appointment is set to ${trimCycleWeeks} weeks.`,
+			}),
+		}),
+		// Next appointment section
+		buildTwoColumnInputSection({
+			labelText: 'Next Appointment:',
 			inputID: 'next-trim-date',
+			inputType: 'date',
 			inputName: 'next_trim_date',
-			inputTitle: 'Next Trim Date',
+			inputTitle: 'Next Appointment Date',
 			required: true,
 			inputValue: getReadableCurrentFutureDate(clientInfo?.trim_cycle),
 		}),
-		// Time for the next appointment input
+		// Appointment time section
 		buildTwoColumnInputSection({
 			labelText: 'Appointment Time:',
-			inputType: 'time',
 			inputID: 'app-time',
+			inputType: 'time',
 			inputName: 'app_time',
 			inputTitle: 'Appointment Time',
 			required: true,
-			inputValue: clientInfo?.app_time,
+			inputValue: clientInfo?.app_time || '09:00',
 		}),
-		// Session Notes
-		buildSessionNotesSection(),
-		// Amount due input
+		// Session notes section
+		buildTwoColumnTextareaSection({
+			labelText: 'Trimming/Shoeing Session Notes:',
+			textareaID: 'session-notes',
+			textareaName: 'session_notes',
+			textareaTitle: 'Session Notes',
+			rows: 5,
+		}),
+		// Payment section
 		buildTwoColumnInputSection({
 			labelText: 'Amount Due:',
-			inputType: 'number',
 			inputID: 'payment',
+			inputType: 'number',
 			inputName: 'payment',
-			inputTitle: 'Payment',
+			inputTitle: 'Amount Due',
 			required: true,
 		}),
-		// Invoice Paid Checkbox
-		buildInvoicePaidCheckbox(),
-		// Submit button
+		// Submit button section
 		buildSubmitButtonSection('Add Trimming/Shoeing'),
 	]);
 
-	return [
-		container,
-		card,
-		numberHorses,
-		pageElements.numberHorseContainer,
-		trimDate,
-		nextTrimDate,
-		appTime,
-		sessionNotes,
-		amountDue,
-		invoicePaid,
-		submit,
-	];
+	return {
+		form,
+		numberHorseSection,
+		numberHorseContainer,
+		appointmentDateSection,
+		nextAppointmentSection,
+		appointmentTimeSection,
+		optionalContainer,
+		sessionNotesSection,
+		paymentSection,
+		invoicePaidContainer,
+		submitButtonSection,
+	};
 }
 
-async function getOptionalSections({clientInfo, clientDistance, mileageCharges}){
+async function buildOptionalComponents({ pageData, cID, primaryKey }) {
+	const { clientDistance, mileageCharges, clientInfo } = pageData;
+
 	const sections = {};
 
+	const [{ default: getMileageCharges }, { default: buildFuelChargeCheckboxSection }] = await Promise.all([
+		import('./components/getMileageCharges.js'),
+		import('./components/buildFuelChargeCheckboxSection.js')
+	]);
+
+
 	// Check if the client has an email
-	if(clientInfo?.email){
+	if (clientInfo?.email) {
 		const { default: buildReceiptSection } = await import("./components/buildReceiptSection.js");
 		sections.receiptSection = await buildReceiptSection();
 	}
 
 	// Check if the user is getting charged mileage
 	const { inRange, cost } = getMileageCharges({ clientDistance, mileageCharges });
-	if(inRange){
+	if (inRange) {
 		sections.fuelChargeSection = await buildFuelChargeCheckboxSection(cost);
 	}
 
 	return sections;
 }
 
-function renderPage(mainContainer, { container, card, trimmingForm, updatedFormElements, receiptSection, fuelChargeSection }) {
-	// Put it all together
-	trimmingForm.append(...updatedFormElements);
+function renderPage({ mainContainer, pageComponents, formComponents, optionalComponents }) {
+	const { container, card } = pageComponents;
+	const { form, ...formElements } = formComponents;
+	const { receiptSection, fuelChargeSection } = optionalComponents;
 
-	// Add optional sections
-	if(receiptSection instanceof HTMLElement) trimmingForm.appendChild(receiptSection);
-	if(fuelChargeSection instanceof HTMLElement) trimmingForm.appendChild(fuelChargeSection);
-	card.appendChild(trimmingForm);
+	form.append(...Object.values(formElements));
+	if (receiptSection instanceof HTMLElement) formElements.optionalContainer.appendChild(receiptSection);
+	if (fuelChargeSection instanceof HTMLElement) formElements.optionalContainer.appendChild(fuelChargeSection);
+	card.appendChild(form);
 	container.appendChild(card);
 
 	// Clear the main container
@@ -291,9 +279,7 @@ function renderPage(mainContainer, { container, card, trimmingForm, updatedFormE
 	mainContainer.appendChild(container);
 }
 
-async function initializeUIHandlers({ cID, primaryKey, mainContainer, manageClient, manageUser }){
-	const { default: addTrimming } = await import("../../../../../../features/client/ui/add-trimming/addTrimmingJS.min.js");
+async function initializeUIHandlers({ cID, primaryKey, mainContainer, manageClient, manageUser }) {
+	const { default: addTrimming } = await import("../../../../../../features/client/ui/add-trimming/addTrimmingJS.js");
 	addTrimming({ cID, primaryKey, mainContainer, manageClient, manageUser, componentId: COMPONENT_ID });
-
-	return () => removeListeners(COMPONENT_ID);
 }

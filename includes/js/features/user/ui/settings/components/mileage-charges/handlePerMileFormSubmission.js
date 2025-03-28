@@ -1,6 +1,6 @@
-import { safeDisplayMessage } from "../../../../../../core/utils/dom/messages.min.js";
-import { isNumeric } from "../../../../../../core/utils/validation/validators.min.js";
-import { top } from "../../../../../../core/utils/window/scroll.min.js";
+import { safeDisplayMessage } from "../../../../../../core/utils/dom/messages.js";
+import { isNumeric } from "../../../../../../core/utils/validation/validators.js";
+import { top } from "../../../../../../core/utils/window/scroll.js";
 
 export default async function handlePerMileFormSubmission({ evt, manageUser }) {
 	evt.preventDefault();
@@ -20,7 +20,7 @@ export default async function handlePerMileFormSubmission({ evt, manageUser }) {
 			}
 		}
 		catch (err) {
-			const { AppError } = await import("../../../../../../core/errors/models/AppError.min.js");
+			const { AppError } = await import("../../../../../../core/errors/models/AppError.js");
 			AppError.handleError(err, {
 				errorCode: AppError.Types.FORM_VALIDATION_ERROR,
 				userMessage: AppError.BaseMessages.forms.validationFailed,
@@ -50,7 +50,7 @@ export default async function handlePerMileFormSubmission({ evt, manageUser }) {
 	}
 	catch (err) {
 		console.warn('Handle per mile form submission error: ', err);
-		const { AppError } = await import("../../../../../../core/errors/models/AppError.min.js");
+		const { AppError } = await import("../../../../../../core/errors/models/AppError.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.FORM_SUBMISSION_ERROR,
 			userMessage: AppError.BaseMessages.forms.submissionFailed,

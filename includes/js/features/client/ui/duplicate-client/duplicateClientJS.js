@@ -1,11 +1,11 @@
-import checkAppointment from '../../../../core/services/appointment-block/checkAppointment.min.js';
-import { getValidElement } from '../../../../core/utils/dom/elements.min.js';
-import { createDebouncedHandler, getOptimalDelay } from '../../../../core/utils/dom/eventUtils.min.js';
-import filterClientList from '../../../../core/utils/dom/forms/filterClientSelectElement.min.js';
-import { addListener } from '../../../../core/utils/dom/listeners.min.js';
-import { clearMsg, safeDisplayMessage } from '../../../../core/utils/dom/messages.min.js';
-import buildAndShowClientForm from './components/buildAndShowClientForm.min.js';
-import duplicateClientFormSubmission from './components/duplicateClientFormSubmission.min.js';
+import checkAppointment from '../../../../core/services/appointment-block/checkAppointment.js';
+import { getValidElement } from '../../../../core/utils/dom/elements.js';
+import { createDebouncedHandler, getOptimalDelay } from '../../../../core/utils/dom/eventUtils.js';
+import filterClientList from '../../../../core/utils/dom/forms/filterClientSelectElement.js';
+import { addListener } from '../../../../core/utils/dom/listeners.js';
+import { clearMsg, safeDisplayMessage } from '../../../../core/utils/dom/messages.js';
+import buildAndShowClientForm from './components/buildAndShowClientForm.js';
+import duplicateClientFormSubmission from './components/duplicateClientFormSubmission.js';
 
 // Set up Error Logging
 const COMPONENT = 'Duplicate Client';
@@ -72,7 +72,7 @@ export default async function duplicateClient({ mainContainer, manageClient, man
 		});
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../core/errors/models/AppError.min.js");
+		const { AppError } = await import("../../../../core/errors/models/AppError.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.INITIALIZATION_ERROR,
 			userMessage: AppError.BaseMessages.system.initialization,

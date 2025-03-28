@@ -61,7 +61,7 @@ export async function matchesDateSearch({searchText, searchValue, manageUser}) {
                Object.keys(MONTHS).some(month => month.includes(searchText));
 
     } catch (err) {
-        const { AppError } = await import("../../../../../core/errors/models/AppError.min.js");
+        const { AppError } = await import("../../../../../core/errors/models/AppError.js");
         AppError.process(err, {
             errorCode: AppError.Types.INITIALIZATION_ERROR,
             userMessage: 'Search functionality not available at the moment.'
