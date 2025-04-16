@@ -1,5 +1,5 @@
 const COMPONENT = 'costHandlers';
-const DEBUG = true;
+const DEBUG = false;
 
 const debugLog = (...args) => {
 	if(DEBUG){

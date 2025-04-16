@@ -1,6 +1,7 @@
 import { buildEle } from '../../../../../utils/dom/elements.js';
 import { buildPageContainer, buildSubmitButtonSection, buildTwoColumnTextareaSection } from '../../../../../utils/dom/forms/buildUtils.js';
 import { removeListeners } from '../../../../../utils/dom/listeners.js';
+import { clearMsg } from '../../../../../utils/dom/messages.js';
 
 // Set up debug mode
 const COMPONENT = 'Build Add Personal Notes Page';
@@ -14,6 +15,8 @@ const COMPONENT_ID = 'add-personal-notes';
 
 export default async function buildAddPersonalNotes({ mainContainer, manageClient, manageUser }) {
 	try {
+		// Clear any page-msg
+		clearMsg({ container: 'page-msg' });
 		// Build page components and form components concurrently
 		const [pageComponents, formComponents] = await Promise.all([
 			buildPageComponents(),
@@ -28,7 +31,7 @@ export default async function buildAddPersonalNotes({ mainContainer, manageClien
 		});
 
 		// Initialize the UI file
-		await initializeUIFunction({ componentId: COMPONENT_ID });
+		await initializeUIFunction({ componentId: COMPONENT_ID, manageUser });
 
 		// Garbage collection
 		return () => removeListeners(COMPONENT_ID);
@@ -63,8 +66,8 @@ async function buildFormComponents() {
 	] = await Promise.all([
 		buildTwoColumnTextareaSection({
 			labelText: 'Notes:',
-			textareaID: 'note',
-			textareaName: 'note',
+			textareaID: 'notes',
+			textareaName: 'notes',
 			textareaTitle: 'Personal Notes',
 			// required: true,
 			rows: 10,
@@ -91,10 +94,10 @@ function renderPage({ mainContainer, pageComponents, formComponents }) {
 	mainContainer.append(container);
 }
 
-async function initializeUIFunction({ componentId }) {
+async function initializeUIFunction({ componentId, manageUser }) {
 	try {
 		const { default: addPersonalNotes } = await import("../../../../../../features/user/ui/personal-notes/add/addPersonalNotesJS.js");
-		addPersonalNotes({ componentId });
+		addPersonalNotes({ componentId, manageUser });
 	}
 	catch (err) {
 		const { AppError } = await import("../../../../../errors/models/AppError.js");

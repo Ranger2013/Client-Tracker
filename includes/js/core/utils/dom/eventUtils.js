@@ -190,7 +190,23 @@ export function createDebouncedHandler(fn, delay) {
     let timeoutId;
     return (...args) => {
         clearTimeout(timeoutId);
-        timeoutId = setTimeout(() => fn(...args), delay);
+
+        return new Promise(resolve => {
+            timeoutId = setTimeout(() => {
+                const result = fn(...args);
+
+                if(result instanceof Promise) {
+                    result.then(value => resolve(value))
+                    .catch(err => {
+                        console.error('Error in debounced function:', err);
+                        resolve(null);
+                    });
+                }
+                else {
+                    resolve(result);
+                }
+            }, delay); // Added missing delay parameter here
+        });
     };
 }
 
@@ -223,6 +239,7 @@ export function createThrottledHandler(fn, limit) {
  * Creates a debounced handler that adapts to user's typing speed and device
  * @param {Function} fn - Function to debounce
  * @param {string} [inputType='default'] - Type of input for optimization
+ * @returns {Function} - The adaptive debounced function that returns a Promise
  */
 export function createAdaptiveHandler(fn, inputType = 'default') {
     let timeoutId;
@@ -238,10 +255,53 @@ export function createAdaptiveHandler(fn, inputType = 'default') {
             console.debug('Adjusted delay to:', optimalDelay);
         }
 
-        timeoutId = setTimeout(() => {
-            const start = performance.now();
-            fn(...args);
-            updateOptimalDelay(performance.now() - start);
-        }, lastDelay);
+        return new Promise(resolve => {
+            timeoutId = setTimeout(() => {
+                const start = performance.now();
+                const result = fn(...args);
+                
+                if(result instanceof Promise) {
+                    result.then(value => {
+                        updateOptimalDelay(performance.now() - start);
+                        resolve(value);
+                    })
+                    .catch(err => {
+                        console.error('Error in adaptive handler function:', err);
+                        updateOptimalDelay(performance.now() - start);
+                        resolve(null);
+                    });
+                } else {
+                    updateOptimalDelay(performance.now() - start);
+                    resolve(result);
+                }
+            }, lastDelay);
+        });
     };
 }
+
+/**
+ * USAGE GUIDE: When to use each event handler type
+ * 
+ * 1. createDebouncedHandler:
+ *    - Use for simple input validation where you want to wait until the user stops typing
+ *    - Use for search inputs where you want to delay API calls until typing pauses
+ *    - Use when a fixed delay is appropriate and predictable
+ *    - Example: Form field validation, search-as-you-type features
+ * 
+ * 2. createThrottledHandler:
+ *    - Use for events that fire rapidly like scroll, resize, mousemove
+ *    - Use when you need to limit the frequency of execution to a maximum rate
+ *    - Use for continuous events where performance is critical
+ *    - Example: Scroll animations, window resizing, drag operations
+ * 
+ * 3. createAdaptiveHandler:
+ *    - Use for complex interfaces where user experience varies by device/user
+ *    - Use when you want optimal performance across different devices
+ *    - Use when user typing speed or device capabilities matter
+ *    - Example: Complex forms on both mobile and desktop, autocomplete features
+ */
+
+// Example usage:
+// For search input: createDebouncedHandler(searchAPI, 300)
+// For scroll event: createThrottledHandler(updatePosition, 100) 
+// For complex form: createAdaptiveHandler(validateForm, 'validation')

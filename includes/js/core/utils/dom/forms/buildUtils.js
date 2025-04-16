@@ -1,4 +1,4 @@
-import { buildEle } from '../elements.js';
+import { buildEle, buildElementsFromConfig, buildElementTree } from '../elements.js';
 
 const COMPONENT = 'Build DOM Form Utils';
 const DEBUG = false;
@@ -11,10 +11,10 @@ const debugLog = (...args) => {
  * @param {string} id - The base ID that will be used to create the error div's ID (will be suffixed with '-error')
  * @returns {HTMLDivElement} A div element with the specified ID and styling classes, initially hidden
  */
-export function buildErrorDiv(id){
+export function buildErrorDiv(id) {
 	const errorDiv = buildEle({
 		type: 'div',
-		attributes: {id: `${id}-error`},
+		attributes: { id: `${id}-error` },
 		myClass: ['w3-padding-small', 'w3-margin-small', 'w3-hide'],
 	});
 	return errorDiv;
@@ -30,78 +30,63 @@ export function buildErrorDiv(id){
  * @returns {Promise<[HTMLElement, HTMLElement]>} Container and card elements
  */
 export async function buildPageContainer({ pageTitle, clientName = null, cID = null, primaryKey = null }) {
-	 try {
-		  // Define element configurations
-		  const PAGE_ELEMENTS = {
-				container: {
-					 type: 'div',
-					 myClass: ['w3-container']
-				},
-				card: {
-					 type: 'div',
-					 myClass: ['w3-card'],
-					 attributes: { id: 'card' },
-				},
-				titleContainer: {
-					 type: 'div',
-					 myClass: ['w3-center']
-				},
-				formMsg: {
-					 type: 'div',
-					 attributes: { id: 'form-msg' }
-				},
-				title: {
-					 type: 'h5'
-				},
-				anchor: {
-					 type: 'a',
-					 myClass: ['w3-text-underline']
-				}
-		  };
+	try {
+		// Define element configurations
+		const PAGE_ELEMENTS = {
+			container: {
+				type: 'div',
+				myClass: ['w3-container']
+			},
+			card: {
+				type: 'div',
+				myClass: ['w3-card'],
+				attributes: { id: 'card' },
+			},
+			titleContainer: {
+				type: 'div',
+				myClass: ['w3-center']
+			},
+			formMsg: {
+				type: 'div',
+				attributes: { id: 'form-msg' },
+				myClass: ['w3-center'],
+			},
+			title: {
+				type: 'h5',
+				text: pageTitle,
+			},
+			anchor: {
+				type: 'a',
+				myClass: ['w3-text-underline'],
+				text: clientName || '',
+				attributes: clientName && cID && primaryKey ? {
+					'data-component': 'client-navigation',  // Identifies purpose
+					'data-clientid': cID,                 // Stores client data
+					'data-primarykey': primaryKey,        // Stores key data
+					href: `/tracker/clients/appointments/?cID=${cID}&key=${primaryKey}`
+				} : {},
+			}
+		};
 
-		  // Build base structure
-		  const container = buildEle(PAGE_ELEMENTS.container);
-		  const card = buildEle(PAGE_ELEMENTS.card);
-		  const titleDiv = buildEle(PAGE_ELEMENTS.titleContainer);
+		const elements = buildElementsFromConfig(PAGE_ELEMENTS);
+		const { container, card, titleContainer, formMsg, title, anchor } = elements;
 
-		  // Handle form message element
-		  if (!document.getElementById('form-msg')) {
-				titleDiv.appendChild(buildEle(PAGE_ELEMENTS.formMsg));
-		  }
+		if (clientName && cID && primaryKey) {
+			title.appendChild(anchor);
+		}
 
-		  // Build title with optional client link
-		  const title = buildEle({
-				...PAGE_ELEMENTS.title,
-				text: pageTitle
-		  });
+		titleContainer.prepend(title);
+		card.append(titleContainer, formMsg);
 
-		  if (clientName && cID && primaryKey) {
-				const anchor = buildEle({
-					 ...PAGE_ELEMENTS.anchor,
-					 attributes: {
-						  'data-component': 'client-navigation',  // Identifies purpose
-						  'data-clientid': cID,                 // Stores client data
-						  'data-primarykey': primaryKey,        // Stores key data
-						  href: `/tracker/clients/appointments/?cID=${cID}&key=${primaryKey}`
-					 },
-					 text: clientName
-				});
-
-				title.appendChild(anchor);
-		  }
-
-		  titleDiv.prepend(title);
-		  card.appendChild(titleDiv);
-
-		  return [container, card];
-	 }
-	 catch (err) {
-		  const { AppError } = await import("../../../errors/models/AppError.js");
-		  AppError.process(err, {
-				errorCode: AppError.Types.RENDER_ERROR,
-				userMessage: AppError.BaseMessages.system.render,
-		  }, true);
-	 }
+		return [container, card];
+	}
+	catch (err) {
+		const { AppError } = await import("../../../errors/models/AppError.js");
+		AppError.process(err, {
+			errorCode: AppError.Types.RENDER_ERROR,
+			userMessage: AppError.BaseMessages.system.render,
+		}, true);
+	}
 }
 
 /**
@@ -111,39 +96,41 @@ export async function buildPageContainer({ pageTitle, clientName = null, cID = n
  * @returns {Promise<HTMLElement>} The button container element.
  */
 export async function buildSubmitButtonSection(buttonText, buttonColor = null, id = null) {
-	 try {
-		  if (!buttonText) throw new Error('Button Text is required');
+	try {
+		if (!buttonText) throw new Error('Button Text is required');
 
-		  // Build all elements at once
-		  const [container, button] = [
-				{
-					 type: 'div',
-					 attributes: { id: 'button-section' },
-					 myClass: ['w3-margin-top', 'w3-padding-bottom', 'w3-center']
+		const PAGE_MAPPING = {
+			container: {
+				type: 'div',
+				attributes: { id: 'button-section' },
+				myClass: ['w3-margin-top', 'w3-padding-bottom', 'w3-center']
+			},
+			button: {
+				type: 'button',
+				attributes: {
+					id: id || 'submit-button',
+					type: 'submit',
+					name: 'submit'
 				},
-				{
-					 type: 'button',
-					 attributes: {
-						  id: id || 'submit-button',
-						  type: 'submit',
-						  name: 'submit'
-					 },
-					 myClass: ['w3-button', 'w3-round-large', buttonColor || 'w3-black'],
-					 text: buttonText
-				}
-		  ].map(config => buildEle(config));
+				myClass: ['w3-button', 'w3-round-large', buttonColor || 'w3-black'],
+				text: buttonText
+			}
+		};
 
-		  container.appendChild(button);
-		  return container;
+		const elements = buildElementsFromConfig(PAGE_MAPPING);
+		const { container, button } = elements;
 
-	 }
-	 catch (err) {
-		  const { AppError } = await import("../../../errors/models/AppError.js");
+		container.appendChild(button);
+		return container;
+
+	}
+	catch (err) {
+		const { AppError } = await import("../../../errors/models/AppError.js");
 		AppError.process(err, {
 			errorCode: AppError.Types.RENDER_ERROR,
 			userMessage: AppError.BaseMessages.system.render,
 		}, true);
-	 }
+	}
 }
 
 /**
@@ -153,53 +140,61 @@ export async function buildSubmitButtonSection(buttonText, buttonColor = null, i
  * @param {string} params.deleteButtonText - The text for the delete button.
  * @returns {Promise<HTMLElement>} The row containing both buttons.
  */
-export async function buildSubmitDeleteButtonSection({ submitButtonText, deleteButtonText }) {
-	 try {
-		  // Build all elements at once
-		  const [row, submitCol, deleteCol] = [
-				{ type: 'div', myClass: ['w3-row'] },
-				{ type: 'div', myClass: ['w3-col', 's6', 'w3-padding-small', 'w3-center'] },
-				{ type: 'div', myClass: ['w3-col', 's6', 'w3-padding-small', 'w3-center'] }
-		  ].map(config => buildEle(config));
+export async function buildSubmitDeleteButtonSection({ submitButtonText, deleteButtonText, submitButtonIterator = null, deleteButtonIterator = null }) {
+	try {
+		const submitButtonId = !submitButtonIterator ? 'submit-button' : `submit-button-${submitButtonIterator}`;
+		const deleteButtonId = !deleteButtonIterator ? 'delete-button' : `delete-button-${deleteButtonIterator}`;
 
-		  // Build both buttons
-		  const [submitButton, deleteButton] = [
-				{
-					 type: 'button',
-					 attributes: {
-						  id: 'submit-button',
-						  type: 'submit',
-						  name: 'submit'
-					 },
-					 myClass: ['w3-button', 'w3-round-large', 'w3-black'],
-					 text: submitButtonText
+		const PAGE_MAPPING = {
+			type: 'div',
+			myClass: ['w3-row', 'w3-padding', 'w3-margin-top'],
+			children: {
+				submitCol: {
+					type: 'div',
+					myClass: ['w3-col', 's6', 'w3-padding-small', 'w3-center'],
+					children: {
+						submitButton: {
+							type: 'button',
+							attributes: {
+								id: submitButtonId,
+								type: 'submit',
+								name: 'submit'
+							},
+							myClass: ['w3-button', 'w3-round-large', 'w3-black'],
+							text: submitButtonText
+						},
+					},
 				},
-				{
-					 type: 'button',
-					 attributes: {
-						  id: 'delete-button',
-						  type: 'submit',
-						  name: 'delete'
-					 },
-					 myClass: ['w3-button', 'w3-round-large', 'w3-red'],
-					 text: deleteButtonText
-				}
-		  ].map(config => buildEle(config));
+				deleteCol: {
+					type: 'div',
+					myClass: ['w3-col', 's6', 'w3-padding-small', 'w3-center'],
+					children: {
+						deleteButton: {
+							type: 'button',
+							attributes: {
+								id: deleteButtonId,
+								type: 'submit',
+								name: 'delete'
+							},
+							myClass: ['w3-button', 'w3-round-large', 'w3-red'],
+							text: deleteButtonText
+						},
+					},
+				},
+			},
+		};
 
-		  // Assemble and return
-		  submitCol.appendChild(submitButton);
-		  deleteCol.appendChild(deleteButton);
-		  row.append(submitCol, deleteCol);
-		  
-		  return row;
-	 }
-	 catch (err) {
-		  const { AppError } = await import("../../../errors/models/AppError.js");
+		const elements = buildElementTree(PAGE_MAPPING);
+		debugLog('Elements:', elements);
+		return elements;
+	}
+	catch (err) {
+		const { AppError } = await import("../../../errors/models/AppError.js");
 		AppError.process(err, {
 			errorCode: AppError.Types.RENDER_ERROR,
 			userMessage: AppError.BaseMessages.system.render,
 		}, true);
-	 }
+	}
 }
 
 /**
@@ -215,97 +210,111 @@ export async function buildSubmitDeleteButtonSection({ submitButtonText, deleteB
  * @returns {Promise<HTMLElement>} The row element containing the section.
  */
 export async function buildTwoColumnInputSection({
-	 labelText,
-	 inputID,
-	 inputType,
-	 inputName,
-	 inputTitle,
-	 required = undefined,
-	 inputValue = undefined,
-	 additionalElement = null
+	labelText,
+	inputID,
+	inputType,
+	inputName,
+	inputTitle,
+	required = undefined,
+	inputValue = undefined,
+	additionalElement = null
 }) {
-	 try {
+	try {
 		// Lazy load for this function
 		const { getCurrentTime, getReadableCurrentFutureDate } = await import('../../date/dateUtils.js');
 		const { cleanUserOutput } = await import('../../string/stringUtils.js');
 
-		  const INPUT_TYPES = {
-				date: {
-					 getDefaultValue: () => getReadableCurrentFutureDate()
-				},
-				time: {
-					 getDefaultValue: () => getCurrentTime()
-				},
-				number: {
-					 attributes: { step: '.01' }  // Only number type has attributes defined
-				}
-		  };
+		const INPUT_TYPES = {
+			date: {
+				getDefaultValue: () => getReadableCurrentFutureDate()
+			},
+			time: {
+				getDefaultValue: () => getCurrentTime()
+			},
+			number: {
+				attributes: { step: '.01' }  // Only number type has attributes defined
+			}
+		};
 
-		  // Simplified attributes object
-		  const inputAttributes = {
-				id: inputID,
-				type: inputType,
-				name: inputName,
-				placeholder: inputTitle,
-				title: inputTitle,
-				required,  // if undefined, won't be included in the object
-				value: (cleanUserOutput(inputValue) || undefined) || INPUT_TYPES[inputType]?.getDefaultValue?.() || undefined,
-				...INPUT_TYPES[inputType]?.attributes  // if undefined, nothing will be spread
-		  };
+		// Simplified attributes object
+		const inputAttributes = {
+			id: inputID,
+			type: inputType,
+			name: inputName,
+			placeholder: inputTitle,
+			title: inputTitle,
+			required,  // if undefined, won't be included in the object
+			value: (cleanUserOutput(inputValue) || undefined) || INPUT_TYPES[inputType]?.getDefaultValue?.() || undefined,
+			...INPUT_TYPES[inputType]?.attributes  // if undefined, nothing will be spread
+		};
 
-		  Object.keys(inputAttributes).forEach(key => inputAttributes[key] === undefined && delete inputAttributes[key]);
+		Object.keys(inputAttributes).forEach(key => inputAttributes[key] === undefined && delete inputAttributes[key]);
 
-		  // Build base elements separately from error div
-		  const [row, colLabel, colInput, input] = [
-				{ type: 'div', myClass: ['w3-row', 'w3-padding'] },
-				{ type: 'div', myClass: ['w3-col', 'm6'] },
-				{ type: 'div', myClass: ['w3-col', 'm6'] },
-				{ type: 'input', attributes: inputAttributes, myClass: ['w3-input', 'w3-border', 'input'] }
-		  ].map(config => buildEle(config));
-
-		  // Build error div separately
-		  const errorDiv = buildErrorDiv(inputID);
-
-		  // Build label
-		  const label = buildEle({
+		const PAGE_MAPPING = {
+			row: { type: 'div', myClass: ['w3-row', 'w3-padding'] },
+			colLabel: { type: 'div', myClass: ['w3-col', 'm6'] },
+			colInput: { type: 'div', myClass: ['w3-col', 'm6'] },
+			input: {
+				type: 'input',
+				attributes: inputAttributes,
+				myClass: ['w3-input', 'w3-border', 'input']
+			},
+			label: {
 				type: 'label',
 				attributes: { for: inputID },
 				text: labelText
-		  });
+			},
+		};
 
-		  // Special handling for appointment time
-		  if (inputID === 'app-time') {
-				const [appointmentBlock, projectedBlock] = ['appointment-block', 'projected-appointment-block']
-					 .map(id => buildEle({
-						  type: 'div',
-						  attributes: { id },
-						  myClass: ['w3-margin-small']
-					 }));
+		// Add the conditional elements to the config
+		if (inputID === 'app-time') {
+			PAGE_MAPPING.appointmentBlock = {
+				type: 'div',
+				attributes: { id: 'appointment-block' },
+				myClass: ['w3-margin-small']
+			};
+			PAGE_MAPPING.projectedAppointmentBlock = {
+				type: 'div',
+				attributes: { id: 'projected-appointment-block' },
+				myClass: ['w3-margin-small']
+			};
+		}
 
-				colInput.append(input, errorDiv, appointmentBlock, projectedBlock);
-		  } else {
-				colInput.append(input, errorDiv);
-		  }
+		// Build all elements at once
+		const elements = buildElementsFromConfig(PAGE_MAPPING);
+		const { row, colLabel, colInput, input, label } = elements;
 
-		  // Add any additional elements
-		  if (additionalElement) {
-				colInput.appendChild(additionalElement);
-		  }
+		// Build error div separately since it's already a built element
+		const errorDiv = buildErrorDiv(inputID);
 
-		  // Assemble and return
-		  colLabel.appendChild(label);
-		  row.append(colLabel, colInput);
+		// add the app-time special case
+		if (inputID === 'app-time') {
+			const { appointmentBlock, projectedAppointmentBlock } = elements;
+			colInput.append(input, errorDiv, appointmentBlock, projectedAppointmentBlock);
+		}
+		else {
+			colInput.append(input, errorDiv);
+		}
 
-		  return row;
+		// Add any additional elements
+		if (additionalElement) {
+			colInput.appendChild(additionalElement);
+		}
 
-	 }
-	 catch (err) {
-		  const { AppError } = await import("../../../errors/models/AppError.js");
-		  AppError.process(err, {
-				errorCode: AppError.Types.RENDER_ERROR,
-				userMessage: AppError.BaseMessages.system.render,
-		  }, true);
-	 }
+		// Assemble and return
+		colLabel.appendChild(label);
+		row.append(colLabel, colInput);
+
+		return row;
+
+	}
+	catch (err) {
+		const { AppError } = await import("../../../errors/models/AppError.js");
+		AppError.process(err, {
+			errorCode: AppError.Types.RENDER_ERROR,
+			userMessage: AppError.BaseMessages.system.render,
+		}, true);
+	}
 }
 
 /**
@@ -321,48 +330,50 @@ export async function buildTwoColumnInputSection({
  * @returns {Promise<HTMLElement>} A promise that resolves to the row element containing the section.
  */
 export async function buildTwoColumnRadioButtonSection({ labelText, required = undefined, buttons }) {
-    try {
-        // Build base elements
-        const [row, colOne, colTwo] = [
-            { type: 'div', myClass: ['w3-row', 'w3-padding'] },
-            { type: 'div', myClass: ['w3-col', 's6'], text: labelText },
-            { type: 'div', myClass: ['w3-col', 's6'] }
-        ].map(config => buildEle(config));
+	try {
+		const PAGE_MAPPING = {
+			row: { type: 'div', myClass: ['w3-row', 'w3-padding'] },
+			colOne: { type: 'div', myClass: ['w3-col', 's6'], text: labelText },
+			colTwo: { type: 'div', myClass: ['w3-col', 's6'] }
+		};
 
-        // Build radio buttons
-        buttons?.forEach(button => {
-            const label = buildEle({ 
-                type: 'label', 
-                myClass: ['w3-block'], 
-                text: `${button.labelText} ` 
-            });
+		const elements = buildElementsFromConfig(PAGE_MAPPING);
+		const { row, colOne, colTwo } = elements;
 
-            const radioButton = buildEle({
-                type: 'input',
-                attributes: {
-                    type: 'radio',
-                    name: button.name,
-                    value: button.value,
-                    ...(button.checked && { checked: true }),
-                    ...(required && { required: true })
-                }
-            });
+		// Build radio buttons
+		buttons?.forEach(button => {
+			const label = buildEle({
+				type: 'label',
+				myClass: ['w3-block'],
+				text: `${button.labelText} `
+			});
 
-            label.appendChild(radioButton);
-            colTwo.appendChild(label);
-        });
+			const radioButton = buildEle({
+				type: 'input',
+				attributes: {
+					type: 'radio',
+					name: button.name,
+					value: button.value,
+					...(button.checked && { checked: true }),
+					...(required && { required: true })
+				}
+			});
 
-        row.append(colOne, colTwo);
-        return row;
+			label.appendChild(radioButton);
+			colTwo.appendChild(label);
+		});
 
-    }
-    catch (err) {
-        const { AppError } = await import("../../../errors/models/AppError.js");
+		row.append(colOne, colTwo);
+		return row;
+
+	}
+	catch (err) {
+		const { AppError } = await import("../../../errors/models/AppError.js");
 		AppError.process(err, {
 			errorCode: AppError.Types.RENDER_ERROR,
 			userMessage: AppError.BaseMessages.system.render,
 		}, true);
-    }
+	}
 }
 
 /**
@@ -381,73 +392,72 @@ export async function buildTwoColumnRadioButtonSection({ labelText, required = u
  * @returns {Promise<HTMLElement>} A promise that resolves to the row element containing the section.
  */
 export async function buildTwoColumnSelectElementSection({
-	 labelText,
-	 selectID,
-	 selectName,
-	 selectTitle,
-	 required = undefined,
-	 options
+	labelText,
+	selectID,
+	selectName,
+	selectTitle,
+	required = undefined,
+	options
 }) {
-	 try {
-		  // Build base elements all at once - only configurations
-		  const [row, colOne, colTwo, select] = [
-				{ type: 'div', myClass: ['w3-row', 'w3-padding'] },
-				{ type: 'div', myClass: ['w3-col', 'm6'] },
-				{ type: 'div', myClass: ['w3-col', 'm6'] },
-				{
-					 type: 'select',
-					 attributes: {
-						  id: selectID,
-						  name: selectName,
-						  title: selectTitle,
-						  required
-					 },
-					 myClass: ['w3-input', 'w3-border']
-				}
-		  ].map(config => buildEle(config));
-
-		  // Build error div separately since it's already a built element
-		  const errorDiv = buildErrorDiv(selectID);
-
-		  // Add label
-		  colOne.appendChild(buildEle({
+	try {
+		const PAGE_MAPPING = {
+			row: { type: 'div', myClass: ['w3-row', 'w3-padding'] },
+			colOne: { type: 'div', myClass: ['w3-col', 'm6'] },
+			colTwo: { type: 'div', myClass: ['w3-col', 'm6'] },
+			label: {
 				type: 'label',
 				attributes: { for: selectID },
 				text: labelText
-		  }));
+			},
+			select: {
+				type: 'select',
+				attributes: {
+					id: selectID,
+					name: selectName,
+					title: selectTitle,
+					required
+				},
+				myClass: ['w3-input', 'w3-border']
+			}
+		};
 
-		  // Add options if they exist
-		  debugLog('Options:', options);
-		  if (options?.length > 0) {
-				options.forEach(option => {
-					 debugLog('Option:', option);
-					 const { value, disabled, selected, text, ...otherAttributes } = option;
-					 select.appendChild(buildEle({
-						  type: 'option',
-						  attributes: {
-								...otherAttributes,  // Spread any additional attributes
-								value,
-								...(disabled && { disabled: true }),
-								...(selected && { selected: true })
-						  },
-						  text,
-					 }));
-				});
-		  }
+		// Build base elements
+		const elements = buildElementsFromConfig(PAGE_MAPPING);
+		const { row, colOne, colTwo, label, select } = elements;
 
-		  // Assemble and return
-		  colTwo.append(select, errorDiv);
-		  row.append(colOne, colTwo);
-		  return row;
+		const errorDiv = buildErrorDiv(selectID);
 
-	 }
-	 catch (err) {
-		  const { AppError } = await import("../../../errors/models/AppError.js");
+		// Add options if they exist
+		if (options?.length > 0) {
+			options.forEach(option => {
+				const { value, disabled, selected, text, ...otherAttributes } = option;
+				select.appendChild(buildEle({
+					type: 'option',
+					attributes: {
+						...otherAttributes,  // Spread any additional attributes
+						value,
+						...(disabled && { disabled: true }),
+						...(selected && { selected: true })
+					},
+					text,
+				}));
+			});
+		}
+
+		// Assemble and return
+		colOne.appendChild(label);
+		colTwo.append(select, errorDiv);
+		row.append(colOne, colTwo);
+		return row;
+
+	}
+	catch (err) {
+		const { AppError } = await import("../../../errors/models/AppError.js");
 		AppError.process(err, {
 			errorCode: AppError.Types.RENDER_ERROR,
 			userMessage: AppError.BaseMessages.system.render,
 		}, true);
-	 }
+	}
 }
 
 export async function buildTwoColumnTextareaSection({
@@ -474,20 +484,34 @@ export async function buildTwoColumnTextareaSection({
 		// Remove undefined attributes
 		Object.keys(attributes).forEach(key => attributes[key] === undefined && delete attributes[key]);
 
-		const row = buildEle({ type: 'div', myClass: ['w3-row', 'w3-padding'] });
-		const colLabel = buildEle({ type: 'div', myClass: ['w3-col', 'm6'] });
-		const label = buildEle({ type: 'label', attributes: { for: textareaID }, text: labelText });
-		const colInput = buildEle({ type: 'div', myClass: ['w3-col', 'm6'] });
-		const textarea = buildEle({ type: 'textarea', attributes, myClass: ['w3-input', 'w3-border'], text: cleanUserOutput(textareaValue) || '',
-		});
+		const PAGE_MAPPING = {
+			row: { type: 'div', myClass: ['w3-row', 'w3-padding'] },
+			colLabel: { type: 'div', myClass: ['w3-col', 'm6'] },
+			label: {
+				type: 'label',
+				attributes: { for: textareaID },
+				text: labelText
+			},
+			colInput: { type: 'div', myClass: ['w3-col', 'm6'] },
+			textarea: {
+				type: 'textarea',
+				attributes,
+				myClass: ['w3-input', 'w3-border'],
+				text: textareaValue || ''
+			}
+		};
+
+		const elements = buildElementsFromConfig(PAGE_MAPPING);
+		const { row, colLabel, label, colInput, textarea } = elements;
+
 		const errorDiv = buildErrorDiv(textareaID);
 
-		// Put it all together
-		row.appendChild(colLabel);
+		// Put all parts together
 		colLabel.appendChild(label);
-		row.appendChild(colInput);
-		colInput.appendChild(textarea);
-		colInput.appendChild(errorDiv);
+		colInput.append(textarea, errorDiv);
+
+		// Append main structure
+		row.append(colLabel, colInput);
 
 		return row;
 	}

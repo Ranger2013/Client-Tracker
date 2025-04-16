@@ -1,19 +1,32 @@
+import setupBackupNotice from '../../../../../core/services/backup-notice/backupNotice.js';
 import { disableEnableSubmitButton } from '../../../../../core/utils/dom/elements.js';
 import displayFormValidationErrors from '../../../../../core/utils/dom/forms/displayFormValidationErrors.js';
 import { addListener } from '../../../../../core/utils/dom/listeners.js';
-import { clearMsg } from '../../../../../core/utils/dom/messages.js';
+import { clearMsg, safeDisplayMessage } from '../../../../../core/utils/dom/messages.js';
 
-export default async function addPersonalNotes({ componentId }) {
+// Set up debug logging
+const COMPONENT = 'Add Personal Notes';
+const DEBUG = false;
+
+const debugLog = (...args) => {
+	if (DEBUG) {
+		console.log(`[${COMPONENT}]`, ...args);
+	}
+};
+
+export default async function addPersonalNotes({ componentId, manageUser }) {
 	try {
 		// Set up the static event handlers
 		const staticEventHandlers = {
 			'focusin:note': (evt) => {
-				clearMsg({ container: `${evt.target}-error`, hide: true, input: evt.target });
+				debugLog('evt.target: ', evt.target);
+
+				clearMsg({ container: `${evt.target.id}-error`, hide: true, input: evt.target.id });
 				disableEnableSubmitButton('submit-button');
 			},
 			'submit:add-personal-notes-form': async (evt) => {
 				evt.preventDefault();
-				await handleAddNotesFormSubmission( evt );
+				await handleAddNotesFormSubmission({ evt, manageUser });
 			},
 		};
 
@@ -40,7 +53,7 @@ export default async function addPersonalNotes({ componentId }) {
 	}
 }
 
-async function handleAddNotesFormSubmission( evt ) {
+async function handleAddNotesFormSubmission({ evt, manageUser }) {
 	try {
 		const userData = Object.fromEntries(new FormData(evt.target));
 
@@ -53,13 +66,14 @@ async function handleAddNotesFormSubmission( evt ) {
 			return;
 		}
 
-		// const response = await handleFormSubmission(userData);
+		const response = await handleFormSubmission(userData);
 
-		// if (response) {
-		// 	displaySuccessMessageAndResetForm();
-		// }
+		if (response) {
+			displaySuccessMessageAndResetForm({ evt, manageUser });
+		}
 	}
 	catch (err) {
+		console.log('handleAddNotesFormSubmission: ', err);
 		const { AppError } = await import("../../../../../core/errors/models/AppError.js");
 		AppError.handleError(err, {
 			errorCode: AppError.Types.FORM_SUBMISSION_ERROR,
@@ -71,8 +85,8 @@ async function handleAddNotesFormSubmission( evt ) {
 async function validateAddPersonalNotesForm(userData) {
 	try {
 		const VALIDATION_MAPPING = {
-			note: {
-				isValid: () => userData.note.trim().length > 0,
+			notes: {
+				isValid: () => userData.notes.trim().length > 0,
 				message: 'Please enter a note.',
 			}
 		};
@@ -93,11 +107,33 @@ async function validateAddPersonalNotesForm(userData) {
 async function handleFormSubmission(userData) {
 	try {
 		const { default: ManagePersonalNotes } = await import("../../../models/ManagePersonalNotes.js");
-		const manageNotes = new ManagePersonalNotes();
+		const manageNotes = new ManagePersonalNotes({ debug: false });
 
 		return await manageNotes.addPersonalNotes(userData);
 	}
 	catch (err) {
+		console.warn('HandleFormSubmission: ', err);
 		throw err;
+	}
+}
+
+async function displaySuccessMessageAndResetForm({ evt, manageUser }) {
+	try {
+		safeDisplayMessage({
+			elementId: 'form-msg',
+			message: 'Personal notes added successfully.',
+			isSuccess: true,
+		});
+
+		evt.target.reset();
+
+		setupBackupNotice({ errorEleID: 'backup-data-notice', manageUser })
+	}
+	catch (err) {
+		const { AppError } = await import("../../../../../core/errors/models/AppError.js");
+		AppError.handleError(err, {
+			errorCode: AppError.Types.MESSAGE_DISPLAY_ERROR,
+			message: AppError.BaseMessages.forms.messageDisplayFailed,
+		});
 	}
 }

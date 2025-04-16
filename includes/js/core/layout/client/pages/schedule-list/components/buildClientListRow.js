@@ -198,7 +198,7 @@ function buildClientTrimDate({ client, dateTime }) {
 		const weekDay = appDate.toLocaleDateString('en-US', { weekday: 'long' });
 		const dateCol = buildEle({ type: 'div' });
 		const longDay = buildEle({ type: 'div', text: weekDay });
-		const appDateSpanLarge = buildEle({ type: 'span', myClass: ['app-date'], text: cleanUserOutput(formatDate(client.trim_date, dateTime)) });
+		const appDateSpanLarge = buildEle({ type: 'span', myClass: ['app-date'], text: cleanUserOutput(formatDate(client.trim_date, dateTime.date_format)) });
 		const appDateSmall = buildEle({ type: 'div', myClass: ['w3-hide-medium', 'w3-hide-large'], text: `At ${formatTime(client.app_time, dateTime.time_format)}` });
 
 		dateCol.append(longDay, appDateSpanLarge, appDateSmall);

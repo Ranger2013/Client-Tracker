@@ -1,5 +1,5 @@
-import { clearMsg, getValidElement, safeDisplayMessage } from '../../core/utils/dom/messages.js';
-import { disableEnableSubmitButton } from '../../core/utils/dom/elements.js';
+import { clearMsg, safeDisplayMessage } from '../../core/utils/dom/messages.js';
+import { disableEnableSubmitButton, getValidElement } from '../../core/utils/dom/elements.js';
 import deepFreeze from '../../core/utils/deepFreeze.js';
 
 const PASSWORD_VALIDATION = deepFreeze({
@@ -24,7 +24,7 @@ const PASSWORD_VALIDATION = deepFreeze({
 		{
 			test: value => value.length < PASSWORD_VALIDATION.MIN_LENGTH,
 			message: 'Password must be at least 8 characters',
-			style: 'w3-text-red error',
+			style: 'w3-text-red',
 			isValid: false
 		},
 		{
@@ -42,7 +42,7 @@ const PASSWORD_VALIDATION = deepFreeze({
 		{
 			test: () => true, // Default case
 			message: 'Password must contain uppercase, lowercase, numbers and special characters',
-			style: 'w3-text-red error',
+			style: 'w3-text-red',
 			isValid: false
 		}
 	]
@@ -56,9 +56,10 @@ const PASSWORD_VALIDATION = deepFreeze({
  * @param {HTMLElement|string} submitButton - Form submit button
  * @returns {Promise<boolean>} Validation result
  */
-export async function comparePasswords(evt, passwordFieldId, errorContainer, submitButton) {
+export async function comparePasswords({ evt, passwordFieldId, errorContainer, submitButton }) {
 	try {
-		const pass = document.getElementById(passwordFieldId)?.value;
+		const passEle = getValidElement(passwordFieldId);
+		const pass = passEle ? passEle.value : null;
 		const compPass = evt.target.value;
 
 		if (!pass) {
@@ -80,10 +81,11 @@ export async function comparePasswords(evt, passwordFieldId, errorContainer, sub
 		}
 	}
 	catch (error) {
+		console.log('Error in comparePasswords:', error);
 		const { AppError } = await import('../../core/errors/models/AppError.js');
 
 		AppError.handleError(error, {
-			errorCode: ErrorTypes.INPUT_ERROR,
+			errorCode: AppError.Types.INPUT_ERROR,
 			userMessage: 'Unable to validate password. Please try again.',
 			displayTarget: 'form-msg',
 			shouldLog: false
@@ -101,7 +103,7 @@ export async function comparePasswords(evt, passwordFieldId, errorContainer, sub
  * @param {HTMLElement|string} submitButton - Form submit button
  * @returns {Promise<boolean>} Strength validation result
  */
-export async function checkPasswordStrength(evt, strengthBadge, errorContainer, submitButton) {
+export async function checkPasswordStrength({ evt, strengthBadge, errorContainer, submitButton }) {
 	try {
 		const value = evt.target.value;
 
@@ -114,7 +116,7 @@ export async function checkPasswordStrength(evt, strengthBadge, errorContainer, 
 		const strengthLevel = PASSWORD_VALIDATION.STRENGTH_LEVELS.find(level => level.test(value));
 
 		await updateStrengthIndicator(errorContainer, strengthLevel.message, strengthLevel.style);
-		disableEnableSubmitButton(submitButton, strengthLevel.isValid);
+		disableEnableSubmitButton(submitButton);
 		return strengthLevel.isValid;
 	}
 	catch (error) {
@@ -137,12 +139,14 @@ export async function checkPasswordStrength(evt, strengthBadge, errorContainer, 
  * @private
  */
 async function updateStrengthIndicator(badge, text, className) {
-	try {
-		const badgeEle = getValidElement(badge);
-		badgeEle.innerHTML = `<div class="${className} w3-padding-small w3-center">${text}</div>`;
-		badgeEle.classList.remove('w3-hide');
-	}
-	catch (err) {
-		console.warn('Error in updateStrengthIndicator:', err);
-	}
+	// Remove any previous classes
+	badge = getValidElement(badge);
+	badge.classList.remove('w3-red', 'w3-blue', 'w3-green', 'w3-yellow');
+
+	safeDisplayMessage({
+		elementId: badge,
+		message: text,
+		isSuccess: className.includes('w3-text-red') ? false : true,
+		color: className,
+	});
 }

@@ -16,9 +16,11 @@ export function setActiveTab({evt, msgElement}) {
 
 	Array.from(tabs).forEach(tab => {
 		if(tab.id === evt.target.id) {
+			tab.dataset.active = true;
 			tab.nextElementSibling.classList.add('w3-blue-grey');
 		}
 		else {
+			tab.dataset.active = false;
 			tab.nextElementSibling.classList.remove('w3-blue-grey');
 		}
 	});

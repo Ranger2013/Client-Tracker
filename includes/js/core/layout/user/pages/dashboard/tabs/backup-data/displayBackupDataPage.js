@@ -1,9 +1,7 @@
-import { buildEle, getValidElement } from '../../../../../../core/utils/dom/elements.js';
-import { addListener, removeListeners } from '../../../../../../core/utils/dom/listeners.js';
-import { clearMsg } from '../../../../../../core/utils/dom/messages.js';
-import buildBackupDataPageComponents from '../components/backup-data/buildPageComponents.js';
-
-const COMPONENT_ID = 'backup-data-tab';
+import { buildEle, getValidElement } from '../../../../../../utils/dom/elements.js';
+import { addListener, removeListeners } from '../../../../../../utils/dom/listeners.js';
+import { clearMsg } from '../../../../../../utils/dom/messages.js';
+import buildBackupDataPageComponents from '../../../../../../../features/user/ui/my-account/dashboard/components/backup-data/buildPageComponents.js';
 
 const COMPONENT = 'Display Backup Data Page';
 const DEBUG = false;
@@ -34,12 +32,12 @@ export default async function displayBackupDataPage({ evt, tabContainer, manageU
 
 		renderPage({ tabContainer, pageComponents });
 
-		showBackupDataButton({pageComponents})
+		showBackupDataButton({pageComponents});
 
 		return () => removeListeners(componentId);
 	}
 	catch (err) {
-		const { AppError } = await import("../../../../../../core/errors/models/AppError.js");
+		const { AppError } = await import("../../../../../../errors/models/AppError.js");
 		AppError.process(err, {
 			errorCode: AppError.Types.RENDER_ERROR,
 			userMessage: AppError.BaseMessages.system.render,
@@ -48,11 +46,11 @@ export default async function displayBackupDataPage({ evt, tabContainer, manageU
 }
 
 function renderPage({ tabContainer, pageComponents }) {
-	const { container, errorContainer, storeRowsContainer, successContainer, title, titleContainer, buttonContainer, button } = pageComponents;
+	const { container, storeRowsContainer, successContainer, title, titleContainer, buttonContainer, button } = pageComponents;
 
 	titleContainer.appendChild(title);
 	buttonContainer.appendChild(button);
-	container.append(titleContainer, successContainer, errorContainer, buttonContainer, storeRowsContainer);
+	container.append(titleContainer, successContainer, buttonContainer, storeRowsContainer);
 
 	tabContainer.innerHTML = '';
 	tabContainer.appendChild(container);
@@ -60,9 +58,9 @@ function renderPage({ tabContainer, pageComponents }) {
 
 function showBackupDataButton({pageComponents}){
 	const { storeRowsContainer, buttonContainer } = pageComponents;
-	debugLog('In showBackupDataButton: storeRowsContainer: ', storeRowsContainer);
+
 	const imgElementsHasData = storeRowsContainer.querySelectorAll('img[data-hasdata="true"]');
-	debugLog('In showBackupDataButton: imgElementsHasData: ', imgElementsHasData);
+
 	if(imgElementsHasData.length > 0){
 		buttonContainer.classList.remove('w3-hide');
 	}

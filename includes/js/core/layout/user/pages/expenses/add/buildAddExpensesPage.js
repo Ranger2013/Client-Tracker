@@ -1,6 +1,7 @@
 import { buildEle } from '../../../../../utils/dom/elements.js';
 import { buildPageContainer, buildSubmitButtonSection, buildTwoColumnInputSection, buildTwoColumnSelectElementSection, buildTwoColumnTextareaSection } from '../../../../../utils/dom/forms/buildUtils.js';
 import { removeListeners } from '../../../../../utils/dom/listeners.js';
+import { clearMsg } from '../../../../../utils/dom/messages.js';
 
 // Set up debug mode
 const COMPONENT = 'Build Add Expenses Page';
@@ -25,6 +26,8 @@ const CATEGORY_OPTIONS = [
 
 export default async function buildExpensesPage({ mainContainer, manageClient, manageUser }) {
 	try {
+		// Clear any page-msg
+		clearMsg({ container: 'page-msg' });
 		const [pageComponents, formComponents] = await Promise.all([
 			buildPageComponents(),
 			buildFormComponents(),
@@ -104,7 +107,7 @@ async function buildFormComponents() {
 		buildTwoColumnTextareaSection({
 			labelText: 'Item Description:',
 			textareaID: 'item-description',
-			textareaName: 'item-description',
+			textareaName: 'item_description',
 			textareaTitle: 'Description of Purchase',
 			required: true,
 			rows: 10,

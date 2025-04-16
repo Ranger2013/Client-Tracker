@@ -394,6 +394,7 @@ export default class IndexedDBOperations {
                     const clearRequest = myStore.clear();
                     clearRequest.onerror = evt => reject(evt.target.error);
                     clearRequest.onsuccess = () => {
+                        this.#log('Store cleared successfully, now putting data...', data);
                         const putRequest = myStore.put(data);
                         putRequest.onsuccess = evt => resolve(evt.target.result);
                         putRequest.onerror = evt => reject(evt.target.error);
@@ -407,6 +408,7 @@ export default class IndexedDBOperations {
             });
         }
         catch (err) {
+            console.warn('Error in putStorePromise:', err);
             await this.#handleError({
                 consoleMsg: `Error in putStorePromise database operation: `,
                 err,
@@ -420,7 +422,7 @@ export default class IndexedDBOperations {
     *
     * @param {IDBDatabase} db - The IndexedDB database.
     * @param {string} store - The name of the store.
-    * @param {string} key - The key of the data to retrieve.
+    * @param {number} key - The key of the data to retrieve.
     * @param {IDBTransaction} [transaction] - An existing transaction.
     * @returns {Promise<any>} A promise that resolves with the result of the operation.
     */

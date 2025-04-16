@@ -19,7 +19,7 @@ const menuState = {
 };
 
 
-const ROUTES = {
+export const ROUTES = {
     // Dynamic (JS-managed) routes
     dynamic: {
         clients: {

@@ -30,5 +30,6 @@
 		<div class="w3-container w3-center w3-animate-top">
 			<img src="/public/siteImages/main_logo.png" alt="Client Tracker">
 		</div>
+		<div id="page-msg" class="w3-padding w3-center"></div>
 	</header>
 	<main id="main">

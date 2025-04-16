@@ -3,7 +3,7 @@ import { cacheFirst, dynamicCacheName, networkFirst, staticCacheName } from "../
 
 // Our app shell assets to cache
 const assets = [
-	'/includes/css/w3-css.css',
+	// '/includes/css/w3-css.css',
 	// '/includes/js/core/errors/models/AppError.js',
 	'/tracker/public/src/libs/trackerFallBackPage.php',
 ];

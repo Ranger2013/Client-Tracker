@@ -3,7 +3,15 @@ import { buildPageContainer, buildTwoColumnInputSection, buildTwoColumnRadioButt
 import { trimCycleConfigurations } from '../../../../utils/dom/forms/trimCycleConfigurations.js';
 import { removeListeners } from '../../../../utils/dom/listeners.js';
 import { clearMsg } from '../../../../utils/dom/messages.js';
+import { top } from '../../../../utils/window/scroll.js';
 import buildTwoColumnAddressSection from '../../../components/buildTwoColumnAddressSection.js';
+
+// Set up debug mode
+const COMPONENT = 'Build Add/Edit Client Page';
+const DEBUG = false;
+const debugLog = (...args) => {
+    if (DEBUG) console.log(`[${COMPONENT}]`, ...args);
+};
 
 export const COMPONENT_ID = 'add-edit-client';
 
@@ -17,6 +25,7 @@ export const COMPONENT_ID = 'add-edit-client';
 */
 export default async function buildAddEditClientPage({ cID = null, primaryKey = null, mainContainer, manageClient, manageUser }) {
     try {
+        top();
         /**
          * @typedef {Object} ClientFields
          * @property {string} client_name - Client's full name
@@ -72,6 +81,8 @@ export default async function buildAddEditClientPage({ cID = null, primaryKey = 
                 submitButtonText: 'Edit Client',
                 deleteButtonText: 'Delete Client'
             });
+
+            debugLog('submitButton: ', submitButton);
         }
         else {
             const { buildSubmitButtonSection } = await import('../../../../../core/utils/dom/forms/buildUtils.js');

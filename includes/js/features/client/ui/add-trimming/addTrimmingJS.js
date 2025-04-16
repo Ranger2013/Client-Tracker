@@ -29,6 +29,15 @@ export default async function addTrimming({ cID, primaryKey, mainContainer, mana
 		// Get the clients information
 		const clientInfo = await manageClient.getClientInfo({ primaryKey });
 
+		checkAppointment({
+			trimDate: 'next-trim-date',
+			appBlock: 'appointment-block',
+			projAppBlock: 'projected-appointment-block',
+			clientInfo,
+			manageClient,
+			manageUser,
+		});
+
 		// Set up static event handlers for known elements
 		const staticEventHandlers = {
 			'input:number-horses': async (evt) => {
@@ -307,12 +316,16 @@ async function changeServiceCostToMatchHorseService({ evt, primaryKey, manageCli
 
 async function updateHorseListLabel({evt}){
 	try{
+		const index = evt.target.id.split(/-/g).pop();
 		const selectedOption = evt.target.options[evt.target.selectedIndex];
 		const serviceType = selectedOption.dataset.serviceType;
 		const serviceTime = selectedOption.dataset.trimCycle;
+		const horseType = selectedOption.dataset.horseType;
 
-		const horseNameLabel = document.querySelector(`label[for="${evt.target.id}"]`);
-		horseNameLabel.innerHTML = `Horse's Name: <span class="w3-small">${ucwords(underscoreToSpaces(serviceType))} Cycle: ${serviceTime / 7} weeks</span>`;
+		const horseTrimCycleDiv = document.querySelector(`#horse-trim-cycle-${index}`);
+		horseTrimCycleDiv.innerHTML = `<span class="w3-small">${ucwords(underscoreToSpaces(serviceType))} Cycle: ${serviceTime / 7} weeks</span>`;
+		const horseTypeDiv = document.getElementById(`horse-type-${index}`);
+		horseTypeDiv.innerHTML = horseType !== '' ? `Horse Type: ${ucwords(underscoreToSpaces(horseType))}` : 'Horse Type: Unknown';
 	}
 	catch(err){
 		const { AppError } = await import("../../../../core/errors/models/AppError.js");

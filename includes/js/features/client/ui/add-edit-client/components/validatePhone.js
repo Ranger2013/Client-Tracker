@@ -1,4 +1,5 @@
-import { clearMsg } from '../../../../../core/utils/dom/messages';
+import { formatPhone } from '../../../../../core/utils/dom/forms/validation.js';
+import { clearMsg } from '../../../../../core/utils/dom/messages.js';
 
 const COMPONENT = 'Validate Phone';
 const DEBUG = false;
@@ -30,26 +31,6 @@ export default async function validatePhone({ evt, cID, primaryKey, manageClient
 	catch (err) {
 		throw err;
 	}
-}
-
-/**
- * Helper function to validatePhone. It takes the phone number and formats it: xxx-xxx-xxxx
- * @param {string} phone The phone number to format
- * @returns {boolean} True on success, false on failure as well as formatting the phone input value or posting error messages
- */
-function formatPhone(phone) {
-	// Remove all non-digit chars
-	let cleaned = ('' + phone).replace(/\D/g, '');
-
-	// Split the phone number up into it's corresponding parts. American numbers
-	let match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
-
-	if (match) {
-		return `${match[1]}-${match[2]}-${match[3]}`;
-	}
-
-	// No matches
-	return null;
 }
 
 async function checkForDuplicateNumbers({phone, cID, primaryKey, manageClient}) {

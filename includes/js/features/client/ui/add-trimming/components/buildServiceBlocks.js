@@ -36,6 +36,17 @@ export default async function buildServiceBlocks({ iterator, clientTrimCycle, ho
 				attributes: { for: `horse-list-${i}` },
 				text: 'Horse\'s Name:',
 			},
+			firstColHorseTrimCycle: {
+				type: 'div',
+				attributes: { id: `horse-trim-cycle-${i}` },
+				myClass: ['w3-small'],
+			},
+			firstColTypeHorse: {
+				type: 'div',
+				attributes: { id: `horse-type-${i}` },
+				myClass: ['w3-small'],
+				text: 'Horse Type: ',
+			},
 			secondCol: {
 				type: 'div',
 				myClass: ['w3-col', 'm6'],
@@ -97,7 +108,7 @@ export default async function buildServiceBlocks({ iterator, clientTrimCycle, ho
 		debugLog('In buildServiceBlocks: farrierPricesOptions: ', farrierPricesOptions);
 		const elements = buildElementsFromConfig(PAGE_MAPPING);
 		// Main Layout elements
-		const { row, firstCol, firstColLabel, secondCol } = elements;
+		const { row, firstCol, firstColLabel, firstColHorseTrimCycle, firstColTypeHorse, secondCol } = elements;
 
 		// Form Elements
 		const { horseListSelectError, servicesContainer, accessoriesContainer } = elements;
@@ -118,6 +129,7 @@ export default async function buildServiceBlocks({ iterator, clientTrimCycle, ho
 			id: `service-cost-${i}`,
 			name: `service_cost_${i}`,
 			title: 'Type of Service',
+			nullOptionText: '-- Select Service --',
 			options: farrierPricesOptions,
 			required: true,
 		});
@@ -140,7 +152,7 @@ export default async function buildServiceBlocks({ iterator, clientTrimCycle, ho
 		changeCostInputContainer.append(changeCostSpan, changeCostInput);
 
 		// Put the main elements together
-		firstCol.appendChild(firstColLabel);
+		firstCol.append(firstColLabel, firstColHorseTrimCycle, firstColTypeHorse);
 		secondCol.append(
 			horseListSelect,
 			horseListSelectError,

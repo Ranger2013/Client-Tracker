@@ -4,6 +4,9 @@ export const authAPI = {
     register: "/includes/api/register-user/registerUserAPI.php",
     checkDuplicate: "/includes/api/duplicate-validation/checkForDuplicatesAPI.php",
     terms: "/includes/api/register-user/getTermsAPI.php",
+    verifyPass: "/includes/api/login/verifyPasswordAPI.php",
+    resetPass: "/includes/api/login/resetPasswordAPI.php",
+    updateUserCredentials: "/includes/api/my-account/credentials/updateUserCredentialsAPI.php",
 };
 
 export const systemAPI = {
@@ -15,7 +18,9 @@ export const systemAPI = {
 
 export const accountAPI = {
     unpaidInvoices: "/includes/api/my-account/unpaid-invoices/getUnpaidInvoicesAPI.php",
+    markInvoicePaid: "/includes/api/my-account/unpaid-invoices/markInvoicePaidAPI.php",
     subscription: "/includes/api/my-account/subsciptions/getSubscriptionAPI.php",
+    credentials: "/includes/api/my-account/credentials/getUserInfoAPI.php",
 };
 
 export const dataAPI = {

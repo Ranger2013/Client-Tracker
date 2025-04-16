@@ -3,6 +3,7 @@ import { buildEle, buildElementTree } from '../../../../../utils/dom/elements.js
 import { buildErrorDiv, buildPageContainer, buildSubmitButtonSection, buildTwoColumnInputSection } from '../../../../../utils/dom/forms/buildUtils.js';
 import createSelectElement from '../../../../../utils/dom/forms/createSelectElement.js';
 import { removeListeners } from '../../../../../utils/dom/listeners.js';
+import { clearMsg } from '../../../../../utils/dom/messages.js';
 import { cleanUserOutput } from '../../../../../utils/string/stringUtils.js';
 
 // Set up debugging
@@ -19,6 +20,9 @@ const COMPONENT_ID = 'add-mileage-page';
 
 export default async function buildAddMileagePage({ mainContainer, manageClient, manageUser }) {
 	try {
+		// Clear any page-msg
+		clearMsg({ container: 'page-msg' });
+
 		// Get the client list information
 		const clientList = await getPageData({ manageClient, manageUser });
 		debugLog('buildAddMileagePage: Client List:', clientList);
@@ -29,6 +33,8 @@ export default async function buildAddMileagePage({ mainContainer, manageClient,
 		renderPage({ pageComponents, mainContainer });
 
 		await initializeHandlers({ manageClient, manageUser, componentId: COMPONENT_ID });
+		return () => removeListeners(COMPONENT_ID);
+
 	}
 	catch (err) {
 		throw err;
@@ -36,7 +42,7 @@ export default async function buildAddMileagePage({ mainContainer, manageClient,
 }
 
 async function getPageData({ manageClient, manageUser }) {
-	const clientList = await manageClient.getClientScheduleList();
+	const clientList = await manageClient.getClientScheduleList({ active: 'yes' });
 	return clientList.sort((a, b) => sortByTrimDateAndAppTime(a, b));
 }
 
@@ -228,6 +234,4 @@ function renderPage({ pageComponents, mainContainer }) {
 async function initializeHandlers({ manageClient, manageUser, componentId }) {
 	const { default: addMileage } = await import("../../../../../../features/user/ui/mileage/add/addMileageJS.js");
 	addMileage({ manageClient, manageUser, componentId });
-
-	return () => removeListeners(COMPONENT_ID);
 }

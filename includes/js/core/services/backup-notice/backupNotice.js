@@ -18,7 +18,7 @@ const BACKUP_NOTICE_ID = 'backup-notice-component';  // Add consistent component
 /**
  * Sets up the backup notice by updating it and adding an event listener to close it.
  */
-export default async function setupBackupNotice({ errorEleID, manageUser }) {
+export default async function setupBackupNotice({ errorEleID = 'backup-data-notice', manageUser }) {
     // noticeDiv is the 'backup-data-notice' element
     const noticeDiv = getValidElement(errorEleID);
 

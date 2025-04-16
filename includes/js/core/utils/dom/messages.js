@@ -1,7 +1,7 @@
 import { getValidElement } from './elements.js';
 
 /**
- * Safely displays a message with fallback handling
+ * Safely displays a message with fallback handling. defaults the myError
  * @param {Object} options Message display options
  * @param {string} options.elementId Element ID to display message in
  * @param {string} options.message Message to display
@@ -13,7 +13,7 @@ export function safeDisplayMessage({
     elementId,
     message,
     isSuccess = false,
-    color = 'w3-text-green',
+    color = null,
     targetId = null,
 }) {
     try {
@@ -21,7 +21,7 @@ export function safeDisplayMessage({
             mySuccess(elementId, message, color);
         }
         else {
-            myError(elementId, message, targetId);
+            myError(elementId, message, targetId, color);
         }
     }
     catch (err) {
@@ -36,11 +36,11 @@ export function safeDisplayMessage({
  * @param {string} msg - Error message to display
  * @param {HTMLElement|string|null} [target=null] - Optional target for error styling
  */
-export function myError(ele, msg, target = null) {
+export function myError(ele, msg, target = null, color = null ) {
     try {
         const element = getValidElement(ele);
         removeTextColorClasses(element);
-        element.classList.add('w3-text-red');
+        element.classList.add(color || 'w3-text-red');
 
         if (!isMessageContainer(element)) {
             element.classList.add('error');
@@ -56,12 +56,10 @@ export function myError(ele, msg, target = null) {
     catch (err) {
         import('../../errors/models/AppError.js')
             .then(({ AppError }) => {
-                throw new AppError('Display error failed', {
-                    originalError: err,
+                AppError.process(err, {
                     errorCode: AppError.Types.RENDER_ERROR,
-                    userMessage: AppError.BaseMessages.system.generic,
-                    displayTarget: 'page-msg'
-                });
+                    userMessage:'Display myError failed',
+                }, true);
             });
     }
 }
@@ -72,13 +70,13 @@ export function myError(ele, msg, target = null) {
  * @param {string} msg - Success message to display
  * @param {string} [color='w3-text-green'] - CSS class for text color
  */
-export function mySuccess(ele, msg, color = 'w3-text-green') {
+export function mySuccess(ele, msg, color = null) {
     try {
         const element = getValidElement(ele);
 
         // Remove any existing text colors
         removeTextColorClasses(element);
-        element.classList.add(color);
+        element.classList.add(color || 'w3-text-green');
 
         // Remove error class if present
         element.classList.remove('error');
@@ -90,12 +88,9 @@ export function mySuccess(ele, msg, color = 'w3-text-green') {
     catch (err) {
         import('../../errors/models/AppError.js')
             .then(({ AppError }) => {
-                throw new AppError('Success message display failed', {
-                    originalError: err,
+                AppError.process(err, {
                     errorCode: AppError.Types.RENDER_ERROR,
-                    userMessage: AppError.BaseMessages.system.generic,
-                    displayTarget: 'page-msg',
-                    shouldLog: false  // Don't log UI feedback issues
+                    userMessage: 'Success message display failed',
                 });
             });
     }
@@ -130,7 +125,7 @@ export function displayErrorMessage(targetId, message) {
  * @param {boolean} [params.hide=false] Whether to hide container after clearing
  * @param {HTMLElement|string} [params.input=null] Input element to remove error styling
  */
-export function clearMsg({ container, hide = false, input = null }) {
+export async function clearMsg({ container, hide = false, input = null }) {
     try {
         const element = getValidElement(container);
 
@@ -151,16 +146,11 @@ export function clearMsg({ container, hide = false, input = null }) {
         }
     }
     catch (err) {
-        import('../../errors/models/AppError.js')
-            .then(({ AppError }) => {
-                throw new AppError('Failed to clear message', {
-                    originalError: err,
-                    errorCode: AppError.Types.RENDER_ERROR,
-                    userMessage: AppError.BaseMessages.system.generic,
-                    displayTarget: 'page-msg',
-                    shouldLog: true
-                });
-            });
+        const { AppError } = await import('../../errors/models/AppError.js');
+        AppError.process(err, {
+            errorCode: AppError.Types.MESSAGE_DISPLAY_ERROR,
+            userMessage: AppError.BaseMessages.forms.messageDisplayFailed,
+        }, true);
     }
 }
 

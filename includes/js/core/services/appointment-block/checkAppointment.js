@@ -52,10 +52,9 @@ export default async function checkAppointment({
 		const trimDateError = document.getElementById(`${trimDate.id}-error`);
 		const dateTime = new Date(trimDate.value.replace(/-/g, '\/')).toDateString();
 
-		const [scheduleOptions, dateTimeFormats, blockedDates] = await Promise.all([
+		const [scheduleOptions, dateTimeFormats] = await Promise.all([
 			manageUser.getScheduleOptions(),
 			manageUser.getDateTimeOptions(),
-			manageUser.getUserBlockedDates() ?? []
 		]);
 
 		// Check if the user has schedule options or date time formats
@@ -68,23 +67,14 @@ export default async function checkAppointment({
 			}, true);
 		}
 
-		// Add the notice in the error block that this date has been blocked out by the user
-		if (blockedDates?.includes(trimDate.value)) {
-			safeDisplayMessage({
-				elementOrId: trimDateError,
-				message: 'You have blocked out this date.',
-				targetId: trimDateError
-			});
-		} else {
-			clearMsg({ container: trimDateError, hide: true, input: trimDateError });
-		}
-
 		// Get the booked appointments and the projected appointments data concurrently
 		const [bookedAppointments, projectedAppointments] = await Promise.all([
 			getCurrentAppointments({ appointmentDate: trimDate.value, scheduleOptions, dateTimeFormats, manageClient }),
 			getProjectedAppointments({ appointmentDate: trimDate, trimCycle, clientInfo, scheduleOptions, manageClient })
 		]);
-		debugLog('bookedAppointments: ', bookedAppointments);
+		// debugLog('bookedAppointments: ', bookedAppointments);
+		debugLog('Get Projected Appointments: ', projectedAppointments);
+
 		// Build the booked appointments or no appointments blocks
 		if (bookedAppointments?.length > 0) {
 			await buildAppointmentBlock({
@@ -95,7 +85,8 @@ export default async function checkAppointment({
 				manageUser,
 				componentId: COMPONENT_ID
 			});
-		} else {
+		}
+		else {
 			await buildNoAppointmentsBlock({ appointmentContainer: appBlock, date: dateTime });
 		}
 
@@ -109,6 +100,9 @@ export default async function checkAppointment({
 				manageUser,
 				componentId: COMPONENT_ID
 			});
+		}
+		else {
+			projAppBlock.innerHTML = ''; // Clear the projected appointments block if no data is available
 		}
 	}
 	catch (err) {

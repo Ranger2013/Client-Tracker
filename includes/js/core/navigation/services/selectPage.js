@@ -1,7 +1,9 @@
-import { removeListeners } from "../../utils/dom/listeners.js";
+import { hasListeners, removeListeners } from "../../utils/dom/listeners.js";
 
 /** @type {Function|null} */
 let cleanup = null;
+let isFromServerRenderedPage = false;
+
 const main = document.getElementById('main');
 
 /**
@@ -24,6 +26,7 @@ const main = document.getElementById('main');
  */
 export default async function selectPage({ evt, page, cID = null, closeMenu = null, primaryKey, manageUser, manageClient }) {
     evt.preventDefault();
+    isFromServerRenderedPage = await checkIfCurrentPageIsServerRendered();
 
     // Page configuration map
     const PAGE_CONFIG = {
@@ -82,9 +85,9 @@ export default async function selectPage({ evt, page, cID = null, closeMenu = nu
                 getArgs: () => [{ mainContainer: main, manageClient, manageUser }]
             },
             edit: {
-                module: "../page-builders/pages/personal-notes/edit/buildEditPersonalNotesPage.js",
+                module: "../../layout/user/pages/personal-notes/edit/buildEditPersonalNotesPage.js",
                 getState: () => "/tracker/personal-notes/edit/",
-                getArgs: () => [{ mainContainer: main }]
+                getArgs: () => [{ mainContainer: main, manageClient, manageUser }]
             },
             view: {
                 module: "../page-builders/pages/personal-notes/view/buildViewPersonalNotesPage.js",
@@ -111,7 +114,9 @@ export default async function selectPage({ evt, page, cID = null, closeMenu = nu
 
     try {
         // Clean up any server-rendered page listeners before SPA navigation
-        cleanupServerRenderedListeners();
+        if(isFromServerRenderedPage){
+            await cleanupServerRenderedListeners();
+        }
 
         // Clean up any previous SPA pages before loading new page
         await cleanupPreviousPage();
@@ -152,6 +157,7 @@ export default async function selectPage({ evt, page, cID = null, closeMenu = nu
 
 async function cleanupPreviousPage() {
     if (cleanup) {
+        console.log('Clean up Exists: ', cleanup);
         await cleanup();
         cleanup = null;
     }
@@ -166,7 +172,10 @@ async function loadNewPage(pageConfig, page, cID, primaryKey) {
         cleanup = await module.default(...args);
 
         const historyState = pageConfig.getState(cID, primaryKey);
-        history.pushState({ page }, '', historyState);
+        history.pushState({ page, isSpaNavigation: true }, '', historyState);
+
+        // Mark that we are now in an SPA navigation state
+        isFromServerRenderedPage = false;
     } catch (err) {
         console.error('Error loading page:', err);
         throw err;
@@ -202,13 +211,28 @@ async function importModule(modulePath) {
 }
 
 function cleanupServerRenderedListeners() {
-    removeListeners('color-options');           // From colorOptionsJS.js
-    removeListeners('farrier-prices');          // From farrierPricesJS.js
-    removeListeners('date-time');               // From dateTimeJS.js
-    removeListeners('mileage-charges');         // From mileageCharges.js
-    removeListeners('schedule-options');        // From scheduleOptionsJS.js
-    removeListeners('tracker-install-manager'); // From ManageTrackerInstallApp.js
-    // We'll add more as we work through other server-rendered pages
+    // Component IDs for server-rendered pages
+    const SERVER_COMPONENTS = [
+        'color-options',
+        'farrier-prices',
+        'date-time',
+        'mileage-charges',
+        'schedule-options',
+        'tracker-install-manager',
+        'user-account-page',
+        'dashboard',
+        'build-invoices-page',
+        'build-account-settings-page',
+        'unpaid-invoices-modal-listeners'
+    ];
+
+    // Only clean up components that actually have listeners
+    for(const componentId of SERVER_COMPONENTS) {
+        if(hasListeners(componentId)){
+            console.log('Cleaning up listeners for component: ', componentId);
+            removeListeners(componentId);
+        }
+    }
 }
 
 /**
@@ -236,4 +260,37 @@ function closeNavigationMenu() {
             img.classList.remove('up');
         }
     });
+}
+
+/**
+ * Checks if the current page is server-rendered by examining the current path.
+ * @returns {Promise<boolean>} - True if the current page is server-rendered, false otherwise.
+ */
+async function checkIfCurrentPageIsServerRendered(){
+    // Check if we have history state indicating we are in SPA navigation
+    if(history.state && history.state.isSpaNavigation){
+        return false;
+    }
+
+    // Import the route information to get server-rendered paths
+    const { ROUTES } = await import("../services/trackerAppMainNavigation.js");
+    const routes = ROUTES || {};
+
+    // Get all static routes as flat paths for comparison
+    const serverPaths = [];
+    if(routes.static){
+        // Flatten the nexted objects into an array of paths
+        Object.values(routes.static).forEach(category => {
+            if(typeof category === 'object'){
+                Object.values(category).forEach(path => {
+                    if(typeof path === 'string'){
+                        serverPaths.push(path);
+                    }
+                });
+            }
+        });
+    }
+
+    const currentPath = window.location.pathname;
+    return serverPaths.some(path => currentPath.startsWith(path));
 }

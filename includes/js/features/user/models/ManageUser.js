@@ -90,9 +90,9 @@ export default class ManageUser {
      */
     async getSettings(...keys) {
         try {
-            this.#log('In getSettings: ', keys);
+            this.#log('In getSettings: keys: ', keys);
             await this.#initializeSettings();
-            this.#log('In getSettings: ', this.#settings);
+            this.#log('In getSettings: this.#settings', this.#settings);
             if (!this.#settings) return null;
 
             return keys.length === 0
@@ -223,22 +223,42 @@ export default class ManageUser {
      * @param {Object} params - Update parameters
      * @param {*} params.userData - New data to store
      * @param {string} params.settingsProperty - Property name to update
-     * @param {string} [params.backupStore] - Optional store name for backup
-     * @param {string} [params.backupAPITag] - Optional API tag for backup
-     * @param {*} [params.backupData] - Optional backup data
+     * @param {boolean} [params.waitForCompletion] - Whether to wait for transaction completion
      * @returns {Promise<boolean>} Success status of the update
      */
-    async updateLocalUserSettings({ userData, settingsProperty, backupStore = null, backupAPITag = null, backupData = null }) {
+    async updateLocalUserSettings({ userData, settingsProperty, backupStore, backupAPITag, waitForCompletion = false }) {
         try {
-            const result = await this.#updateSettings({ userData, settingsProperty, backupStore, backupAPITag, backupData });
+            this.#log('UpdateLocalUserSettings: userData: ', userData);
+            this.#log('UpdateLocalUserSettings: settingsProperty: ', settingsProperty);
+
+            // Force settings refresh before update
+            await this.#initializeSettings();
+            
+            const result = await this.#updateSettings({ 
+                userData, 
+                settingsProperty,
+                backupStore,
+                backupAPITag,
+                waitForCompletion 
+            });
+
             if (result) {
+                // Force a complete refresh of settings
                 this.#settings = null;
                 this.#initialized = false;
+                if (waitForCompletion) {
+                    // Verify the update by reading it back
+                    await this.#initializeSettings();
+                    const verified = this.#settings && 
+                                   this.#settings[settingsProperty] &&
+                                   JSON.stringify(this.#settings[settingsProperty]) === JSON.stringify(userData);
+                    if (!verified) {
+                        throw new Error(`Failed to verify update for ${settingsProperty}`);
+                    }
+                }
             }
-            return result;
-        }
-        catch (error) {
-            // Just throw - let the boss (dateTimeJS) handle it
+            return true;
+        } catch (error) {
             throw error;
         }
     }
@@ -248,41 +268,33 @@ export default class ManageUser {
      * @private
      * @throws {Error} If update fails
      */
-    async #updateSettings({ userData, settingsProperty, backupStore = null, backupAPITag = null, backupData = null }) {
+    async #updateSettings({ userData, settingsProperty, backupStore, backupAPITag, waitForCompletion }) {
         try {
             let userSettings = await this.getSettings();
-
-            // If there are no user settings, then we to build the structure
+            this.#log('User Settings from IDB: userSettings: ', userSettings);
             if (!userSettings) {
-                // Dynamically import the userSettingsDataStructure.js file and then set the userSettings to that structure
                 const { default: userSettingsDataStructure } = await import("../components/userSettingsDataStructure.js");
-                const setUserSettings = userSettingsDataStructure();
-
-                const db = await this.#indexed.openDBPromise();
-                await this.#indexed.putStorePromise(db, setUserSettings, this.#indexed.stores.USERSETTINGS);
-                // Get all of the user's settings
-                userSettings = setUserSettings;
-
-                // Reset the cache so next getSettings() will fetch fresh content
-                this.#settings = null;
-                this.#initialized = false;
+                userSettings = userSettingsDataStructure();
+                this.#log('User Settings from userSettingsDataStructure: ', userSettings);
             }
-
+            
             userSettings[settingsProperty] = userData;
+            this.#log('settingsProperty: ', settingsProperty);
+            this.#log('userSettings[settingsProperty]: ', userSettings[settingsProperty]);
 
-            // This operation needs error handling
-            await this.#manageIDBTransactions({
-                userData,
-                userSettings,
+            // Ensure transaction completes before returning
+            const success = await this.#manageIDBTransactions({
+                userData, 
+                userSettings, // Send entire settings object
+                store: this.#indexed.stores.USERSETTINGS,
                 backupStore,
                 backupAPITag,
-                backupData
+                waitForCompletion
             });
-            return true;
-        }
-        catch (error) {
+
+            return success;
+        } catch (error) {
             const { AppError } = await import('../../../core/errors/models/AppError.js');
-            // Process because private method, let public method handle
             await AppError.process(error, {
                 errorCode: AppError.Types.DATABASE_ERROR,
                 userMessage: AppError.BaseMessages.system.server,
@@ -296,25 +308,42 @@ export default class ManageUser {
      * @private
      * @throws {Error} If transactions fail
      */
-    async #manageIDBTransactions({
-        userData,
-        userSettings,
-        backupStore = null,
-        backupAPITag = null,
-        backupData = null
-    }) {
+    async #manageIDBTransactions({ userData, userSettings, store, backupStore, backupAPITag, waitForCompletion }) {
         try {
             const db = await this.#indexed.openDBPromise();
-            await this.#indexed.putStorePromise(db, userSettings, this.#indexed.stores.USERSETTINGS, true);
 
-            if (backupStore && backupAPITag) {
-                await this.#backupData(userData, backupStore, backupAPITag, backupData);
+            const tx = backupStore && backupAPITag ? db.transaction([
+                store,
+                backupStore,
+            ], 'readwrite') : null;
+
+            if(tx) {
+                const backupData = {
+                    [backupAPITag]: true,
+                    ...userData
+                };
+
+
+                await Promise.all([
+                    this.#indexed.putStorePromise(db, userSettings, store, true, tx),
+                    this.#indexed.putStorePromise(db, backupData, backupStore, tx),
+                ]);
+            }
+            else {
+                // Use put with complete object to avoid partial updates
+                await this.#indexed.putStorePromise(db, userSettings, store, true);
+            }            
+            
+            if (waitForCompletion) {
+                // Get entire store contents since we're storing whole settings object
+                const verify = await this.#indexed.getAllStorePromise(db, store);
+                // Compare first item since settings are stored as single object
+                return verify && verify[0] && 
+                       JSON.stringify(verify[0]) === JSON.stringify(userData);
             }
 
             return true;
-        }
-        catch (err) {
-            // Just throw - parent will handle
+        } catch (err) {
             throw err;
         }
     }
@@ -369,6 +398,48 @@ export default class ManageUser {
                 shouldLog: true
             });
             return false;
+        }
+    }
+
+    async buildNewUserSettingsStructure({dataStructure}) {
+        try{
+            const db = await this.#indexed.openDBPromise();
+
+            const response = await this.#indexed.putStorePromise(db, dataStructure, this.#indexed.stores.USERSETTINGS, true);
+            this.#log('In buildNewUserSettingsStructure: response: ', response);
+            this.#log('New user settings structure built: ', dataStructure);
+        }
+        catch(err){
+            const { AppError } = await import('../../../core/errors/models/AppError.js');
+            AppError.process(err, {
+                errorCode: AppError.Types.AUTHORIZATION_ERROR,
+                userMessage: AppError.BaseMessages.system.authorization,
+            }, true);
+        }
+    }
+
+    async verifyPassword(password){
+        try{
+            const [{ fetchData }, { authAPI }, { getValidationToken }] = await Promise.all([
+                import('../../../core/network/services/network.js'),
+                import('../../../core/network/api/apiEndpoints.js'),
+                import('../../../tracker.js')
+            ]);
+
+            const response = await fetchData({
+                api: authAPI.verifyPass,
+                data: { password},
+                token: getValidationToken(),
+            });
+
+            return response;
+        }
+        catch(err){
+            const { AppError } = await import('../../../core/errors/models/AppError.js');
+            AppError.process(err, {
+                errorCode: AppError.Types.API_ERROR,
+                userMessage: AppError.BaseMessages.system.server,
+            }, true);
         }
     }
 }

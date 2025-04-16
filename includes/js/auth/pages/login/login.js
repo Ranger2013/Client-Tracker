@@ -3,6 +3,15 @@ import { fetchData } from "../../../core/network/services/network.js";
 import { safeDisplayMessage } from "../../../core/utils/dom/messages.js";
 import ManageUser from "../../../features/user/models/ManageUser.js";
 
+// Setup debug mode
+const COMPONENT = 'login';
+const DEBUG = false;
+const debugLog = (...args) => {
+    if (DEBUG) {
+        console.log(`[${COMPONENT}]`, ...args);
+    }
+};
+
 async function handleLogIn(evt) {
     evt.preventDefault();
 
@@ -17,31 +26,36 @@ async function handleLogIn(evt) {
 
         if (!validateForm(userData)) return;
 
-        const req = await fetchData({
+        const response = await fetchData({
             api: authAPI.login,
             data: userData,
             timeout: 10000 // Longer timeout for login
         });
 
-        if (req.status !== 'ok') {
-            safeDisplayMessage({elementId: 'form-msg', message: req.msg});
+        debugLog('Login response:', response);
+
+        if (response.status !== 'ok') {
+            let msg = response.msg;
+            msg += response.attempts && response.loginAttempts ? `<br>Current Attempts: ${response.attempts}<br>Attempts Remaining: ${response.loginAttempts}` : '';
+            safeDisplayMessage({elementId: 'form-msg', message: msg, color: 'w3-text-yellow'});
             return;
         }
 
-        const token = req.msg;
+        const token = response.msg;
         if (!token) {
-            safeDisplayMessage({elementId: 'form-msg', message: 'Token validation issue. Please contact the administrator.'});
+            safeDisplayMessage({elementId: 'form-msg', message: 'Token validation issue. Please contact the administrator.', color: 'w3-text-yellow'});
             return;
         }
 
         // Update the user settings in the idb user_settings store
         const manageUser = new ManageUser();
+
         await manageUser.updateLocalUserSettings({
             userData: {
                 userToken: token,
-                status: req.member_status,
-                expiry: req.account_expiry,
-                uID: req.uID,
+                status: response.member_status,
+                expiry: response.account_expiry,
+                uID: response.uID,
             },
             settingsProperty: 'user_status'
         });
@@ -50,12 +64,13 @@ async function handleLogIn(evt) {
 
     }
     catch (err) {
-        const { AppError } = await import("../../../core/errors/models/AppError.js");
-        AppError.handleError(err, {
-            errorCode: AppError.Types.AUTHORIZATION_ERROR,
-            userMessage: AppError.BaseMessages.system.authorization,
-        });
-        safeDisplayMessage({elementId: 'form-msg', message: 'Login failed. Please contact administrator.'});
+        console.log('Log In Error: ', err);
+        // const { AppError } = await import("../../../core/errors/models/AppError.js");
+        // AppError.handleError(err, {
+        //     errorCode: AppError.Types.AUTHORIZATION_ERROR,
+        //     userMessage: AppError.BaseMessages.system.authorization,
+        // });
+        // safeDisplayMessage({elementId: 'form-msg', message: 'Login failed. Please contact administrator.'});
     }
 }
 

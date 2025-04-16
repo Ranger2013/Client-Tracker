@@ -3,10 +3,11 @@ import { addListener, removeListeners } from "../../../../core/utils/dom/listene
 import { clearMsg, safeDisplayMessage } from "../../../../core/utils/dom/messages.js";
 import { underscoreToHyphen, underscoreToHyphenPlusError } from "../../../../core/utils/string/stringUtils.js";
 import { isNumeric } from "../../../../core/utils/validation/validators.js";
+import { top } from '../../../../core/utils/window/scroll.js';
 import ManageUser from "../../models/ManageUser.js";
 import populateScheduleOptionsForm from "./components/schedule-options/populateScheduleOptionsForm.js";
 
-const manageUser = new ManageUser();
+const manageUser = new ManageUser({ debug: true});
 const COMPONENT_ID = 'schedule-options';
 
 (async function init() {
@@ -100,7 +101,9 @@ async function handleScheduleFormSubmission(evt) {
                 elementId: 'form-msg',
                 message: 'Schedule Options have been saved.',
                 isSuccess: true,
-            })
+            });
+
+            top();
             return;
         }
 

@@ -1,6 +1,15 @@
 import { formatTime } from '../../../utils/date/dateUtils.js';
 import { cleanUserOutput } from '../../../utils/string/stringUtils.js';
 
+// Set up debug mode
+const COMPONENT = 'Appointment Block Data';
+const DEBUG = false;
+const debugLog = (...args) => {
+	if (DEBUG) {
+		console.log(`[${COMPONENT}]`, ...args);
+	}
+};
+
 /**
  * Processes appointment data and returns an object with formatted appointment block details.
  * 
@@ -20,13 +29,21 @@ export default async function appointmentBlockData(data) {
 			city,
 			service_breakdown
 		} = data;
+		debugLog('STARTING WITH CLIENT: ', clientName);
+		debugLog('Time Format: ', timeFormat);
+		debugLog('Appointment Time: ', appTime);
+		debugLog('Total Minutes: ', totalMinutes);
 
 		// Calculate end time by adding total minutes to start time
 		const endTime = calculateEndTime(appTime, totalMinutes);
+		debugLog('End Time: ', endTime);
 
 		// Format times according to user preference
 		const startTime = parseInt(timeFormat) === 12 ? formatTime(appTime, 12) : formatTime(appTime, 24);
+		debugLog('Start Time: ', startTime);
+
 		const formattedEndTime = parseInt(timeFormat) === 12 ? formatTime(endTime, 12) : formatTime(endTime, 24);
+		debugLog('Formatted End Time: ', formattedEndTime);
 
 		// Create detailed service breakdown message
 		const serviceMessage = buildServiceMessage(service_breakdown);
@@ -56,11 +73,21 @@ export default async function appointmentBlockData(data) {
  * Calculates the end time by adding minutes to the start time
  */
 function calculateEndTime(startTime, totalMinutes) {
+	debugLog('CalculateEndTime: startTime: ', startTime);
+	debugLog('CalculateEndTime: totalMinutes: ', totalMinutes);
+
 	const [hours, minutes] = startTime.split(':').map(Number);
+	debugLog('CalculateEndTime: hours: ', hours);
+	debugLog('CalculateEndTime: minutes: ', minutes);
+
 	const totalTime = hours * 60 + minutes + totalMinutes;
+	debugLog('CalculateEndTime: totalTime: ', totalTime);
 	
 	const endHours = Math.floor(totalTime / 60) % 24;
+	debugLog('CalculateEndTime: endHours: ', endHours);
+
 	const endMinutes = totalTime % 60;
+	debugLog('CalculateEndTime: endMinutes: ', endMinutes);
 	
 	return `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
 }

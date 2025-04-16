@@ -53,12 +53,7 @@ function buildMainPageComponents() {
 		successContainer: {
 			type: 'div',
 			attributes: { id: 'backup-msg-success' },
-			myClass: ['w3-padding-small', 'w3-center', 'w3-hide'],
-		},
-		errorContainer: {
-			type: 'div',
-			attributes: { id: 'backup-msg-error' },
-			myClass: ['w3-padding-small', 'w3-center', 'w3-hide'],
+			myClass: ['w3-padding-small', 'w3-text-green'],
 		},
 		buttonContainer: {
 			type: 'div',

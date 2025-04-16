@@ -45,7 +45,8 @@ import { underscoreToHyphen, underscoreToHyphenPlusError } from "../../string/st
 export default async function displayFormValidationErrors(errors, options = {}) {
     const {
         formMessage = 'Please fix the following errors',
-        scrollToTop = true
+        scrollToTop = true,
+        displayTarget = 'form-msg',
     } = options;
 
     try {
@@ -79,7 +80,7 @@ export default async function displayFormValidationErrors(errors, options = {}) 
 
         // Show general form message
         safeDisplayMessage({
-            elementId: 'form-msg',
+            elementId: displayTarget,
             message: formMessage
         });
 

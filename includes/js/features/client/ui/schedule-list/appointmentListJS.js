@@ -1,5 +1,6 @@
 import { dropDownClientMenu } from '../../../../core/navigation/services/dropDownClientMenu.js';
 import selectClientMenuPage from '../../../../core/navigation/services/selectClientMenuPage.js';
+import { getValidElement } from '../../../../core/utils/dom/elements.js';
 import { createDebouncedHandler, getOptimalDelay } from '../../../../core/utils/dom/eventUtils.js';
 import { addListener, removeListeners } from '../../../../core/utils/dom/listeners.js';
 import { safeDisplayMessage } from '../../../../core/utils/dom/messages.js';
@@ -17,6 +18,7 @@ export default async function appointmentList({ active, cID, primaryKey, manageC
         // Handle search and filter events
         try {
             await initializeSearchHandlers({ manageUser });
+            await initializePersonalNotes();
         }
         catch (err) {
             const { AppError } = await import("../../../../core/errors/models/AppError.js");
@@ -44,6 +46,30 @@ export default async function appointmentList({ active, cID, primaryKey, manageC
             userMessage: AppError.BaseMessages.system.initialization,
         });
     }
+}
+
+function initializePersonalNotes() {
+    addListener({
+        elementOrId: 'info-icon',
+        eventType: 'click',
+        handler: () => {
+            const notesBlock = getValidElement('personal-notes-block');
+            if(notesBlock.classList.contains('collapsed')){
+                notesBlock.classList.remove('w3-hide');
+                notesBlock.style.maxHeight = (notesBlock.scrollHeight + 30) + 'px';
+                notesBlock.classList.remove('collapsed');
+            }
+            else {
+                notesBlock.style.maxHeight = (notesBlock.scrollHeight + 30) + 'px';
+                setTimeout(() => {
+                    notesBlock.style.maxHeight = '0px';
+                    notesBlock.classList.add('collapsed');
+                    setTimeout(() => notesBlock.classList.add('w3-hide'), 500);
+                },10);
+            }
+        },
+        componentId: COMPONENT_ID,
+    });
 }
 
 async function initializeSearchHandlers({ manageUser }) {

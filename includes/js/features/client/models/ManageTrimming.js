@@ -97,6 +97,7 @@ export default class ManageTrimming {
 			// Prepare data structures
 			const backupData = this.setTrimmingDataStructureForBackupData({ cID, userData, trimID: nextTrimID });
 			this.#log('Backup Data Structure: ', backupData);
+
 			const trimmingStoreData = await this.setTrimmingStoreData({ cID, prevTrims });
 			this.#log('Trimming Store Data: ', trimmingStoreData);
 
@@ -107,7 +108,7 @@ export default class ManageTrimming {
 			// Check if we are going to send a receipt
 			let receiptMsg = '';
 			if (userData?.receipt === 'yes') {
-				this.#log('Sending receipt for trimming session');
+				this.#log('Sending receipt for trimming session: backupData: ', backupData);
 				const receiptStatus = await this.handleSendingReceipt(backupData);
 				this.#log('Receipt Status: ', receiptStatus);
 
@@ -116,7 +117,10 @@ export default class ManageTrimming {
 					receiptMsg = '<div>Receipt sent successfully.</div>';
 				}
 				else {
+					// Set the receipt to no
 					backupData.receipt_sent = 'no';
+					// Add the full userData if the receipt was not sent. This will try to send the receipt when the user backs up their data.
+					backupData.userData = userData;
 					receiptMsg = `<div class="w3-text-red">${receiptStatus.msg}</div>`;
 				}
 			}
@@ -151,15 +155,18 @@ export default class ManageTrimming {
 	setTrimmingDataStructureForBackupData({ cID, userData, trimID }) {
 		return {
 			add_trimming: true,
-			trimID,
+			app_time: userData.app_time,
 			cID,
+			date_trimmed: userData.trim_date,
+			next_trim_date: userData.next_trim_date,
+			number_horses: userData.number_horses,
+			invoice_sent: 'no',
 			mileage_cost: userData?.mileage_cost || '0',
+			paid: userData?.paid || 'no',
+			payment_amount: userData.payment !== '' ? userData.payment : '0',
 			receipt: userData?.receipt || 'no',
 			session_notes: userData?.session_notes || '',
-			payment_amount: userData.payment !== '' ? userData.payment : '0',
-			date_trimmed: userData.trim_date,
-			paid: userData?.paid || 'no',
-			invoice_sent: 'no',
+			trimID,
 		};
 	}
 
@@ -200,6 +207,7 @@ export default class ManageTrimming {
 
 			const validationToken = getValidationToken();
 			this.#log('Validation Token: ', validationToken);
+
 			this.#log('Before we send the receipt.');
 			// Make the reqeust to the server api
 			const response = await fetchData({

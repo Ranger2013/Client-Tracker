@@ -17,7 +17,7 @@ const debugLog = (...args) => {
  * @param {string} appointmentDate - A string representing the appointment date.
  * @param {Object} scheduleOptions - An object containing scheduling options.
  * @param {number} scheduleOptions.avg_horses - The average number of horses per hour.
- * @param {number} scheduleOptions.avg_drive_time - The average drive time.
+ * @param {number} scheduleOptions.drive_time - The average drive time.
  * @param {Object} dateTimeFormats - An object containing date and time formats.
  * @param {string} dateTimeFormats.date_format - The date format.
  * @param {string} dateTimeFormats.time_format - The time format (12 or 24).
@@ -29,8 +29,8 @@ export default async function getCurrentAppointments({ appointmentDate, schedule
 	try {
 		if (!scheduleOptions || !dateTimeFormats) throw new Error('No Schedule Options or Date/Time Options to create booked appointments. Please update your settings.');
 
-		// const { avg_horses: avgHorses, avg_drive_time: avgDriveTime } = scheduleOptions;
-		const { avg_drive_time: avgDriveTime, avg_trim: avgTrimTime, full_set: fullSetTime, half_set: halfSetTime } = scheduleOptions;
+		// const { avg_horses: avgHorses, drive_time: avgDriveTime } = scheduleOptions;
+		const { drive_time: avgDriveTime, avg_trim: avgTrimTime, full_set: fullSetTime, half_set: halfSetTime } = scheduleOptions;
 
 		const { date_format: dateFormat, time_format: timeFormat } = dateTimeFormats;
 		let appList = [];
@@ -46,7 +46,8 @@ export default async function getCurrentAppointments({ appointmentDate, schedule
 		let clientsSet = new Set();
 
 		for (let client of clientDataByTrimDate) {
-			const { cID,
+			const {
+				cID,
 				primaryKey,
 				active,
 				client_name: clientName,
@@ -70,7 +71,7 @@ export default async function getCurrentAppointments({ appointmentDate, schedule
 
 			// Set the number of client horses or 1 as a default
 			const clientHorses = horses.length > 0 ? horses.length : 1;
-			debugLog('clientHorses: ', clientHorses);
+			// debugLog('clientHorses: ', clientHorses);
 
 			// Get prediction including time calculations
 			const prediction = await predictNextSessionNumberHorses({ 
@@ -81,7 +82,7 @@ export default async function getCurrentAppointments({ appointmentDate, schedule
 				manageClient 
 			});
 
-			debugLog('prediction: ', prediction);
+			debugLog('Prediction: ', prediction);
 
 			const appointmentData = {
 				cID,

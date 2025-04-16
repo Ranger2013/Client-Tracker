@@ -68,7 +68,7 @@ export default function openModal({ content, title = null, configuration = [], c
 					'w3-padding',
 					'w3-round-large',
 					'w3-white',
-					// 'w3-margin',
+					'w3-margin',
 					'w3-margin-center'
 			  ];
 		 }

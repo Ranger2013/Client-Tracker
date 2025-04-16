@@ -59,14 +59,38 @@ export default async function autoFillHorseList({ totalHorses, optionsConfig }) 
 				const servicesContainer = block.querySelector(`#services-container-${iterator}`);
 				const checkboxContainer = block.querySelector(`#checkbox-container-${iterator}`);
 
-				// Set selected index to i (0-based) instead of iterator (1-based)
-				horseList.selectedIndex = i;
+				const predictedOptions = [];
 
-				const horseNameLabel = block.querySelector(`label[for="horse-list-${iterator}"]`);
+				// Identify all predicted options in this select box
+				for(let j = 0; j < horseList.options.length; j++){
+					if(horseList.options[j].getAttribute('data-is-predicted') === 'true'){
+						predictedOptions.push(j);
+					}
+				}
+
+				// If we have predicted options, prioritize them
+				if(predictedOptions.length > 0 && i < predictedOptions.length){
+					// Take predicted options in order
+					horseList.selectedIndex = predictedOptions[i];
+				}
+				else {
+					// Otherwise fall back to default index-based selection
+					horseList.selectedIndex = Math.min(i, horseList.options.length - 1);
+				}
+
+
+				// Set selected index to i (0-based) instead of iterator (1-based)
+				// horseList.selectedIndex = i;
+
+				const horseTypeDiv = block.querySelector(`#horse-type-${iterator}`);
+				const horseTrimCycleDiv = block.querySelector(`#horse-trim-cycle-${iterator}`);
 				const selectOption = horseList.options[horseList.selectedIndex];
 				const serviceType = selectOption.dataset.serviceType;
 				const serviceTime = selectOption.dataset.trimCycle;
-				horseNameLabel.innerHTML = `Horse's Name: <span class="w3-small">${ucwords(underscoreToSpaces(serviceType))} Cycle: ${serviceTime / 7} weeks</span>`;
+				const horseType = selectOption.dataset.horseType || 'Unknown';
+				horseTrimCycleDiv.innerHTML = `<span class="w3-small">${ucwords(underscoreToSpaces(serviceType))} Cycle: ${serviceTime / 7} weeks</span>`;
+				horseTypeDiv.textContent = horseTypeDiv.textContent + ucwords(underscoreToSpaces(horseType));
+
 
 				// Show the containers
 				[servicesContainer, checkboxContainer].forEach(

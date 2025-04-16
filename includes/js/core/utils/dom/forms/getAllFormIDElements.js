@@ -1,4 +1,4 @@
-import { getValidElement } from '../elements.min';
+import { getValidElement } from '../elements.js';
 
 /**
  * Gets all form elements with non-empty id attributes.

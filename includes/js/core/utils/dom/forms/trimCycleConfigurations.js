@@ -14,4 +14,4 @@ export function trimCycleConfigurations(fieldValues = null) {
 	];
 } 
 
-export const trimCycleRange = [7,21,28,35,42,49,56,63,70];
+export const trimCycleRange = [7,14,21,28,35,42,49,56,63,70];

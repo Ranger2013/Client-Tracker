@@ -48,3 +48,6 @@ $payload = file_get_contents('php://input');
 // Decode the data
 $data = json_decode($payload);
 
+if(!empty($data->shouldValidate) && $data->shouldValidate !== false){
+	include_once DOC_ROOT . "includes/configurations/authorizations/apiAuthorization.php";
+}

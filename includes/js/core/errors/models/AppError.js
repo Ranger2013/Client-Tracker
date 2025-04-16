@@ -53,6 +53,7 @@ export class AppError extends Error {
                 validationFailed: 'Form validation failed.',
                 submissionFailed: 'Form submission failed.',
                 noData: 'No local data found for this form.',
+                messageDisplayFailed: 'Failed to display form message.',
             },
         };
     }
@@ -82,7 +83,7 @@ export class AppError extends Error {
      * @param {string} [message='An unexpected error occurred'] - Technical error message.
      * @param {AppErrorConfig} [config={}] - Error configuration options.
      */
-    constructor(message = 'An unexpected error occurred', config = {}) {
+    constructor(message = 'An unexpected error occurred.', config = {}) {
         super(message); // Calls Error constructor, sets this.message
         this.name = 'AppError'; // Override the name property, usually Error.
         this.originalError = config.originalError || null;
@@ -144,6 +145,7 @@ export class AppError extends Error {
             FORM_VALIDATION_ERROR: 'FORM_VALIDATION_ERROR',
             FORM_SUBMISSION_ERROR: 'FORM_SUBMISSION_ERROR',
             FORM_POPULATION_ERROR: 'FORM_POPULATION_ERROR',
+            MESSAGE_DISPLAY_ERROR: 'MESSAGE_DISPLAY_ERROR',
         };
     }
 
@@ -197,6 +199,7 @@ export class AppError extends Error {
      */
     async handle(shouldThrow = false) {
         try {
+            console.log('AppError: handle: shouldThrow: ', shouldThrow)
             if (this.shouldLog && !this.logged) {
                 await this.logError();
             }
@@ -209,6 +212,7 @@ export class AppError extends Error {
             return this;
         }
         catch (handlingError) {
+            console.warn('AppError handlingError: ', handlingError);
             // If we're supposed to throw, do it immediately
             if (shouldThrow) {
                 throw handlingError;

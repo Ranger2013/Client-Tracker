@@ -4,7 +4,7 @@ import { top } from '../../../../../core/utils/window/scroll.js';
 import ManageTrimming from '../../../models/ManageTrimming.js';
 
 const COMPONENT = 'Form Submission';
-const DEBUG = true;
+const DEBUG = false;
 
 const debugLog = (...args) => {
 	if (DEBUG) {
@@ -22,7 +22,7 @@ export default async function handleAddTrimmingFormSubmission({ evt, cID, primar
 		debugLog('User Data: after form submission:', userData);
 		// Validate the form data
 		const isValidated = await validateTrimmingForm({ userData });
-		debugLog('Validation:', isValidated);
+
 		const { status, message, target, targetError } = isValidated;
 
 		// Return early if we have errors
@@ -48,7 +48,7 @@ export default async function handleAddTrimmingFormSubmission({ evt, cID, primar
 		const manageTrimming = new ManageTrimming({debug: false});
 		const result = await manageTrimming.handleAddTrimmingSession({ cID, primaryKey, userData });
 
-		debugLog('Form Submission result:', result);
+		debugLog('Form Submission: result:', result);
 
 		// Handle success
 		safeDisplayMessage({
@@ -78,18 +78,13 @@ export default async function handleAddTrimmingFormSubmission({ evt, cID, primar
 function processFormData(formData) {
 	try {
 		const entries = Array.from(formData.entries());
-		debugLog('Form Entries:', entries);
-
 		const processedData = entries.reduce((accumulator, [key, value]) => {
-			debugLog('Processing:', { key, value });
-
 			return {
 				...accumulator,
 				...processFormField(key, value, accumulator)
 			};
 		}, {});
 
-		debugLog('Processed Data:', processedData);
 		return processedData;
 	} catch (err) {
 		console.error('Error processing form data:', err);
@@ -148,9 +143,7 @@ function getReceiptMessage(status) {
 function handleFormReset({ evt, numberHorseContainer, userData }) {
 	debugLog('userData: ', userData);
 	const { trim_date: trimDate, next_trim_date: nextTrimDate, app_time: appTime } = userData;
-	debugLog('trimDate: ', trimDate);
-	debugLog('nextTrimDate: ', nextTrimDate);
-	debugLog('appTime: ', appTime);
+
 	// Reset the form
 	evt.target.reset();
 

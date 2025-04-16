@@ -1,1 +1,3 @@
 Need to go back to predictNextSessionNumberHorses.js file when we get done with the add trimming/shoeing page.
+
+Create a class base for the listeners.js file. This will help maintaining state, especially for the tabbed pages.

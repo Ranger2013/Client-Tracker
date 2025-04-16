@@ -1,3 +1,4 @@
+import setupBackupNotice from '../../../../../../core/services/backup-notice/backupNotice.js';
 import { getValidElement } from '../../../../../../core/utils/dom/elements.js';
 import { clearMsg, safeDisplayMessage } from '../../../../../../core/utils/dom/messages.js';
 import ManageMileage from '../../../../models/ManageMileage.js';
@@ -28,11 +29,11 @@ export default async function handleAddMileageFormSubmission({ evt, manageClient
 		}
 
 		// Handle form submission
-		const isSubmitted = await handleFormSubmission(userData);
+		const isSubmitted = await handleFormSubmission({ userData, manageUser });
 
 		// Show success message
-		if(isSubmitted){
-			showSuccessMessage(evt);
+		if (isSubmitted) {
+			showSuccessMessage({evt, manageUser});
 		}
 	}
 	catch (err) {
@@ -125,13 +126,13 @@ function renderErrors(errors) {
 	});
 }
 
-async function handleFormSubmission(userData) {
-	const manageMileage = new ManageMileage({ debug: true });
+async function handleFormSubmission({ userData, manageUser }) {
+	const manageMileage = new ManageMileage({ debug: false });
 
 	const mileageData = {
 		add_mileage: true,
 		difference: Number(userData.ending_mileage) - Number(userData.starting_mileage),
-		date: new Date().toISOString().slice(0,10),
+		date: new Date().toISOString().slice(0, 10),
 		...userData,
 	};
 
@@ -140,7 +141,7 @@ async function handleFormSubmission(userData) {
 	return result ? true : false;
 }
 
-function showSuccessMessage(evt){
+function showSuccessMessage({evt, manageUser}) {
 	safeDisplayMessage({
 		elementId: 'form-msg',
 		message: 'Mileage added successfully',
@@ -151,9 +152,11 @@ function showSuccessMessage(evt){
 	evt.target.reset();
 
 	closeAndDisableInputAndSelectFields();
+
+	setupBackupNotice({ manageUser });
 }
 
-function closeAndDisableInputAndSelectFields(){
+function closeAndDisableInputAndSelectFields() {
 	const destinationSelect = getValidElement('select-destination');
 	const destinationInput = getValidElement('input-destination');
 	const clientListDisplayContainer = getValidElement('client-list-display-container');

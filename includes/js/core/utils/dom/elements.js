@@ -106,12 +106,8 @@ export function buildElementsFromConfig(config) {
 }
 
 export function buildElementTree(config) {
-	debugLog('Building element tree with config:', config);
-	debugLog('Desctructor: type: ', config.type);
-	debugLog('Desctructor: attributes: ', config.attributes);
-	debugLog('Desctructor: myClass: ', config.myClass);
-	debugLog('Desctructor: text: ', config.text);
-	debugLog('Desctructor: children: ', config.children);
+	if(!config || !config.type) return null;
+
 	const element = buildEle({
 		type: config.type,
 		attributes: config.attributes,
@@ -123,7 +119,8 @@ export function buildElementTree(config) {
 
 	if (config.children) {
 		Object.values(config.children).forEach(childConfig => {
-			element.appendChild(buildElementTree(childConfig));
+			const childElement = buildElementTree(childConfig);
+			if(childElement) element.appendChild(childElement);	
 		});
 	}
 

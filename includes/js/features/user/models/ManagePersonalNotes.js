@@ -52,17 +52,42 @@ export default class ManagePersonalNotes {
 		}
 	}
 
-	async getPersonalNotes(){
-		try{}
+	async getAllPersonalNotes(){
+		try{
+			const db = await this.#indexed.openDBPromise();
+
+			const notes = await this.#indexed.getAllStorePromise(db, this.#indexed.stores.PERSONALNOTES);
+			this.#log('Personal notes: ', notes);
+
+			return notes;
+		}
 		catch(err){
 			const { AppError } = await import("../../../core/errors/models/AppError.js");
 			AppError.process(err, {
 				errorCode: AppError.Types.DATABASE_ERROR,
 				userMessage: 'There was an error retrieving your personal notes.',
-				targetDisplay: 'form-msg',
+				displayTarget: 'form-msg',
 			}, true);
 		}
 
+	}
+
+	async getSpecificPersonalNotes(notesID){
+		try{
+			const db = await this.#indexed.openDBPromise();
+			const notes = await this.#indexed.getStorePromise(db, this.#indexed.stores.PERSONALNOTES, parseInt(notesID, 10));
+			this.#log('Personal notes: ', notes);
+
+			return notes;
+		} 
+		catch(err){
+			const { AppError } = await import("../../../core/errors/models/AppError.js");
+			AppError.process(err, {
+				errorCode: AppError.Types.DATABASE_ERROR,
+				userMessage: 'There was an error retrieving your personal notes.',
+				displayTarget: 'form-msg',
+			}, true);
+		}
 	}
 
 	async addPersonalNotes(userData){
@@ -71,23 +96,26 @@ export default class ManagePersonalNotes {
 			const today = new Date().toISOString().slice(0, 10);
 
 			// Get the max personal notes id. getLastKeyForID creates it's own db connection.
-			const notesID = await this.#indexed.getLastKeyForID(this.#indexed.stores.MAXPERSONALNOTESID);
-
+			this.#log('Max personal notes ID: ', this.#indexed.stores.MAXPERSONALNOTESID);
+			const notesID = await this.#indexed.getLastKeyForID({store: this.#indexed.stores.MAXPERSONALNOTESID});
+			this.#log('New personal notes ID: ', notesID);
 			// Build the notes data object
 			const notesData = {
 				date: today,
 				notesID,
 				...userData,
 			};
+			this.#log('Notes data: ', notesData);
 
 			// Backup the notes data for server sync
 			const backupData = {
 				add_personalNotes: true,
 				...notesData,
 			};
+			this.#log('Backup data: ', backupData);
 
 			// Set up the db operations
-			const db = this.#indexed.openDBPromise();
+			const db = await this.#indexed.openDBPromise();
 			const tx = db.transaction([
 				this.#indexed.stores.PERSONALNOTES,
 				this.#indexed.stores.MAXPERSONALNOTESID,
@@ -95,9 +123,9 @@ export default class ManagePersonalNotes {
 			], 'readwrite');
 
 			await Promise.all([
-				this.#indexed.putStorePromise(tx, notesData, this.#indexed.stores.PERSONALNOTES, false, tx),
-				this.#indexed.putStorePromise(tx, backupData, this.#indexed.stores.ADDPERSONALNOTES, false, tx),
-				this.#indexed.putStorePromise(tx, notesID, this.#indexed.stores.MAXPERSONALNOTESID, true, tx),
+				this.#indexed.putStorePromise(db, notesData, this.#indexed.stores.PERSONALNOTES, false, tx),
+				this.#indexed.putStorePromise(db, backupData, this.#indexed.stores.ADDPERSONALNOTES, false, tx),
+				this.#indexed.putStorePromise(db, {notesID}, this.#indexed.stores.MAXPERSONALNOTESID, true, tx),
 			]);
 
 			return true;
@@ -107,19 +135,77 @@ export default class ManagePersonalNotes {
 			AppError.process(err, {
 				errorCode: AppError.Types.DATABASE_ERROR,
 				userMessage: 'There was an error adding your personal notes.',
-				targetDisplay: 'form-msg',
+				displayTarget: 'form-msg',
 			}, true);
 		}
 	}
 
-	async editPersonalNotes(){
-		try{}
+	async deletePersonalNotes(notesID){
+		try{
+			const backupData = {
+				delete_personalNotes: true,
+				notesID: parseInt(notesID, 10),
+			};
+
+			const db = await this.#indexed.openDBPromise();
+			const tx = db.transaction([
+				this.#indexed.stores.PERSONALNOTES,
+				this.#indexed.stores.DELETEPERSONALNOTES,
+			], 'readwrite');
+
+			await Promise.all([
+				this.#indexed.deleteRecordPromise(parseInt(notesID,10), this.#indexed.stores.PERSONALNOTES, tx),
+				this.#indexed.putStorePromise(db, backupData, this.#indexed.stores.DELETEPERSONALNOTES, false, tx),
+			]);
+
+			return true;
+		}
+		catch(err){
+			const { AppError } = await import("../../../core/errors/models/AppError.js");
+			AppError.process(err, {
+				errorCode: AppError.Types.DATABASE_ERROR,
+				userMessage: 'There was an error deleting your personal notes.',
+				displayTarget: 'form-msg',
+			}, true);
+		}
+	}
+
+	async editPersonalNotes(userData){
+		try{
+			const { date, notes, notesID } = userData;
+
+			const db = await this.#indexed.openDBPromise();			
+			const userNotes = await this.getSpecificPersonalNotes(notesID);
+
+			const updatedNotes = {
+				...userNotes,
+				notes,
+			};
+
+			const backupData = {
+				edit_personalNotes: true,
+				...updatedNotes,
+			};
+
+			const tx = db.transaction([
+				this.#indexed.stores.PERSONALNOTES,
+				this.#indexed.stores.EDITPERSONALNOTES,
+			], 'readwrite');
+			
+			await Promise.all([
+				this.#indexed.putStorePromise(db, updatedNotes, this.#indexed.stores.PERSONALNOTES, false, tx),
+				this.#indexed.putStorePromise(db, backupData, this.#indexed.stores.EDITPERSONALNOTES, false, tx),
+			]);
+
+			return true;
+
+		}
 		catch(err){
 			const { AppError } = await import("../../../core/errors/models/AppError.js");
 			AppError.process(err, {
 				errorCode: AppError.Types.DATABASE_ERROR,
 				userMessage: 'There was an error editing your personal notes.',
-				targetDisplay: 'form-msg',
+				displayTarget: 'form-msg',
 			}, true);
 		}
 

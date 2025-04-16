@@ -1,156 +1,238 @@
-import { addListener } from "../../../core/utils/dom/listeners.js";
-import { ucwords } from "../../../core/utils/string/stringUtils.js";
-import { clearMsg, safeDisplayMessage } from "../../../core/utils/dom/messages.js";
-import { checkForDuplicate } from "../../services/duplicateCheck.js";
-import { formatEmail, formatPhone } from "../../../core/utils/dom/forms/validation.js";
-import { checkPasswordStrength, comparePasswords } from "../../utils/passwordValidation.js";
-import { getTerms, handleUserRegistration } from "./components/registerUserHelpers.js";
+// import { addListener } from "../../../core/utils/dom/listeners.js";
+// import { ucwords } from "../../../core/utils/string/stringUtils.js";
+// import { clearMsg, safeDisplayMessage } from "../../../core/utils/dom/messages.js";
+// import { checkForDuplicate } from "../../services/duplicateCheck.js";
+// import { formatEmail, formatPhone } from "../../../core/utils/dom/forms/validation.js";
+// import { checkPasswordStrength, comparePasswords } from "../../utils/passwordValidation.js";
+// import { getTerms, handleUserRegistration } from "./components/registerUserHelpers.js";
 import { createAdaptiveHandler } from "../../../core/utils/dom/eventUtils.js";
-import { disableEnableSubmitButton } from "../../../core/utils/dom/elements.js";
+// import { disableEnableSubmitButton } from "../../../core/utils/dom/elements.js";
+
+import { disableEnableSubmitButton } from '../../../core/utils/dom/elements';
+import { clearMsg, safeDisplayMessage } from '../../../core/utils/dom/messages';
+import { ucwords } from '../../../core/utils/string/stringUtils';
+import { formatEmail, formatPhone } from '../../../core/utils/dom/forms/validation';
+import { checkForDuplicate } from '../../services/duplicateCheck';
+import { checkPasswordStrength, comparePasswords } from '../../utils/passwordValidation.js';
+import { getTerms, handleUserRegistration } from './components/registerUserHelpers.js';
+import { addListener } from '../../../core/utils/dom/listeners.js';
+
+const COMPONENT_ID = 'register-user-form';
 
 /**
  * Initializes the registration form validation and event handlers
  * Primary entry point for registration functionality
  */
 function initializeRegistrationForm() {
-    // Setup name fields (no delay needed - instant feedback)
-    ['first-name', 'last-name', 'company-name'].forEach(id => {
-        addListener({
-            element: id,
-            event: 'input',
-            handler: evt => evt.target.value = ucwords(evt.target.value)
+    // Create the debounced handler ONCE, outside the event mapping
+    const debouncedUsernameCheck = createAdaptiveHandler(async (evt) => {
+        await checkFieldForDuplicate({
+            field: evt.target,
+            column: 'username', 
+            table: 'users'
         });
-    });
+    }, 'validation');
 
-    // Setup fields requiring validation with adaptive handlers
-    const validatedFields = [
-        {
-            id: 'email',
-            type: 'email',
-            format: 'email',
-            inputType: 'validation' // Used by getOptimalDelay
+    const staticEventHandlers = {
+        'focusin:first-name': (evt) => clearMsg({ container: `${evt.target.id}-error`, hide: true, input: evt.target }),
+        'input:first-name': (evt) => handleFormatting({
+            target: evt.target,
+            format: 'first-name',
+        }),
+        'focusin:last-name': (evt) => clearMsg({ container: `${evt.target.id}-error`, hide: true, input: evt.target }),
+        'input:last-name': (evt) => handleFormatting({
+            target: evt.target,
+            format: 'last-name',
+            }),
+        'focusin:company-name': (evt) => clearMsg({ container: `${evt.target.id}-error`, hide: true, input: evt.target }),
+        'input:company-name': (evt) => handleFormatting({
+            target: evt.target,
+            format: 'company-name',
+        }),
+        'focusin:phone': (evt) => clearMsg({ container: `${evt.target.id}-error`, hide: true, input: evt.target }),
+        'input:phone': async (evt) => {
+            await handleFormatting({ target: evt.target, format: 'phone' });
         },
-        {
-            id: 'phone',
-            type: 'phone',
-            format: 'phone',
-            inputType: 'validation'
+        'focusout:phone': async (evt) => {
+            await checkFieldForDuplicate({
+                field: evt.target,
+                column: 'phone', 
+                table: 'users'
+            });
         },
-        {
-            id: 'username',
-            type: 'username',
-            inputType: 'validation'
-        }
-    ];
+        'focusin:email': (evt) => clearMsg({ container: `${evt.target.id}-error`, hide: true, input: evt.target }),
+        'input:email': async (evt) => {
+            await handleFormatting({ target: evt.target, format: 'email' });
+        },
+        'focusout:email': async (evt) => {
+            await checkFieldForDuplicate({
+                field: evt.target,
+                column: 'email', 
+                table: 'users'
+            });
+        },
+        'focusin:username': (evt) => clearMsg({ container: `${evt.target.id}-error`, hide: true, input: evt.target }),
+        'input:username': (evt) => {
+            // Use the pre-created debounced handler
+            debouncedUsernameCheck(evt);
+        },
+        'focusin:password': (evt) => clearMsg({ container: `${evt.target.id}-error`, hide: true, input: evt.target }),
+        'input:password': async (evt) => {
+            // Only validate if the password field has a value
+            if (evt.target.value) {
+                await checkPasswordStrength({
+                    evt,
+                    strengthBadge: 'password-strength-container',
+                    errorContainer: 'password-error',
+                    submitButton: 'submit-button',
+                });
+            }
+        },
+        'focusin:confirm-password': (evt) => clearMsg({ container: `${evt.target.id}-error`, hide: true, input: evt.target }),
+        'input:confirm-password': async (evt) => {
+            // Only validate if the confirm password field has a value
+            if (evt.target.value) {
+                await comparePasswords({
+                    evt,
+                    passwordFieldId: 'password',
+                    errorContainer: 'confirm-password-error',
+                    submitButton: 'submit-button',
+                });
+            }
+        },
+        'click:terms': async (evt) => await getTerms('terms'),
+        'click:privacy': async (evt) => await getTerms('privacy'),
+        'submit:new-user-form': async (evt) => await handleUserRegistration(evt),
+    };
 
-    validatedFields.forEach(({ id, type, inputType, format }) => {
-        // Clear errors on focus
-        addListener({
-            element: id,
-            event: 'focus',
-            handler: evt => clearMsg({ container: `${id}-error`, input: evt.target })
+    addListener({
+        elementOrId: 'new-user-form',
+        eventType: ['focusin', 'input', 'focusout', 'click', 'submit'],
+        handler: (evt) => {
+            const keyPath = `${evt.type}:${evt.target.id}`;
+
+            if (staticEventHandlers[keyPath]) {
+                staticEventHandlers[keyPath](evt);
+            }
+        },
+        componentId: COMPONENT_ID,
+    });
+
+    disableEnableSubmitButton('submit-button');
+}
+
+/**
+ * Helper function to check if a field value already exists in the database
+ * @param {Object} params - Parameters object
+ * @param {HTMLElement} params.field - The input field element
+ * @param {string} params.column - The database column to check
+ * @param {string} params.table - The database table to check
+ * @returns {Promise<boolean>} - True if duplicate found, false otherwise
+ */
+async function checkFieldForDuplicate({ field, column, table }) {
+    const isDuplicate = await checkForDuplicate({
+        value: field.value,
+        column: column,
+        table: table,
+    });
+
+    if (isDuplicate.status === 'duplicate') {
+        return await handleValidationResponse({
+            response: isDuplicate.msg,
+            errorEle: `${field.id}-error`,
+            inputEle: field
         });
-
-        // Add adaptive validation handler for phone, email, and username
-        addListener({
-            element: id,
-            event: 'input', // Using 'input' instead of 'blur' to track typing patterns
-            handler: createAdaptiveHandler(async (evt) => {
-
-                if (format) {
-                    // Format phone number/email if necessary
-                    const formattedFields = await handleFormatting({ target: evt.target, format });
-                    if (!formattedFields) return;
-                }
-
-                const response = await checkForDuplicate({ value: evt.target.value, type, userType: 'users' });
-                if (response.status === 'duplicate') {
-                    await handleValidationResponse({ response: response.msg, errorEle: `${evt.target.id}-error`, inputEle: evt.target });
-                }
-                else if (response.status === 'ok') {
-                    clearMsg({ container: `${evt.target.id}-error`, input: evt.target });
-                }
-
-                disableEnableSubmitButton('submit-button');
-            }, inputType)
-        });
-    });
-
-    // Password validation with adaptive timing
-    addListener({
-        element: 'password',
-        event: 'input',
-        handler: createAdaptiveHandler(async (evt) =>
-            await checkPasswordStrength(evt, 'password-strength-container', 'password-error', 'submit-button'),
-            'validation'
-        )
-    });
-
-    addListener({
-        element: 'confirm-password',
-        event: 'input',
-        handler: createAdaptiveHandler(async (evt) =>
-            await comparePasswords(evt, 'password', 'confirm-password-error', 'submit-button'),
-            'validation'
-        )
-    });
-
-    // Terms and form submission (no delay needed)
-    ['terms', 'privacy'].forEach(id =>
-        addListener({ element: id, event: 'click', handler: () => getTerms(id) }));
-
-    addListener({
-        element: 'new-user-form',
-        event: 'submit',
-        handler: handleUserRegistration
-    });
+    }
+    
+    // Clear any previous error messages if no duplicate
+    clearMsg({ container: `${field.id}-error`, input: field });
+    return false;
 }
 
 async function handleValidationResponse({ response, errorEle, inputEle }) {
-    try {
-        // Invalid formatting
-        if (response) {
-            safeDisplayMessage({
-                elementId: errorEle,
-                message: response,
-                targetId: inputEle,
-            });
+    // Invalid formatting
+    if (response) {
+        safeDisplayMessage({
+            elementId: errorEle,
+            message: response,
+            targetId: inputEle,
+        });
 
-            disableEnableSubmitButton('submit-button');
-            return null;
-        }
-        return true;
+        disableEnableSubmitButton('submit-button');
+        return false;
     }
-    catch (err) { }
+    return true;
 }
 
 async function handleFormatting({ target, format }) {
-    try {
-        if (format === 'phone') {
-            const formattedPhone = formatPhone(target.value);
-            if (!formattedPhone) {
-                await handleValidationResponse({ response: `Invalid ${format} format.`, errorEle: `${target.id}-error`, inputEle: target });
-                return false;
-            };
+    const MAPPING = {
+        'first-name': {
+            action: (value) => {
+                const formatted = ucwords(value);
+                target.value = formatted;
+                return true;
+            }
+        },
+        'last-name': {
+            action: (value) => {
+                const formatted = ucwords(value);
+                target.value = formatted;
+                return true;
+            }
+        },
+        'company-name': {
+            action: (value) => {
+                const formatted = ucwords(value);
+                target.value = formatted;
+                return true;
+            }
+        },
+        phone: {
+            action: async (value) => {
+                const formattedPhone = formatPhone(value);
+                if (!formattedPhone) {
+                    await handleValidationResponse({
+                        response: `Invalid phone format.`,
+                        errorEle: `${target.id}-error`,
+                        inputEle: target,
+                    });
+                    return false;
+                }
 
-            target.value = formattedPhone;
-            clearMsg({ container: `${target.id}-error`, input: target });
-            return true;
-        }
-        else if (format === 'email') {
-            const formattedEmail = formatEmail(target.value);
+                target.value = formattedPhone;
+                clearMsg({ container: `${target.id}-error`, input: target });
+                return true;
+            }
+        },
+        email: {
+            action: async (value) => {
+                const formattedEmail = formatEmail(value);
+                if (!formattedEmail) {
+                    await handleValidationResponse({
+                        response: `Invalid email format.`,
+                        errorEle: `${target.id}-error`,
+                        inputEle: target,
+                    });
+                    return false;
+                }
 
-            if (!formattedEmail) {
-                await handleValidationResponse({ response: `Invalid ${format} format.`, errorEle: `${target.id}-error`, inputEle: target });
-                return false;
-            };
-            clearMsg({ container: `${target.id}-error`, input: target });
-            return true;
+                target.value = formattedEmail;
+                clearMsg({ container: `${target.id}-error`, input: target });
+                return true;
+            }
         }
+    };
+
+    // If we have a specific format, use that, otherwise try to use the target id
+    const handler = format ? MAPPING[format] : MAPPING[target.id];
+    
+    if (handler) {
+        return await handler.action(target.value);
     }
-    catch (err) { }
+    
+    // No matching handler found
+    console.warn(`No formatting handler for ${format || target.id}`);
+    return false;
 }
 
-// Initialize form when DOM is ready
-document.addEventListener('DOMContentLoaded', initializeRegistrationForm);
-
+initializeRegistrationForm();

@@ -1,4 +1,5 @@
 import IndexedDBOperations from '../../../core/database/IndexedDBOperations.js';
+import DateHelper from '../../../core/utils/date/DateHelper.js';
 
 export default class ManageClient {
     // Static private property to hold the singleton instance
@@ -6,6 +7,7 @@ export default class ManageClient {
 
     // Instance private properties
     #indexed;
+    #dateHelper;
     #clientList = null;
     #initialized = false;
     #trimmingInfo = null;
@@ -22,6 +24,7 @@ export default class ManageClient {
         }
 
         this.#indexed = new IndexedDBOperations();
+        this.#dateHelper = new DateHelper()
         this.#debug = options.debug || false;
 
         // Store this instance as the singleton
@@ -595,13 +598,26 @@ export default class ManageClient {
 
     /**
      * Retrieves the client schedule list from the IndexedDB.
+     * @param {Object} params - The parameters for retrieving the client schedule list.
+     * @param {string} params.active - The status of the clients to retrieve (default: 'all') 'yes' or 'no'
      * @returns {Promise<Array>} A promise that resolves to an array of client information.
      * @throws Will throw an error if the operation fails.
      */
-    async getClientScheduleList() {
+    async getClientScheduleList({ active = 'all' } = {}) {
         try {
             const db = await this.#indexed.openDBPromise();
             const clientList = await this.#indexed.getAllStorePromise(db, this.#indexed.stores.CLIENTLIST);
+
+            if (active !== 'all') {
+                const filteredList = Array.from(clientList).filter(client => {
+                    const trimDate = this.#dateHelper.fromString(client.trim_date);
+                    const currentDate = this.#dateHelper.today();
+
+                    return client.active === active && trimDate.isSameOrAfter(currentDate);
+                });
+                return filteredList;
+            }
+
             return clientList || [];
         }
         catch (err) {
@@ -668,6 +684,7 @@ export default class ManageClient {
 
             const db = await this.#indexed.openDBPromise();
             const trimmingInfo = await this.#indexed.getStorePromise(db, this.#indexed.stores.TRIMMING, cID);
+            console.log('In getClientTrimmingInfo: trimmingInfo: ', trimmingInfo);
             return trimmingInfo?.trimmings || [];
         }
         catch (err) {
@@ -680,13 +697,30 @@ export default class ManageClient {
         }
     }
 
+    async updateClientTrimmingInfo({cID, trimmingInfo}){
+        try{
+            if(!cID || !trimmingInfo) throw new Error('No cID or trimmingInfo provided.');
+
+            const trimData = {
+                cID: parseInt(cID, 10),
+                trimmings: trimmingInfo,
+            };
+
+            const db = await this.#indexed.openDBPromise();
+            await this.#indexed.putStorePromise(db, trimData, this.#indexed.stores.TRIMMING);
+            
+        }
+        catch(err){
+            const { AppError } = await import("../../../core/errors/models/AppError.js");
+            AppError.process(err, {
+                errorCode: AppError.Types.DATABASE_ERROR,
+                userMessage: null,
+            }, true);
+        }
+    }
+
     async updateClientSchedule({ cID, primaryKey, userData }) {
         try {
-            this.#log('cID: ', cID);
-            this.#log('typeof cID: ', typeof cID);
-
-            this.#log('primaryKey: ', primaryKey);
-            this.#log('typeof primaryKey: ', typeof primaryKey);
             if (!cID || !primaryKey || !userData) throw new Error('No cID, primaryKey, or userData provided.');
 
             // Destructure userData

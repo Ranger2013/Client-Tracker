@@ -1,3 +1,4 @@
+import setupBackupNotice from '../../../../../core/services/backup-notice/backupNotice.js';
 import { disableEnableSubmitButton } from '../../../../../core/utils/dom/elements.js';
 import displayFormValidationErrors from '../../../../../core/utils/dom/forms/displayFormValidationErrors.js';
 import { addListener } from '../../../../../core/utils/dom/listeners.js';
@@ -37,7 +38,7 @@ export default async function addExpenses({ mainContainer, manageClient, manageU
 			},
 			'submit:add-expenses-form': async (evt) => {
 				evt.preventDefault();
-				await handleAddExpensesFormSubmission({ evt, mainContainer, manageClient, manageUser, categoryOptions});
+				await handleAddExpensesFormSubmission({ evt, mainContainer, manageClient, manageUser, categoryOptions });
 			},
 		};
 
@@ -72,7 +73,7 @@ async function handleAddExpensesFormSubmission({ evt, mainContainer, manageClien
 
 		const userData = Object.fromEntries(new FormData(evt.target));
 
-		const errors = await validateAddExpensesForm({userData, options: categoryOptions});
+		const errors = await validateAddExpensesForm({ userData, options: categoryOptions });
 		debugLog('Errors: ', errors);
 		if (errors.length > 0) {
 			displayFormValidationErrors(errors);
@@ -83,7 +84,7 @@ async function handleAddExpensesFormSubmission({ evt, mainContainer, manageClien
 		const response = await handleFormSubmission(userData);
 
 		if (response) {
-			displaySuccessMessageAndResetForm(evt);
+			displaySuccessMessageAndResetForm({ evt, manageUser });
 			return;
 		}
 	}
@@ -99,7 +100,7 @@ async function handleAddExpensesFormSubmission({ evt, mainContainer, manageClien
 	}
 }
 
-async function validateAddExpensesForm({userData, options}) {
+async function validateAddExpensesForm({ userData, options }) {
 	try {
 		debugLog('options: ', options);
 		debugLog('Array.from(options): ', options.some(option => option.value !== 'null' && option.value === userData?.category));
@@ -153,12 +154,14 @@ async function handleFormSubmission(userData) {
 	return await manageExpenses.addExpense(backupData);
 }
 
-function displaySuccessMessageAndResetForm(evt) {
+function displaySuccessMessageAndResetForm({ evt, manageUser }) {
 	safeDisplayMessage({
 		elementId: 'form-msg',
 		message: 'Expense added successfully',
 		isSuccess: true,
 	});
+
+	setupBackupNotice({ errorEleID: 'backup-data-notice', manageUser })
 
 	evt.target.reset();
 	top();

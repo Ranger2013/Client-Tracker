@@ -1,6 +1,6 @@
 // Setup debug mode
 const COMPONENT = 'Update Trim Cost';
-const DEBUG = true;
+const DEBUG = false;
 const debugLog = (...args) => {
 	if (DEBUG) {
 		console.log(`[${COMPONENT}]`, ...args);

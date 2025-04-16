@@ -21,7 +21,7 @@ const debugLog = (...args) => {
  * @param {Object} params - The parameters for the function.
  * @param {HTMLElement} params.tabContainer - The container for the tab content.
  * @returns {Promise<void>}
- */ 
+ */
 export default async function backupDataToServer({ tabContainer, manageUser }) {
 	try {
 		debugLog('In backupDataToServer: manageUser', manageUser);
@@ -39,7 +39,8 @@ export default async function backupDataToServer({ tabContainer, manageUser }) {
 		const db = await indexed.openDBPromise();
 
 		let displayErrors = '';
-		
+		let displaySuccess = '';
+
 		for (const element of elements) {
 			const store = element.dataset.store;
 			const storeData = await indexed.getAllStorePromise(db, store);
@@ -56,18 +57,26 @@ export default async function backupDataToServer({ tabContainer, manageUser }) {
 				});
 				debugLog('Server Response: ', response);
 
-				for (const { status, msg, data } of response) {
-					debugLog('Response: ', response);
-					debugLog('status: ', status);
-					debugLog('msg: ', msg);
-					if (status === 'ok' || status === 'no-update') {
-						await handleClearingStore({ indexed, db, response, store });
+				for (const { status, msg, data, email_status, email_msg } of response) {
+					debugLog('Status: ', status);
+					debugLog('Message: ', msg);
+					debugLog('Data: ', data);
+					debugLog('Email Status: ', email_status);
+					debugLog('Email Message: ', email_msg);
 
-						// Change the indicator to green if successful
-						// element.src = '/public/siteImages/indicator_green_light.webp';
-						// element.dataset.hasdata = 'false';
+					if (status === 'ok' || status === 'no-update') {
+						if (email_status === 'success') {
+							displaySuccess += email_msg + '<br>';
+						}
+						else if (email_status === 'error') {
+							displayErrors += email_msg + '<br>';
+						}
+						else {
+							debugLog('No email status provided from server while processing the backup data.');
+						}
+						await handleClearingStore({ indexed, db, response, store });
 					}
-					else if( status === 'validation-error'){
+					else if (status === 'validation-error') {
 						debugLog('Error Data: ', data);
 						if (data) {
 							for (const error in data) {
@@ -89,7 +98,7 @@ export default async function backupDataToServer({ tabContainer, manageUser }) {
 					}
 				}
 
-				if(doWeHaveAnError) {
+				if (doWeHaveAnError) {
 					element.src = '/public/siteImages/indicator_red_light.png';
 					element.dataset.hasdata = 'true';
 				}
@@ -111,6 +120,14 @@ export default async function backupDataToServer({ tabContainer, manageUser }) {
 			}
 		}
 
+		debugLog('Display Success: ', displaySuccess);
+		if(displaySuccess !== ''){
+			const successMsgContainer = getValidElement('backup-msg-success');
+			successMsgContainer.innerHTML = displaySuccess;
+			successMsgContainer.classList.remove('w3-hide');
+		}
+		
+		debugLog('Display Errors: ', displayErrors);
 		if (displayErrors !== '') {
 			openModal({
 				content: displayErrors,
@@ -128,19 +145,19 @@ export default async function backupDataToServer({ tabContainer, manageUser }) {
 		shouldHideBackupDataButton();
 	}
 	catch (err) {
-			// Handle the error
-			const { AppError } = await import("../../../../../../../core/errors/models/AppError.js");
-			AppError.handleError(err, {
-				errorCode: AppError.Types.BACKUP_ERROR,
-				userMessage: AppError.BaseMessages.system.backup,
-			}, true);
-		}
+		// Handle the error
+		const { AppError } = await import("../../../../../../../core/errors/models/AppError.js");
+		AppError.handleError(err, {
+			errorCode: AppError.Types.BACKUP_ERROR,
+			userMessage: AppError.BaseMessages.system.backup,
+		}, true);
 	}
+}
 
 function shouldHideBackupDataButton() {
-		const elements = document.querySelectorAll('img[data-hasdata="true"]');
-		if (elements.length === 0) {
-			const backupButton = getValidElement('backup-data-button-container');
-			backupButton.classList.add('w3-hide');
-		}
+	const elements = document.querySelectorAll('img[data-hasdata="true"]');
+	if (elements.length === 0) {
+		const backupButton = getValidElement('backup-data-button-container');
+		backupButton.classList.add('w3-hide');
 	}
+}

@@ -1,3 +1,4 @@
+import DateHelper from '../../../utils/date/DateHelper.js';
 import { trimCycleRange } from '../../../utils/dom/forms/trimCycleConfigurations.js';
 import predictNextSessionNumberHorses from './predictNextSessionNumberHorses.js';
 
@@ -5,7 +6,7 @@ const COMPONENT = 'Get Projected Appointments';
 const DEBUG = false;
 
 const debugLog = (...args) => {
-	if(DEBUG) {
+	if (DEBUG) {
 		console.log(`[${COMPONENT}]`, ...args);
 	}
 };
@@ -20,7 +21,7 @@ const debugLog = (...args) => {
  * @param {string} clientInfo.trim_cycle - The client's trim cycle.
  * @param {Object} scheduleOptions - An object containing scheduling options.
  * @param {number} scheduleOptions.avg_horses - The average number of horses per hour.
- * @param {number} scheduleOptions.avg_drive_time - The average drive time.
+ * @param {number} scheduleOptions.drive_time - The average drive time.
  * @returns {Promise<Object[]|null>} A promise that resolves to an array of projected booking data or null if no projections are found.
  * @throws {Error} Throws an error if there's an issue retrieving or processing the projected appointments.
  */
@@ -31,44 +32,37 @@ export default async function getProjectedAppointments({ appointmentDate, trimCy
 
 		if (!trimCycleValue) return null;
 
-		// Set up the Dates
-		const [year, month, day] = appointmentDate.value.split('-');
-		const nextTrim = new Date(year, month - 1, day);
-		nextTrim.setHours(0, 0, 0, 0);
-		const currentDate = new Date();
-		currentDate.setHours(0, 0, 0, 0);
+		const nextTrim = new DateHelper(appointmentDate.value);
+		const currentDate = new DateHelper().today();
 
 		const projectedBookingsData = [];
 		const processedClients = new Set();
 
 		for (const cycleDays of trimCycleRange) {
-			const pastDate = new Date(nextTrim);
-			pastDate.setDate(nextTrim.getDate() - cycleDays);
+			const pastDate = nextTrim.addDays(-cycleDays);
 
 			// If we've gone past current date, no need to look further back
-			if (pastDate <= currentDate) {
+			if (pastDate.isBefore(currentDate)) {
 				return projectedBookingsData.length > 0 ? projectedBookingsData : null;
 			}
 
-			debugLog('Past Date: ', pastDate);
-			debugLog('Past Date to ISO String: ', pastDate.toISOString());
-			const formattedPastDate = pastDate.toISOString().slice(0, 10);
-			debugLog('Formatted Past Date: ', formattedPastDate);
-			const trimDates = await manageClient.getClientScheduleByTrimDate(formattedPastDate);
-			debugLog('Trim Dates: ', trimDates);
-			if (trimDates?.length > 0) {
-				for (const trimDate of trimDates) {
-					if (processedClients.has(trimDate.cID) ||
-						trimDate.cID === cID ||
-						trimDate.active === 'no' ||
-						trimDate.trim_cycle !== cycleDays.toString()) {
+			const formattedPastDate = pastDate.toYYYYMMDD();
+			const clients = await manageClient.getClientScheduleByTrimDate(formattedPastDate);
+
+			if (clients?.length > 0) {
+				for (const client of clients) {
+					// Skip past the current client or processed clients preventing duplicates, or inactive clients
+					if (client.cID === cID || processedClients.has(client.cID) || client.active === 'no') {
 						continue;
 					}
 
-					processedClients.add(trimDate.cID);
-					const bookingData = await buildProjectedBookingData(trimDate, manageClient, scheduleOptions);
-					if (bookingData) {
-						projectedBookingsData.push(bookingData);
+					if (client.trim_cycle === cycleDays.toString()) {
+						processedClients.add(client.cID);
+						const bookingData = await buildProjectedBookingData(client, manageClient, scheduleOptions);
+
+						if (bookingData) {
+							projectedBookingsData.push(bookingData);
+						}
 					}
 				}
 			}
@@ -82,33 +76,33 @@ export default async function getProjectedAppointments({ appointmentDate, trimCy
 }
 
 async function buildProjectedBookingData(trimDate, manageClient, scheduleOptions) {
-    debugLog('Building projected booking data for:', trimDate);
+	debugLog('Building projected booking data for:', trimDate);
 
-	 // Use predictNextSessionNumberHorses to get actual service predictions
-    const prediction = await predictNextSessionNumberHorses({ 
-        clientData: { 
-            ...trimDate, 
-            scheduleOptions 
-        }, 
-        manageClient 
-    });
-    debugLog('Prediction result:', prediction);
+	// Use predictNextSessionNumberHorses to get actual service predictions
+	const prediction = await predictNextSessionNumberHorses({
+		clientData: {
+			...trimDate,
+			scheduleOptions
+		},
+		manageClient
+	});
+	debugLog('Prediction result:', prediction);
 
-    // Validate time_block value
-    const timeBlock = prediction?.totalTime || 0;
-    debugLog('Time block calculation:', {
-        predictionTotalTime: prediction?.totalTime,
-        finalTimeBlock: timeBlock
-    });
+	// Validate time_block value
+	const timeBlock = prediction?.totalTime || 0;
+	debugLog('Time block calculation:', {
+		predictionTotalTime: prediction?.totalTime,
+		finalTimeBlock: timeBlock
+	});
 
-    return {
-        client_name: trimDate.client_name,
-		  cID: trimDate.cID,
-		  primaryKey: trimDate.primaryKey,
-        city: trimDate.city,
-        num_horses: prediction?.horses?.length || 0,
-        new_client: (!trimDate.horses || trimDate.horses.length === 0) ? 'New Client.' : '',
-        predicted_services: prediction?.serviceBreakdown || { trims: 0, halfSets: 0, fullSets: 0 },
-        time_block: timeBlock
-    };
+	return {
+		client_name: trimDate.client_name,
+		cID: trimDate.cID,
+		primaryKey: trimDate.primaryKey,
+		city: trimDate.city,
+		num_horses: prediction?.horses?.length || 0,
+		new_client: (!trimDate.horses || trimDate.horses.length === 0) ? 'New Client.' : '',
+		predicted_services: prediction?.serviceBreakdown || { trims: 0, halfSets: 0, fullSets: 0 },
+		time_block: timeBlock
+	};
 }

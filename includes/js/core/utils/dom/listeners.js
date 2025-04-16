@@ -4,7 +4,12 @@ import { getValidElement } from './elements.js';
  * Tracks event listeners by component for cleanup
  * @type {Map<string, Set<{element: HTMLElement, type: keyof HTMLElementEventMap, listener: EventListener}>>}
  */
-const listenerRegistry = new Map();
+const REGISTRY_KEY = 'APP_LISTENER_REGISTRY';
+if (!window[REGISTRY_KEY]) {
+    window[REGISTRY_KEY] = new Map();
+}
+
+const listenerRegistry = window[REGISTRY_KEY];
 
 /**
  * Adds an event listener and tracks it by component ID
@@ -102,15 +107,31 @@ function registerListener({ element, type, listener, componentId }) {
  * @param {string} componentId - ID of component whose listeners should be removed
  */
 export function removeListeners(componentId) {
-    const listeners = listenerRegistry.get(componentId);
-    if (!listeners) return;
+    const registry = window[REGISTRY_KEY];
 
-    listeners.forEach(({ element, type, listener }) => {
-        // Type assertion to handle the strict typing
-        element.removeEventListener(type, listener);
+    if (!registry) {
+        console.error('CRITICAL ERROR: Global listener registry  not found!');
+        return;
+    }
+
+
+    const listeners = registry.get(componentId);
+    if (!listeners) {
+        return;
+    };
+
+    // Create a copy to avoid modification during iteration
+    const listenerCopy = Array.from(listeners);
+    listenerCopy.forEach(({ element, type, listener }) => {
+        try {
+            element.removeEventListener(type, listener);
+        }
+        catch (err) {
+            console.error(`Error removing listener for ${componentId}: `, err);
+        }
+
+        registry.delete(componentId);
     });
-
-    listenerRegistry.delete(componentId);
 }
 
 /**
@@ -119,8 +140,10 @@ export function removeListeners(componentId) {
  * @returns {boolean} True if component has listeners
  */
 export function hasListeners(componentId) {
-    return listenerRegistry.has(componentId) &&
-        listenerRegistry.get(componentId).size > 0;
+    const registry = window[REGISTRY_KEY];
+    if (!registry) return false;
+
+    return registry.has(componentId) && registry.get(componentId).size > 0;
 }
 
 /**

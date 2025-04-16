@@ -5,8 +5,10 @@ import autoFillHorseList from './autoFillHorseList.js';
 import calculateTotalCost from './calculateTotalCost.js';
 import { updateTrimCost } from './updateTrimCost.js';
 import { prevOptions } from '../addTrimmingJS.js';
+import { getLocalDateString } from '../../../../../core/utils/date/dateUtils.js';
+import horsePredictionService from '../../../../../core/services/horse-prediction/horsePredictionServices.js';
 
-const COMPONENT = 'BuildListOfHorsesSection';
+const COMPONENT = 'Build List Of Horses Section';
 const DEBUG = false;
 
 const debugLog = (...args) => {
@@ -45,9 +47,8 @@ export default async function buildListOfHorsesSection({ evt, horseListContainer
 			totalHorses,
 			farrierPrices,
 			accessoryPrices,
+			predictedHorseIds,
 		} = await getPageData({ manageUser, manageClient, primaryKey });
-
-		debugLog('farrier prices: ', farrierPrices);
 
 		const haveFarrierPricing = Object.values(farrierPrices).some(price => price !== '' && price !== '0.00' && price !== 0.00);
 
@@ -56,20 +57,17 @@ export default async function buildListOfHorsesSection({ evt, horseListContainer
 		}
 
 		// Set up the configuration options to pass to handle showing number of horses.
-		const optionsConfig = getOptionsConfig({ clientHorses, userFarrierPrices: farrierPrices, accessoryPrices });
+		const optionsConfig = getOptionsConfig({ clientHorses, userFarrierPrices: farrierPrices, accessoryPrices, predictedHorseIds });
 
 		const horseListSection = await handleShowingNumberOfHorses({
 			evt,
 			horseListContainer,
 			clientTotalHorses: totalHorses,
-			// farrierPrices: farrierPrices,
 			optionsConfig,
 			containerChildren: horseListChildren,
 		});
 
 		renderPage({ container: horseListContainer, horseList: horseListSection });
-
-		await autoUpdateServiceCost(horseListContainer);
 
 		// Get the final number of horses to determine the trimming costs
 		const finalHorseCount = document.getElementById('number-horses').value;
@@ -77,8 +75,8 @@ export default async function buildListOfHorsesSection({ evt, horseListContainer
 		// Update the trimming costs and calculate total cost
 		await updateTrimCost({ blockElementNode: horseListContainer, numberHorses: finalHorseCount, userFarrierPrices: farrierPrices });
 
+		await autoUpdateServiceCost(horseListContainer);
 		disableEnableSubmitButton('submit-button');
-
 	}
 	catch (err) {
 		const { AppError } = await import("../../../../../core/errors/models/AppError.js");
@@ -124,6 +122,8 @@ async function getPageData({ manageUser, manageClient, primaryKey }) {
 			manageUser.getFarrierPrices(),
 		]);
 
+		const clientTrimmingInfo = await manageClient.getClientTrimmingInfo(clientInfo?.cID);
+		debugLog('Client Trimming Info: ', clientTrimmingInfo);
 		// Get the user's accessory and farrier prices. If we don't have any, throw the error.
 		const { accessories: accessoryPrices, ...farrierPrices } = userFarrierPrices;
 		if (!accessoryPrices || Object.keys(farrierPrices).length === 0) throw new Error('Please update your farrier prices settings.');
@@ -131,9 +131,32 @@ async function getPageData({ manageUser, manageClient, primaryKey }) {
 		// Get the clients trim cycle
 		const clientTrimCycle = clientInfo?.trim_cycle;
 
-		// Get the clients horses sorted by trim cycle
+		// Get the appointment date from the form
+		const trimDateElem = getValidElement('trim-date');
+		const appointmentDate = trimDateElem ? trimDateElem.value : getLocalDateString();
+
+		// Get predicted horses for this appointment
+		const predictedHorses = await horsePredictionService({
+			trimmings: clientTrimmingInfo || [],
+			horses: clientInfo?.horses || [],
+			appointmentDate,
+			manageClient,
+		});
+
+		// Create a Set of predicted horse IDs for faster lookup
+		const predictedHorseIds = new Set(predictedHorses.map(h => String(h.hID)));
+
+
+		// First sort by prediction, then by trim cycle
 		const clientHorses = clientInfo?.horses.sort((a, b) => {
-			// First check if either matches the client's trim cycle
+			// First priority: Is the horse predicted?
+			const aIsPredicted = predictedHorseIds.has(String(a.hID));
+			const bIsPredicted = predictedHorseIds.has(String(b.hID));
+
+			if(aIsPredicted && !bIsPredicted) return -1;
+			if(!aIsPredicted && bIsPredicted) return 1;
+
+			// Second priority: check if either matches the client's trim cycle
 			const aMatchesClientCycle = a.trim_cycle === clientTrimCycle;
 			const bMatchesClientCycle = b.trim_cycle === clientTrimCycle;
 
@@ -148,6 +171,12 @@ async function getPageData({ manageUser, manageClient, primaryKey }) {
 		// Get the clients total horses
 		const totalHorses = clientHorses.length;
 
+		const predictedHorseNames = clientInfo?.horses
+		.filter(h => predictedHorseIds.has(String(h.hID)))
+		.map(h => h.horse_name);
+		debugLog('Predicted Horse names: ', predictedHorseNames);
+		debugLog('predictedHorseIds contents: ', [...predictedHorseIds]);
+
 		return {
 			clientInfo,
 			clientTrimCycle,
@@ -155,6 +184,8 @@ async function getPageData({ manageUser, manageClient, primaryKey }) {
 			totalHorses,
 			accessoryPrices,
 			farrierPrices,
+			predictedHorses,
+			predictedHorseIds,
 		};
 	}
 	catch (err) {
@@ -175,15 +206,31 @@ async function getPageData({ manageUser, manageClient, primaryKey }) {
  * @returns {Object} Configuration object for horse list, farrier prices, and accessory options
  * @private
  */
-function getOptionsConfig({ clientHorses, userFarrierPrices, accessoryPrices }) {
+function getOptionsConfig({ clientHorses, userFarrierPrices, accessoryPrices, predictedHorseIds }) {
+	debugLog('Predicted Horse IDs: ', predictedHorseIds);
+	debugLog('Predicted IDs is a Set: ', predictedHorseIds instanceof Set);
+	debugLog('Predicted IDs size: ', predictedHorseIds instanceof Set ? predictedHorseIds.size : 'N/A');
+
+	// Make sure predictedHorseIds is actually a Set with values
+	const isPredictedHorse = (id) => {
+		return predictedHorseIds instanceof Set && predictedHorseIds.has(String(id));
+	};
+
 	return {
 		horseListOptionsConfig: {
 			list: clientHorses,
 			value: opt => `${opt.hID}:${opt.horse_name}`,
-			text: opt => opt.horse_name,
+			text: opt =>{
+				// User check for predicted status
+				const isPredicted = isPredictedHorse(opt.hID);
+				debugLog(`Horse ${opt.horse_name} (${opt.hID}) is predicted`, isPredicted);
+				return isPredicted ? `${opt.horse_name} (Predicted)` : opt.horse_name;
+			},
 			attributes: opt => ({
 				'data-service-type': opt.service_type,
-				'data-trim-cycle': opt.trim_cycle
+				'data-trim-cycle': opt.trim_cycle,
+				'data-horse-type': opt.horse_type,
+				'data-is-predicted': isPredictedHorse(opt.hID) ? 'true' : 'false',
 			})
 		},
 		farrierPricesOptionsConfig: {
@@ -235,37 +282,7 @@ async function handleShowingNumberOfHorses({ evt, horseListContainer, clientTota
 		// Clear prevOptions whenever number of horses changes
 		prevOptions.clear();
 
-		// Handle max horses boundary condition first
-		if (numberHorsesInput >= clientTotalHorses) {
-			if (numberHorsesInput > clientTotalHorses) {
-				// Set the max number of horses as the numberHorseInput
-				numberHorsesInput = clientTotalHorses;
-				// Set the actual input element value to the max number of horses
-				evt.target.value = clientTotalHorses;
-			}
-
-			// Clear the horse list container
-			horseListContainer.innerHTML = '';
-
-			// Auto fill with the horses names and the service auto set to trim
-			const autoFill = await autoFillHorseList({ totalHorses: clientTotalHorses, optionsConfig });
-
-			// Keep only the selected option for each select
-			autoFill.map(options => options.querySelector('select[id^="horse-list-"]'))
-				.forEach(select => {
-					const selectedOption = select.options[select.selectedIndex];
-
-					Array.from(select.options).forEach(option => {
-						if (option !== selectedOption) {
-							select.removeChild(option);
-						}
-					});
-				});
-
-			return autoFill;
-		}
-
-		// Handle removing horses case
+		// Handle removing horses case first - this needs special handling
 		if (numberHorsesInput < containerChildren) {
 			let childList = containerChildren;
 			let removedOptions = [];
@@ -296,12 +313,24 @@ async function handleShowingNumberOfHorses({ evt, horseListContainer, clientTota
 			return [];
 		}
 
-		debugLog('Number of horses input: ', numberHorsesInput);
-		// Clear the horseListContainer
-		horseListContainer.innerHTML = '';
-		const buildShowHorseList = await autoFillHorseList({ totalHorses: numberHorsesInput, optionsConfig });
+		// For all other cases (add or max), handle together
 
-		// Replace the old dropdown management code with our new function
+		// Cap the number at clientTotalHorses
+		if (numberHorsesInput > clientTotalHorses) {
+			numberHorsesInput = clientTotalHorses;
+			evt.target.value = clientTotalHorses;
+		}
+
+		// Clear the container
+		horseListContainer.innerHTML = '';
+
+		// Build the horse list with the appropriate number
+		const buildShowHorseList = await autoFillHorseList({
+			totalHorses: numberHorsesInput,
+			optionsConfig
+		});
+
+		// Initialize horse selections
 		initializeHorseSelections(buildShowHorseList);
 
 		return buildShowHorseList;
@@ -339,8 +368,6 @@ function initializeHorseSelections(buildShowHorseList) {
 				}
 			});
 		});
-
-	debugLog('Initialized prevOptions:', prevOptions);
 }
 
 /**
@@ -359,9 +386,13 @@ function autoUpdateServiceCost(horseListContainer) {
 		const horseListSelects = horseListContainer.querySelectorAll('select[id^="horse-list-"]');
 
 		horseListSelects.forEach(horseListSelect => {
+
 			const index = horseListSelect.id.split('-').pop();
+
 			const serviceCostSelect = horseListContainer.querySelector(`select[id="service-cost-${index}"]`);
+
 			const horseListSelectedIndex = horseListSelect.options[horseListSelect.selectedIndex];
+
 			const serviceCostOption = Array.from(serviceCostSelect.options).find(option => {
 				return option.value.includes(serviceTypeMapping[horseListSelectedIndex.dataset.serviceType]);
 			});
@@ -369,6 +400,14 @@ function autoUpdateServiceCost(horseListContainer) {
 			if (serviceCostOption) {
 				serviceCostOption.selected = true;
 			}
+			else {
+				// Set the first available service cost option as selected
+				const firstOption = serviceCostSelect.options[1];
+				if (firstOption) {
+					firstOption.selected = true;
+				}
+			}
+			// Set up a change event to fire for the service cost select
 			const changeEvent = new Event('change', {
 				bubbles: true,
 				cancelable: true

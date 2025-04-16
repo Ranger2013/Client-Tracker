@@ -1,4 +1,4 @@
-import { getReadableCurrentFutureDate } from '../../../../../utils/date/dateUtils.js';
+import { getLocalDateString, getReadableCurrentFutureDate } from '../../../../../utils/date/dateUtils.js';
 import { buildEle, buildElementsFromConfig, buildElementTree } from '../../../../../utils/dom/elements.js';
 import { buildPageContainer, buildSubmitButtonSection, buildTwoColumnInputSection, buildTwoColumnTextareaSection } from '../../../../../utils/dom/forms/buildUtils.js';
 import { removeListeners } from '../../../../../utils/dom/listeners.js';
@@ -7,7 +7,7 @@ import { cleanUserOutput } from '../../../../../utils/string/stringUtils.js';
 
 // Set up the debug mode
 const COMPONENT = 'Build Add Trimming Page';
-const DEBUG = true;
+const DEBUG = false;
 const debugLog = (...args) => {
 	if (DEBUG) {
 		console.log(`[${COMPONENT}]`, ...args);
@@ -168,13 +168,13 @@ async function buildFormComponents({ pageData, cID, primaryKey }) {
 		}),
 		// appointment date section
 		buildTwoColumnInputSection({
-			labelText: 'Appointment Date:',
+			labelText: 'Date of Service:',
 			inputID: 'trim-date',
 			inputType: 'date',
 			inputName: 'trim_date',
-			inputTitle: 'Date of Trimming',
+			inputTitle: 'Date of Trimming/Shoeing',
 			required: true,
-			inputValue: new Date().toISOString().slice(0, 10),
+			inputValue: getLocalDateString(),
 			additionalElement: buildEle({
 				type: 'div',
 				myClass: ['w3-small', 'w3-text-red'],
